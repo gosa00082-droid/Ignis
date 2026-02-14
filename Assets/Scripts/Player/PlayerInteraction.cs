@@ -36,77 +36,23 @@ public class PlayerInteraction : MonoBehaviour
 
     private void Update()
     {
-        // Если любой интерфейс открыт — по повторному E закрываем
         if (Input.GetKeyDown(KeyCode.E))
         {
-            if (isFurnaceOpen)
-            {
-                furnaceUI.CloseFurnace();
-                isFurnaceOpen = false;
-                Debug.Log("Печь закрыта по повторному E");
-                return;
-            }
-
-            if (isShopOpen)
-            {
-                shopUI.CloseShop();
-                isShopOpen = false;
-                Debug.Log("Магазин закрыт по повторному E");
-                return;
-            }
-
-            if (isAnvilOpen)
-            {
-                anvilUI.CloseAnvil();
-                isAnvilOpen = false;
-                Debug.Log("Наковальня закрыта по повторному E");
-                return;
-            }
-
-            if (isQuestBoardOpen) 
-            { 
-                questBoardUI.CloseQuestBoard(); 
-                isQuestBoardOpen = false; 
-                return; 
-            }
-
             RaycastHit hit;
             if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward,
                                out hit, interactionDistance, interactableLayer))
             {
                 if (hit.collider.CompareTag("Furnace"))
-                {
-                    furnaceUI.OpenFurnace();
-                    isFurnaceOpen = true;
-                    Debug.Log("Печь открыта");
-                }
-                else if (hit.collider.CompareTag("Anvil"))
-                {
-                    if (anvilUI != null)
-                    {
-                        anvilUI.OpenAnvil();
-                        isAnvilOpen = true;
-                        Debug.Log("Наковальня открыта");
-                    }
-                }
-                else if (hit.collider.CompareTag("ShopTable"))
-                {
-                    if (shopUI != null)
-                    {
-                        shopUI.OpenShop();
-                        isShopOpen = true;
-                        Debug.Log("Магазин открыт");
-                    }
-                }
-                else if (hit.collider.CompareTag("QuestBoard"))
-                {
-                    if (questBoardUI != null)
-                    {
-                        questBoardUI.OpenQuestBoard();
-                        isQuestBoardOpen = true;
-                        Debug.Log("Доска заказов открыта");
-                    }
-                }
+                    furnaceUI.ToggleFurnace();
+
+                else if (hit.collider.CompareTag("Anvil") && anvilUI != null)
+                    anvilUI.ToggleAnvil();
+
+                else if (hit.collider.CompareTag("ShopTable") && shopUI != null)
+                    shopUI.ToggleShop();
+
+                else if (hit.collider.CompareTag("QuestBoard") && questBoardUI != null)
+                    questBoardUI.ToggleQuestBoard();
             }
         }
     }

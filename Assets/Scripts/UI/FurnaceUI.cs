@@ -13,8 +13,6 @@ public class FurnaceUI : MonoBehaviour
     [SerializeField] private GameObject slotPrefab;
     [SerializeField] private ItemDatabase itemDatabase;
     [SerializeField] private GameObject furnaceCanvasRoot;
-    [SerializeField] private PlayerMovement playerMovement;
-    [SerializeField] private MouseLook mouseLook;
     [SerializeField] private AlloyDatabase alloyDatabase;
 
     [Header("Какие руды можно плавить")]
@@ -60,46 +58,27 @@ public class FurnaceUI : MonoBehaviour
         noCoalWarning.gameObject.SetActive(false);
     }
 
-    public void OpenFurnace()
+    public void ToggleFurnace()
     {
-        furnaceCanvasRoot.SetActive(true);
-        RefreshMiniInventory();
-        UpdatePreview();
-        UpdateCoalText();
-
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        playerMovement.enabled = false;
-        mouseLook.enabled = false;
+        if (UIManager.Instance.TryOpenUI(furnaceCanvasRoot))
+        {
+            RefreshMiniInventory();
+            UpdatePreview();
+            UpdateCoalText();
+        }
     }
 
-    public void CloseFurnace()
+    private void OnDisable()
     {
-        furnaceCanvasRoot.SetActive(false);
-
-        if (isSmelting && readinessProgress < 0.3f)
-        {
-            ReturnOresToInventory();
-        }
-
-        isSmelting = false;
-        miniGameActive = false;
-        ClearMiniInventory();
-        noCoalWarning.gameObject.SetActive(false);
-
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        playerMovement.enabled = true;
-        mouseLook.enabled = true;
+        ReturnOresToInventory();
+        ClearFurnaceSlots();
     }
 
     private void RefreshMiniInventory()
     {
         ClearMiniInventory();
-
         var materialsDict = playerInventory.GetMaterials();
 
-        // ← добавь это
         Debug.Log("Все id материалов в инвентаре: " + string.Join(", ", materialsDict.Keys));
 
         foreach (var kvp in materialsDict)
@@ -123,7 +102,7 @@ public class FurnaceUI : MonoBehaviour
 
             DraggableItem draggable = slot.GetComponent<DraggableItem>() ?? slot.AddComponent<DraggableItem>();
             draggable.homeParent = miniInventoryContent;
-            draggable.itemId = item.id;  // ← запоминаем id сразу
+            draggable.itemId = item.id;
 
             spawnedSlots.Add(slot);
         }
@@ -131,7 +110,9 @@ public class FurnaceUI : MonoBehaviour
 
     private void ClearMiniInventory()
     {
-        foreach (var slot in spawnedSlots) if (slot != null) Destroy(slot.gameObject);
+        foreach (var slot in spawnedSlots)
+            if (slot != null) Destroy(slot.gameObject);
+
         spawnedSlots.Clear();
     }
 
@@ -183,6 +164,7 @@ public class FurnaceUI : MonoBehaviour
         isSmelting = true;
         miniGameActive = true;
         ConsumeOresFromSlots();
+
         currentTemperature = 0f;
         brokProgress = 0f;
         readinessProgress = 0f;
@@ -190,6 +172,7 @@ public class FurnaceUI : MonoBehaviour
         tempLabel.text = "0°C";
         brokBar.value = 0f;
         readinessBar.value = 0f;
+
         DisableSlotDragging(true);
         bellowsButton.gameObject.SetActive(true);
         cancelButton.gameObject.SetActive(true);
@@ -207,8 +190,6 @@ public class FurnaceUI : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) CloseFurnace();
-
         if (!miniGameActive) return;
 
         timer += Time.deltaTime;
@@ -227,6 +208,7 @@ public class FurnaceUI : MonoBehaviour
         {
             brokProgress += deltaTime;
             brokBar.value = brokProgress;
+
             if (brokProgress >= 1f)
             {
                 FinishWithSlag();
@@ -236,6 +218,7 @@ public class FurnaceUI : MonoBehaviour
         {
             readinessProgress += deltaTime;
             readinessBar.value = readinessProgress;
+
             if (readinessProgress >= 1f)
             {
                 FinishSmelting();
@@ -274,7 +257,6 @@ public class FurnaceUI : MonoBehaviour
         tempLabel.text = "0°C";
         brokBar.value = 0f;
         readinessBar.value = 0f;
-
         RefreshMiniInventory();
     }
 
@@ -282,9 +264,8 @@ public class FurnaceUI : MonoBehaviour
     {
         if (!isSmelting || readinessProgress >= 0.3f) return;
 
-        ReturnOresToInventory();  // Возврат руд
+        ReturnOresToInventory();
 
-        // Полный сброс состояния плавки
         isSmelting = false;
         miniGameActive = false;
         currentTemperature = 0f;
@@ -298,11 +279,10 @@ public class FurnaceUI : MonoBehaviour
         bellowsButton.gameObject.SetActive(false);
         cancelButton.gameObject.SetActive(false);
         igniteButton.interactable = true;
-
         DisableSlotDragging(false);
         ClearFurnaceSlots();
         UpdatePreview();
-        RefreshMiniInventory();  // Обновляем мини-инвентарь (чтобы руды появились сразу)
+        RefreshMiniInventory();
         previewDescription.text = "";
     }
 

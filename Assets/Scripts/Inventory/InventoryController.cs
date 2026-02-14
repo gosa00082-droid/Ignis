@@ -13,8 +13,13 @@ public class InventoryController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            isOpen = !isOpen;
-            ToggleInventory(isOpen);
+            UIManager.Instance.ToggleUI(inventoryPanel);
+
+            if (inventoryPanel.activeSelf)
+            {
+                var inventoryUI = inventoryPanel.GetComponent<InventoryUI>();
+                if (inventoryUI != null) inventoryUI.Refresh();
+            }
         }
     }
 

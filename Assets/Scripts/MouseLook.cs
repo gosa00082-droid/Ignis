@@ -8,7 +8,7 @@ public class MouseLook : MonoBehaviour
 
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked; // Курсор скрыт
+        // Cursor.lockState = CursorLockMode.Locked; // Курсор скрыт
     }
 
     void Update()

@@ -9,30 +9,26 @@ public class AnvilUI : MonoBehaviour
     [SerializeField] private Inventory playerInventory;
     [SerializeField] private ItemDatabase itemDatabase;
     [SerializeField] private RecipeDatabase recipeDatabase;
-    [SerializeField] private GameObject anvilCanvasRoot;  // Перетащи AnvilCanvas
-    [SerializeField] private Transform recipeListContent; // Content для списка рецептов (ScrollView)
-    [SerializeField] private GameObject recipeSlotPrefab; // Префаб слота рецепта (Button с Text)
-    [SerializeField] private Transform craftSlotsParent;  // Grid для слотов компонентов
-    [SerializeField] private GameObject craftSlotPrefab;  // Префаб слота компонента (Icon + Name + Amount)
+    [SerializeField] private GameObject anvilCanvasRoot;
+    [SerializeField] private Transform recipeListContent;
+    [SerializeField] private GameObject recipeSlotPrefab;
+    [SerializeField] private Transform craftSlotsParent;
+    [SerializeField] private GameObject craftSlotPrefab;
     [SerializeField] private Button toolsButton, weaponsButton, decorationsButton;
-    [Header("Блокировка")]
-    [SerializeField] private PlayerMovement playerMovement;
-    [SerializeField] private MouseLook mouseLook;
 
-    // В начало класса, после других [SerializeField]
     [Header("Крафт")]
     [SerializeField] private Button craftButton;
-    [SerializeField] private TMP_Text successText;      // ← текст успеха (зелёный)
-    [SerializeField] private TMP_Text errorText;        // ← текст ошибок (красный)
-    [SerializeField] private TMP_Text recipeNameText;               // Название рецепта
-    [SerializeField] private TMP_Text resultInventoryCountText;     // Количество результата в инвентаре
+    [SerializeField] private TMP_Text successText;
+    [SerializeField] private TMP_Text errorText;
+    [SerializeField] private TMP_Text recipeNameText;
+    [SerializeField] private TMP_Text resultInventoryCountText;
 
-    private RecipeData selectedRecipe = null;   // текущий выбранный рецепт
-    private int craftCount = 0;  // сколько раз успешно скрафтили текущий рецепт
+    private RecipeData selectedRecipe = null;
+    private int craftCount = 0;
 
     [Header("Цвета слотов")]
-    [SerializeField] private Color availableColor = new Color(1f, 1f, 0.5f, 0.5f); // Желтый
-    [SerializeField] private Color missingColor = new Color(1f, 0.2f, 0.2f, 0.5f); // Красный
+    [SerializeField] private Color availableColor = new Color(1f, 1f, 0.5f, 0.5f);
+    [SerializeField] private Color missingColor = new Color(1f, 0.2f, 0.2f, 0.5f);
 
     private CraftCategory currentCategory = CraftCategory.Tools;
     private List<GameObject> spawnedRecipeSlots = new List<GameObject>();
@@ -50,21 +46,41 @@ public class AnvilUI : MonoBehaviour
         if (recipeNameText != null) recipeNameText.text = "Выберите рецепт";
         if (resultInventoryCountText != null) resultInventoryCountText.text = "";
 
-        // Подключаем вкладки
         toolsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Tools));
         weaponsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Weapons));
         decorationsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Decorations));
 
-        ShowCategory(CraftCategory.Weapons);  // По умолчанию
+        ShowCategory(CraftCategory.Weapons);
 
         if (craftButton != null)
         {
             craftButton.onClick.AddListener(TryCraft);
-            craftButton.interactable = false;   // изначально неактивна
+            craftButton.interactable = false;
         }
 
         if (successText != null) successText.text = "";
         if (errorText != null) errorText.text = "";
+    }
+
+    public void ToggleAnvil()
+    {
+        if (UIManager.Instance.TryOpenUI(anvilCanvasRoot))
+        {
+            ShowCategory(currentCategory);
+            ClearCraftSlots();
+            UpdateCraftSlotAmounts();
+            ClearFeedbackTexts();
+            ResetCraftCount();
+        }
+    }
+
+    private void OnDisable()
+    {
+        ClearRecipeList();
+        ClearCraftSlots();
+        selectedRecipe = null;
+        ClearFeedbackTexts();
+        ResetCraftCount();
     }
 
     private void ClearFeedbackTexts()
@@ -81,44 +97,15 @@ public class AnvilUI : MonoBehaviour
         UpdateResultInventoryCount();
     }
 
-    public void OpenAnvil()
-    {
-        anvilCanvasRoot.SetActive(true);
-        ShowCategory(currentCategory);  // Обновить список
-
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        playerMovement.enabled = false;
-        mouseLook.enabled = false;
-        ClearFeedbackTexts();   // ← добавь
-        ResetCraftCount();          // ← добавь
-    }
-
-    public void CloseAnvil()
-    {
-        anvilCanvasRoot.SetActive(false);
-        ClearRecipeList();
-        ClearCraftSlots();
-
-        selectedRecipe = null;          // ← здесь обязательно
-
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        playerMovement.enabled = true;
-        mouseLook.enabled = true;
-        ClearFeedbackTexts();   // ← добавь
-        ResetCraftCount();          // ← добавь
-    }
-
     private void ShowCategory(CraftCategory category)
     {
         currentCategory = category;
         ClearRecipeList();
         ClearCraftSlots();
-        ClearFeedbackTexts();   // ← добавь
-        ResetCraftCount();          // ← добавь
+        ClearFeedbackTexts();
+        ResetCraftCount();
+        selectedRecipe = null;
 
-        selectedRecipe = null;          // ← здесь сбрасываем, когда меняем вкладку
         if (craftButton != null) craftButton.interactable = false;
 
         var recipes = recipeDatabase.GetRecipesByCategory(category);
@@ -145,19 +132,17 @@ public class AnvilUI : MonoBehaviour
     private void ShowCraftSlots(RecipeData recipe)
     {
         selectedRecipe = recipe;
-        ClearCraftSlots();                  // очищаем слоты
-        ClearFeedbackTexts();               // очищаем сообщения
-        ResetCraftCount();                  // сбрасываем счётчик (и "Выберите рецепт")
+        ClearCraftSlots();
+        ClearFeedbackTexts();
+        ResetCraftCount();
 
-        // ← Теперь ПЕРЕЗАПИСЫВАЕМ название рецепта и счёт в инвентаре
         if (recipeNameText != null)
         {
-            recipeNameText.text = recipe.recipeName;   // ← вот здесь название появляется
-            Debug.Log($"Установлено название рецепта: {recipe.recipeName}");  // для теста в консоли
+            recipeNameText.text = recipe.recipeName;
+            Debug.Log($"Установлено название рецепта: {recipe.recipeName}");
         }
 
-        UpdateResultInventoryCount();       // показываем сколько результата в инвентаре
-
+        UpdateResultInventoryCount();
         Debug.Log($"Показываем рецепт: {recipe.recipeName}. Компонентов: {recipe.requiredItems.Count}");
 
         bool canCraft = true;
@@ -175,23 +160,19 @@ public class AnvilUI : MonoBehaviour
 
             GameObject slot = Instantiate(craftSlotPrefab, craftSlotsParent);
 
-            // Иконка
             Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
             if (icon != null && req.item.icon != null)
                 icon.sprite = req.item.icon;
 
-            // Название
             TMP_Text nameText = slot.transform.Find("Name")?.GetComponent<TMP_Text>();
             if (nameText != null)
                 nameText.text = req.item.itemName;
 
-            // Количество: имеющееся / требуемое
             TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
             int have = playerInventory.GetCount(req.item.id);
             if (amountText != null)
                 amountText.text = $"{have}/{req.amount}";
 
-            // Подсветка фона
             Image bg = slot.GetComponent<Image>();
             if (bg != null)
                 bg.color = (have >= req.amount) ? availableColor : missingColor;
@@ -202,14 +183,12 @@ public class AnvilUI : MonoBehaviour
             spawnedCraftSlots.Add(slot);
         }
 
-        // Активируем кнопку крафта
         if (craftButton != null)
         {
             craftButton.interactable = canCraft;
             Debug.Log($"Кнопка крафта активна: {canCraft}");
         }
 
-        // Если сразу не хватает — показываем ошибку (но не перезаписываем успех)
         if (!canCraft && errorText != null)
         {
             errorText.text = "Недостаточно материалов для этого рецепта";
@@ -219,7 +198,6 @@ public class AnvilUI : MonoBehaviour
     public void TryCraft()
     {
         Debug.Log("=== TryCraft вызван ===");
-
         if (isCrafting)
         {
             Debug.Log("TryCraft вызван повторно — игнорируем");
@@ -227,7 +205,6 @@ public class AnvilUI : MonoBehaviour
         }
 
         isCrafting = true;
-
         Debug.Log("=== TryCraft начат ===");
 
         if (selectedRecipe == null) return;
@@ -248,38 +225,29 @@ public class AnvilUI : MonoBehaviour
             if (errorText != null)
                 errorText.text = "Недостаточно материалов!";
             if (successText != null)
-                successText.text = "";  // очищаем успех, если ошибка
+                successText.text = "";
             return;
         }
 
-        // Снимаем материалы
         foreach (var req in selectedRecipe.requiredItems)
         {
             playerInventory.RemoveItem(req.item.id, req.amount);
         }
 
-        // Добавляем результат
         playerInventory.AddItem(selectedRecipe.resultItem.id, selectedRecipe.resultAmount);
-
-        // ← Добавь эту строку:
         UpdateResultInventoryCount();
 
-        // Увеличиваем счётчик и обновляем текст успеха
-        craftCount += selectedRecipe.resultAmount;  // если resultAmount > 1, тоже учитываем
-
+        craftCount += selectedRecipe.resultAmount;
         if (successText != null)
         {
             successText.text = $"Создано: {selectedRecipe.resultItem.itemName} × {craftCount}";
         }
 
-        // Очищаем ошибку
         if (errorText != null)
             errorText.text = "";
 
-        // Обновляем слоты
         UpdateCraftSlotAmounts();
 
-        // Проверяем повторный крафт
         bool stillCanCraft = true;
         foreach (var req in selectedRecipe.requiredItems)
         {
@@ -291,7 +259,6 @@ public class AnvilUI : MonoBehaviour
         }
 
         craftButton.interactable = stillCanCraft;
-
         if (!stillCanCraft && errorText != null)
             errorText.text = "Недостаточно для повторного крафта";
 
@@ -308,18 +275,14 @@ public class AnvilUI : MonoBehaviour
             if (slot == null) continue;
 
             var req = selectedRecipe.requiredItems[i];
-
-            // Пересчитываем актуальное количество в инвентаре
             int have = playerInventory.GetCount(req.item.id);
 
-            // Обновляем текст количества
             TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
             if (amountText != null)
             {
                 amountText.text = $"{have}/{req.amount}";
             }
 
-            // Обновляем цвет фона
             Image bg = slot.GetComponent<Image>();
             if (bg != null)
             {
@@ -341,22 +304,13 @@ public class AnvilUI : MonoBehaviour
         foreach (var slot in spawnedCraftSlots) Destroy(slot);
         spawnedCraftSlots.Clear();
 
-        // ← ЭТУ СТРОКУ УДАЛИТЬ или закомментировать
-        // selectedRecipe = null;
-
         if (craftButton != null) craftButton.interactable = false;
-        ClearFeedbackTexts();   // ← добавь
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape)) CloseAnvil();
+        ClearFeedbackTexts();
     }
 
     private void UpdateResultInventoryCount()
     {
         if (resultInventoryCountText == null) return;
-
         if (selectedRecipe == null || selectedRecipe.resultItem == null)
         {
             resultInventoryCountText.text = "";

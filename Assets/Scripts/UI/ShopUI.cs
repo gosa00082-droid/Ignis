@@ -5,98 +5,79 @@ using TMPro;
 public class ShopUI : MonoBehaviour
 {
     [Header("Ссылки")]
-    [SerializeField] private Inventory inventory;           // Перетащи Inventory с игрока
-    [SerializeField] private ItemDatabase itemDatabase;     // Перетащи ItemDatabase.asset
-    [SerializeField] private GameObject shopCanvasRoot;     // Сам Canvas
-    [SerializeField] private Transform contentParent;       // Content для списка предметов (ScrollView)
-    [SerializeField] private GameObject slotPrefab;         // Префаб слота (как в InventoryUI)
+    [SerializeField] private Inventory inventory;
+    [SerializeField] private ItemDatabase itemDatabase;
+    [SerializeField] private GameObject shopCanvasRoot;
+    [SerializeField] private Transform contentParent;
+    [SerializeField] private GameObject slotPrefab;
     [SerializeField] private Button materialsButton, weaponsButton, toolsButton, otherButton;
 
     [Header("Детали справа")]
-    [SerializeField] private Image itemIcon;                // Иконка выбранного
-    [SerializeField] private TMP_Text itemNameText;         // Название
-    [SerializeField] private TMP_Text itemPriceText;        // Цена за 1
+    [SerializeField] private Image itemIcon;
+    [SerializeField] private TMP_Text itemNameText;
+    [SerializeField] private TMP_Text itemPriceText;
     [SerializeField] private Button plusButton, minusButton, buyButton;
 
     [Header("Детали справа - доп")]
-    [SerializeField] private TMP_Text inventoryCountText;   // Перетащи InventoryCountText
-    [SerializeField] private TMP_InputField quantityInput;  // Перетащи QuantityInput вместо quantityText
-
-    [Header("Блокировка")]
-    [SerializeField] private PlayerMovement playerMovement; // Перетащи с игрока
-    [SerializeField] private MouseLook mouseLook;           // Перетащи с камеры
+    [SerializeField] private TMP_Text inventoryCountText;
+    [SerializeField] private TMP_InputField quantityInput;
 
     [Header("Правая панель")]
-    [SerializeField] private GameObject rightDetailsPanel;  // Перетащи RightDetailsPanel (весь панель справа)
+    [SerializeField] private GameObject rightDetailsPanel;
 
     [Header("Статус покупки")]
-    [SerializeField] private TMP_Text statusText;  // Перетащи StatusText из инспектора
+    [SerializeField] private TMP_Text statusText;
 
-    private Color successColor = new Color(0f, 1f, 0f, 1f);  // Зелёный
-    private Color errorColor = new Color(1f, 0f, 0f, 1f);    // Красный
+    private Color successColor = new Color(0f, 1f, 0f, 1f);
+    private Color errorColor = new Color(1f, 0f, 0f, 1f);
 
     [Header("Счётчик золота")]
-    [SerializeField] private TMP_Text goldCounterText;      // Перетащи GoldCounter из инспектора
+    [SerializeField] private TMP_Text goldCounterText;
 
     [Header("Цвет денег")]
-    [SerializeField] private Color moneyColor = new Color(1f, 1f, 0f, 1f);  // жёлтый по умолчанию
+    [SerializeField] private Color moneyColor = new Color(1f, 1f, 0f, 1f);
 
     private ItemData selectedItem = null;
-    private int quantity = 0;  // Начальное количество
+    private int quantity = 0;
     private ItemCategory currentCategory = ItemCategory.Material;
 
     private void Start()
     {
         if (statusText != null) statusText.text = "";
 
-        // Подключаем вкладки
         materialsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Material));
         weaponsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Weapon));
         toolsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Tool));
         otherButton.onClick.AddListener(() => ShowCategory(ItemCategory.Other));
 
-        // Кнопки +/-
         plusButton.onClick.AddListener(() => ChangeQuantity(1));
         minusButton.onClick.AddListener(() => ChangeQuantity(-1));
         buyButton.onClick.AddListener(BuyItem);
 
-        // Событие ввода
         if (quantityInput != null)
         {
             quantityInput.onValueChanged.AddListener(OnQuantityInputChanged);
         }
 
-        ShowCategory(ItemCategory.Material);  // По умолчанию
-
+        ShowCategory(ItemCategory.Material);
         UpdateGoldDisplay();
     }
 
-    public void OpenShop()
+    public void ToggleShop()
     {
-        shopCanvasRoot.SetActive(true);
-        ShowCategory(currentCategory);  // Обновить список
-        if (rightDetailsPanel != null) rightDetailsPanel.SetActive(false);
-        UpdateGoldDisplay();  // счётчик золота остаётся видимым
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        playerMovement.enabled = false;
-        mouseLook.enabled = false;
-        ResetSelection();
-        UpdateGoldDisplay();
-
+        if (UIManager.Instance.TryOpenUI(shopCanvasRoot))
+        {
+            ShowCategory(ItemCategory.Material);
+            ResetSelection();
+            ClearDetails();
+            UpdateGoldDisplay();
+        }
     }
 
-    public void CloseShop()
+    private void OnDisable()
     {
-        shopCanvasRoot.SetActive(false);
-        if (rightDetailsPanel != null) rightDetailsPanel.SetActive(false);
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-        playerMovement.enabled = true;
-        mouseLook.enabled = true;
         ResetSelection();
-        UpdateGoldDisplay();
-
+        ClearDetails();
     }
 
     private void UpdateStatus(string message, Color color)
@@ -105,13 +86,11 @@ public class ShopUI : MonoBehaviour
         statusText.text = message;
         statusText.color = color;
         UpdateGoldDisplay();
-
     }
 
     private void UpdateGoldDisplay()
     {
         if (goldCounterText == null) return;
-
         int gold = inventory.GetCount("Gold_Money");
         Debug.Log($"Монеты: {gold}");
         goldCounterText.text = $"Золото: {gold}";
@@ -122,14 +101,17 @@ public class ShopUI : MonoBehaviour
     {
         currentCategory = category;
         ClearSlots();
+
         if (rightDetailsPanel != null) rightDetailsPanel.SetActive(false);
-        ResetSelection();  // на всякий
+        ResetSelection();
+
         var items = itemDatabase.GetItemsByCategory(category);
         foreach (var item in items)
         {
-            if (item.basePrice <= 0) continue;  // Не продаём бесплатные
+            if (item.basePrice <= 0) continue;
             CreateSlot(item);
         }
+
         UpdateGoldDisplay();
     }
 
@@ -137,30 +119,25 @@ public class ShopUI : MonoBehaviour
     {
         foreach (Transform child in contentParent) Destroy(child.gameObject);
         UpdateGoldDisplay();
-
     }
 
     private void CreateSlot(ItemData item)
     {
         GameObject slot = Instantiate(slotPrefab, contentParent);
 
-        // Иконка
         Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
         if (icon != null && item.icon != null) icon.sprite = item.icon;
 
-        // Название
         TMP_Text nameText = slot.transform.Find("Name")?.GetComponent<TMP_Text>();
         if (nameText != null) nameText.text = item.itemName;
 
-        // Цена — жёлтым
         TMP_Text priceText = slot.transform.Find("Price")?.GetComponent<TMP_Text>();
         if (priceText != null)
         {
             priceText.text = $"{item.basePrice}";
-            priceText.color = moneyColor;           // ← жёлтый цвет
+            priceText.color = moneyColor;
         }
 
-        // Кнопка выбора
         Button button = slot.GetComponent<Button>();
         if (button != null) button.onClick.AddListener(() => SelectItem(item));
     }
@@ -168,7 +145,6 @@ public class ShopUI : MonoBehaviour
     private void SelectItem(ItemData item)
     {
         if (rightDetailsPanel != null) rightDetailsPanel.SetActive(true);
-
         ClearDetails();
 
         selectedItem = item;
@@ -180,13 +156,12 @@ public class ShopUI : MonoBehaviour
         quantity = 1;
         UpdateQuantityText();
         ChangeQuantity(0);
-
-        UpdateInventoryCount();  // ← Добавь
+        UpdateInventoryCount();
     }
 
     private void ChangeQuantity(int delta)
     {
-        quantity = Mathf.Max(0, quantity + delta);  // ← Теперь можно до 0
+        quantity = Mathf.Max(0, quantity + delta);
         if (selectedItem == null) return;
 
         int maxAffordable = inventory.GetCount("Gold_Money") / selectedItem.basePrice;
@@ -194,7 +169,6 @@ public class ShopUI : MonoBehaviour
 
         UpdateQuantityText();
 
-        // Проверяем и обновляем кнопку + статус
         bool canBuy = quantity > 0 && inventory.GetCount("Gold_Money") >= (selectedItem.basePrice * quantity);
         buyButton.interactable = canBuy;
 
@@ -204,7 +178,7 @@ public class ShopUI : MonoBehaviour
         }
         else
         {
-            UpdateStatus("", Color.white);  // Очищаем, если ок
+            UpdateStatus("", Color.white);
         }
     }
 
@@ -217,6 +191,7 @@ public class ShopUI : MonoBehaviour
     private void BuyItem()
     {
         if (selectedItem == null || quantity <= 0) return;
+
         int totalCost = selectedItem.basePrice * quantity;
         if (inventory.GetCount("Gold_Money") < totalCost)
         {
@@ -226,16 +201,15 @@ public class ShopUI : MonoBehaviour
 
         inventory.RemoveItem("Gold_Money", totalCost);
         inventory.AddItem(selectedItem.id, quantity);
-        Debug.Log($"Куплено {quantity} x {selectedItem.itemName}");
 
+        Debug.Log($"Куплено {quantity} x {selectedItem.itemName}");
         UpdateGoldDisplay();
         UpdateStatus("Куплено!", successColor);
 
         quantity = 0;
         UpdateQuantityText();
         buyButton.interactable = false;
-
-        UpdateInventoryCount();  // ← Добавь, чтобы обновить после добавления в инвентарь
+        UpdateInventoryCount();
     }
 
     private void ResetSelection()
@@ -244,14 +218,6 @@ public class ShopUI : MonoBehaviour
         quantity = 0;
         UpdateQuantityText();
         buyButton.interactable = false;
-
-        // НЕ очищаем здесь правую панель — пусть остаётся после покупки
-        // itemIcon.sprite = null;
-        // itemNameText.text = "";
-        // itemPriceText.text = "";
-
-        // Статус тоже НЕ очищаем здесь — очищаем только при выборе нового предмета или закрытии
-        // if (statusText != null) statusText.text = "";
     }
 
     private void ClearDetails()
@@ -260,11 +226,6 @@ public class ShopUI : MonoBehaviour
         itemNameText.text = "";
         itemPriceText.text = "";
         if (statusText != null) statusText.text = "";
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape)) CloseShop();
     }
 
     private void UpdateInventoryCount()
@@ -279,11 +240,11 @@ public class ShopUI : MonoBehaviour
         if (int.TryParse(input, out int newQuantity))
         {
             quantity = newQuantity;
-            ChangeQuantity(0);  // Проверяем лимиты и статус
+            ChangeQuantity(0);
         }
         else
         {
-            quantityInput.text = quantity.ToString();  // Восстанавливаем старое, если не число
+            quantityInput.text = quantity.ToString();
         }
     }
 }
