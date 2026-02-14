@@ -1,0 +1,213 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7663279003906542104
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3706170572944723301}
+  - component: {fileID: 6693801711027894142}
+  - component: {fileID: 1883067424104088220}
+  - component: {fileID: 1156452857035115783}
+  - component: {fileID: 1899019318877887671}
+  - component: {fileID: 2843798940187508109}
+  - component: {fileID: 7347533057949409742}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3706170572944723301
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7663279003906542104}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 688.4581, y: 0.00001, z: 1166.5178}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6693801711027894142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7663279003906542104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f960e1fc4f01d84b954c0edbcec5ae2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ReferenceManager
+  referencePanel: {fileID: 0}
+  contentPanels:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  chapterButtons:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  playerMovement: {fileID: 0}
+  mouseLook: {fileID: 0}
+  uiCanvas: {fileID: 0}
+--- !u!114 &1883067424104088220
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7663279003906542104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6c882022dc0dc44683433e31b7a7211, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryController
+  inventoryPanel: {fileID: 0}
+  playerMovement: {fileID: 0}
+  mouseLook: {fileID: 0}
+--- !u!114 &1156452857035115783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7663279003906542104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 897dfdc2230316847b87e69565a625ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FurnaceUI
+  playerInventory: {fileID: 0}
+  miniInventoryContent: {fileID: 0}
+  slotPrefab: {fileID: 7948339153489308604, guid: 1830cddeaed41fb429964413343da6d9, type: 3}
+  itemDatabase: {fileID: 11400000, guid: eae493646857cca47978b0f43b9d4a19, type: 2}
+  furnaceCanvasRoot: {fileID: 0}
+  playerMovement: {fileID: 0}
+  mouseLook: {fileID: 0}
+  alloyDatabase: {fileID: 11400000, guid: 815adff7646df6641b9e844eac07b31b, type: 2}
+  smeltableItemIds:
+  - Iron_Ore
+  - Bronze_Ore
+  - Copper _Ore
+  - Silver_Ore
+  - Gold_Ore
+  - Copper_Ingot
+  - Tin_Ingot
+  - Tin_Ore
+  heatPerCoal: 100
+  temperatureDecay: 30
+  maxTemperature: 2000
+  igniteButton: {fileID: 0}
+  bellowsButton: {fileID: 0}
+  cancelButton: {fileID: 0}
+  tempBar: {fileID: 0}
+  brokBar: {fileID: 0}
+  readinessBar: {fileID: 0}
+  previewName: {fileID: 0}
+  previewDescription: {fileID: 0}
+  coalText: {fileID: 0}
+  tempLabel: {fileID: 0}
+  noCoalWarning: {fileID: 0}
+  previewIcon: {fileID: 0}
+  oreSlots:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+--- !u!114 &1899019318877887671
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7663279003906542104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbd8ccfd9fc279f4bb65ee640d2863e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AnvilUI
+  playerInventory: {fileID: 0}
+  itemDatabase: {fileID: 11400000, guid: eae493646857cca47978b0f43b9d4a19, type: 2}
+  recipeDatabase: {fileID: 11400000, guid: 1a9099678a544c24e8932a12d33842db, type: 2}
+  anvilCanvasRoot: {fileID: 0}
+  recipeListContent: {fileID: 0}
+  recipeSlotPrefab: {fileID: 7948339153489308604, guid: ade522303016cfd48b75cc0e06caa6c2, type: 3}
+  craftSlotsParent: {fileID: 0}
+  craftSlotPrefab: {fileID: 3132430271759498937, guid: 5e2b20edb5d1bdb4b8cc79b0c5ea335e, type: 3}
+  toolsButton: {fileID: 0}
+  weaponsButton: {fileID: 0}
+  decorationsButton: {fileID: 0}
+  playerMovement: {fileID: 0}
+  mouseLook: {fileID: 0}
+  craftButton: {fileID: 0}
+  successText: {fileID: 0}
+  errorText: {fileID: 0}
+  recipeNameText: {fileID: 0}
+  resultInventoryCountText: {fileID: 0}
+  availableColor: {r: 0.606212, g: 1, b: 0.5019608, a: 0.5}
+  missingColor: {r: 1, g: 0.2, b: 0.2, a: 0.5}
+--- !u!114 &2843798940187508109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7663279003906542104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4df5f509b1edf84096affde395d80e3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ShopUI
+  inventory: {fileID: 0}
+  itemDatabase: {fileID: 11400000, guid: eae493646857cca47978b0f43b9d4a19, type: 2}
+  shopCanvasRoot: {fileID: 0}
+  contentParent: {fileID: 0}
+  slotPrefab: {fileID: 3132430271759498937, guid: ffcb401f55bb0eb4cb3311b864f3cf07, type: 3}
+  materialsButton: {fileID: 0}
+  weaponsButton: {fileID: 0}
+  toolsButton: {fileID: 0}
+  otherButton: {fileID: 0}
+  itemIcon: {fileID: 0}
+  itemNameText: {fileID: 0}
+  itemPriceText: {fileID: 0}
+  plusButton: {fileID: 0}
+  minusButton: {fileID: 0}
+  buyButton: {fileID: 0}
+  inventoryCountText: {fileID: 0}
+  quantityInput: {fileID: 0}
+  playerMovement: {fileID: 0}
+  mouseLook: {fileID: 0}
+  rightDetailsPanel: {fileID: 0}
+  statusText: {fileID: 0}
+  goldCounterText: {fileID: 0}
+  moneyColor: {r: 1, g: 1, b: 0, a: 1}
+--- !u!114 &7347533057949409742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7663279003906542104}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: feec8f411c852fc499f8d9074f9e4eeb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::QuestManager
+  playerInventory: {fileID: 0}
+  itemDatabase: {fileID: 11400000, guid: eae493646857cca47978b0f43b9d4a19, type: 2}
+  failMessageCanvas: {fileID: 0}
+  failMessageText: {fileID: 0}
+  failCanvasGroup: {fileID: 0}

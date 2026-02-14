@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db198492b173d4a4c98c56ad8f68ade7, type: 3}
+  m_Name: AlloyBase1
+  m_EditorClassIdentifier: Assembly-CSharp::AlloyDatabase
+  recipes:
+  - {fileID: 11400000, guid: 645501d4395c7fe4498a0c3c9950d0c6, type: 2}
+  - {fileID: 11400000, guid: 35bb452cfcfafb144bdfc13539dbe790, type: 2}
+  - {fileID: 11400000, guid: 218470687074c554180450f7dc314533, type: 2}
+  - {fileID: 11400000, guid: 165d12e92d158c94c9b91f8637466023, type: 2}
+  - {fileID: 11400000, guid: 6dd01c79f449e984eb751701122c2c7c, type: 2}
+  - {fileID: 11400000, guid: 3e81147d94b5ec24bb2676aab6abcdc1, type: 2}
