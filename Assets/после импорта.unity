@@ -2738,7 +2738,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UIManager
   currentUI: {fileID: 0}
   playerMovement: {fileID: 2083097361}
-  mouseLook: {fileID: 0}
+  mouseLook: {fileID: 1267766220}
 --- !u!114 &1624385231 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2891074838192243328, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
@@ -4054,7 +4054,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
   speed: 6
   gravity: -9.81
-  jumpHeight: 3
+  jumpHeight: 0
 --- !u!114 &2103169948 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8930963640254588994, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
