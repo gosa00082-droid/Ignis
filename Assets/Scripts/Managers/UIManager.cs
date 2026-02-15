@@ -46,7 +46,6 @@ public class UIManager : MonoBehaviour
     // Принудительное закрытие текущего (Esc)
     public void CloseCurrent()
     {
-        Debug.Log("UIManager: Закрываем текущий UI. Было: " + (currentUI != null ? currentUI.name : "null"));
         SetUI(null);
     }
 
@@ -67,7 +66,6 @@ public class UIManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape) && currentUI != null)
         {
-            Debug.Log("UIManager: Esc нажат → закрываем UI");
             CloseCurrent();
         }
     }
@@ -75,7 +73,6 @@ public class UIManager : MonoBehaviour
     private void UpdateControls()
     {
         bool uiOpen = currentUI != null;
-        Debug.Log("UIManager: UpdateControls вызван. UI открыт? " + uiOpen + " | currentUI = " + (currentUI != null ? currentUI.name : "null"));
 
         Cursor.visible = uiOpen;
         Cursor.lockState = uiOpen ? CursorLockMode.None : CursorLockMode.Locked;
