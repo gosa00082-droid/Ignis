@@ -67,6 +67,12 @@ public class QuestManager : MonoBehaviour
             playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
             playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
             activeQuests.RemoveAt(slotIndex);
+
+            if (TutorialManager.Instance != null)
+            {
+                TutorialManager.Instance.CheckGoals(aq.data.questID, 1, GoalType.CompleteQuest);
+            }
+
             Debug.Log($"Сдан заказ: {aq.data.title}. Награда: {aq.data.rewardGold}");
         }
         else

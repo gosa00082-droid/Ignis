@@ -237,6 +237,12 @@ public class AnvilUI : MonoBehaviour
         playerInventory.AddItem(selectedRecipe.resultItem.id, selectedRecipe.resultAmount);
         UpdateResultInventoryCount();
 
+        if (TutorialManager.Instance != null)
+        {
+            // Передаем ID созданного предмета
+            TutorialManager.Instance.CheckGoals(selectedRecipe.resultItem.id, 1, GoalType.CraftItem);
+        }
+
         craftCount += selectedRecipe.resultAmount;
         if (successText != null)
         {

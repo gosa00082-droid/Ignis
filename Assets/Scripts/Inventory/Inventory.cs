@@ -53,6 +53,12 @@ public class Inventory : MonoBehaviour
             targetDict[itemId] = item.maxStackSize;
 
         Debug.Log($"Добавлено {amount} × {item.itemName}. Всего: {targetDict[itemId]}");
+
+        if (TutorialManager.Instance != null)
+        {
+            int currentCount = GetCount(itemId);
+            TutorialManager.Instance.CheckGoals(itemId, currentCount, GoalType.CollectItem);
+        }
     }
 
     // Убрать предмет из инвентаря
