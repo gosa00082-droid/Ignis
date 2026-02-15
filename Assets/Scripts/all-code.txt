@@ -1,0 +1,2429 @@
+﻿using UnityEngine;
+
+public class MouseLook : MonoBehaviour
+{
+    public float mouseSensitivity = 500f;
+    public Transform playerBody; // РЎСЃС‹Р»РєР° РЅР° С‚РµР»Рѕ (Player)
+    float xRotation = 0f;
+
+    void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked; // РљСѓСЂСЃРѕСЂ СЃРєСЂС‹С‚
+    }
+
+    void Update()
+    {
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+        playerBody.Rotate(Vector3.up * mouseX);
+    }
+}
+using UnityEngine;
+
+[RequireComponent(typeof(CharacterController))]
+public class PlayerMovement : MonoBehaviour
+{
+    public float speed = 6.0f;
+    public float gravity = -9.81f;
+    public float jumpHeight = 3.0f;
+    private CharacterController controller;
+    private Vector3 velocity;
+    private bool isGrounded;
+
+    void Start()
+    {
+        controller = GetComponent<CharacterController>();
+    }
+
+    void Update()
+    {
+        isGrounded = controller.isGrounded;
+        if (isGrounded && velocity.y < 0)
+        {
+            velocity.y = -2f;
+        }
+
+        float x = Input.GetAxis("Horizontal"); // A/D
+        float z = Input.GetAxis("Vertical");   // W/S
+        Vector3 move = transform.right * x + transform.forward * z;
+        controller.Move(move * speed * Time.deltaTime);
+
+        if (Input.GetButtonDown("Jump") && isGrounded)
+        {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        }
+
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+    }
+}
+using UnityEngine;
+using Unity.Cinemachine;
+using UnityEngine.Playables;
+
+public class CutsceneManager : MonoBehaviour
+{
+    [SerializeField] private GameObject player; // Ссылка на объект игрока (капсула)
+    [SerializeField] private GameObject playerCameraObject; // GameObject с обычной камерой игрока (без Cinemachine)
+    [SerializeField] private Camera cutsceneCamera; // Моя main camera с CinemachineBrain
+    [SerializeField] private PlayableDirector cutsceneDirector; // Playable Director с Timeline
+    [SerializeField] private CinemachineCamera[] cutsceneVCams; // Массив всех vcam для катсцены
+
+    void Start()
+    {
+        StartGameWithCutscene(); // Автоматически запускает катсцену при загрузке сцены
+    }
+
+    public void StartGameWithCutscene()
+    {
+        Debug.Log("Катсцена запущена!");
+
+        // Скрыть игрока и отключить его контроллер
+        if (player != null)
+        {
+            Debug.Log("Скрываем капсулу игрока");
+            player.SetActive(false);
+            // Если у игрока есть скрипт контроллера: player.GetComponent<PlayerController>().enabled = false;
+        }
+
+        // Отключить камеру игрока
+        if (playerCameraObject != null)
+        {
+            Debug.Log("Отключаем камеру игрока");
+            playerCameraObject.SetActive(false);
+        }
+
+        // Включить камеру катсцены
+        if (cutsceneCamera != null)
+        {
+            Debug.Log("Включаем камеру катсцены");
+            cutsceneCamera.gameObject.SetActive(true);
+        }
+
+        // Запустить Timeline (он активирует vcam)
+        if (cutsceneDirector != null)
+        {
+            cutsceneDirector.Play();
+        }
+
+        // Подписаться на окончание
+        cutsceneDirector.stopped += OnCutsceneFinished;
+    }
+
+    private void OnCutsceneFinished(PlayableDirector director)
+    {
+        Debug.Log("Катсцена завершена, возвращаем всё");
+
+        // Отключить все катсценные vcam
+        foreach (var vcam in cutsceneVCams)
+        {
+            if (vcam != null)
+            {
+                Debug.Log("Отключаем vcam: " + vcam.name);
+                vcam.Priority = 0; // Или vcam.gameObject.SetActive(false);
+            }
+        }
+
+        // Отключить камеру катсцены
+        if (cutsceneCamera != null)
+        {
+            Debug.Log("Выключаем камеру после катсцены");
+            cutsceneCamera.gameObject.SetActive(false);
+        }
+
+        // Включить камеру игрока
+        if (playerCameraObject != null)
+        {
+            Debug.Log("Включаем камеру игрока");
+            playerCameraObject.SetActive(true);
+        }
+
+        // Показать игрока и включить контроллер
+        if (player != null)
+        {
+            Debug.Log("Показываем капсулу игрока");
+            player.SetActive(true);
+            // Если у игрока есть скрипт контроллера: player.GetComponent<PlayerController>().enabled = true;
+        }
+
+        // Отписаться
+        cutsceneDirector.stopped -= OnCutsceneFinished;
+    }
+}
+// Assets/Scripts/Inventory/Inventory.cs
+using UnityEngine;
+using System.Collections.Generic;
+
+public class Inventory : MonoBehaviour
+{
+    // Отдельный словарь для каждой категории
+    private Dictionary<string, int> materials = new Dictionary<string, int>();   // id → количество
+    private Dictionary<string, int> weapons = new Dictionary<string, int>();
+    private Dictionary<string, int> tools = new Dictionary<string, int>();
+    private Dictionary<string, int> consumables = new Dictionary<string, int>();
+    private Dictionary<string, int> others = new Dictionary<string, int>();
+
+    [SerializeField] private ItemDatabase itemDatabase;  // ссылка на нашу базу
+
+    private void Awake()
+    {
+        if (itemDatabase == null)
+        {
+            itemDatabase = Resources.Load<ItemDatabase>("ItemDatabase"); // ← попробуй этот вариант
+                                                                         // или просто перетащи вручную в инспекторе — тогда эту строку можно убрать
+        }
+
+        if (itemDatabase == null)
+        {
+            Debug.LogError("База предметов НЕ НАЙДЕНА!");
+        }
+        else
+        {
+            Debug.Log($"База загружена. Всего предметов: {itemDatabase.TotalItems}");
+        }
+    }
+
+    // Добавить предмет в инвентарь
+    public void AddItem(string itemId, int amount = 1)
+    {
+        ItemData item = itemDatabase.GetItem(itemId);
+        if (item == null) return;
+
+        var targetDict = GetDictionaryByCategory(item.category);
+
+        if (targetDict.ContainsKey(itemId))
+        {
+            targetDict[itemId] += amount;
+        }
+        else
+        {
+            targetDict[itemId] = amount;
+        }
+
+        // Ограничение стека
+        if (targetDict[itemId] > item.maxStackSize)
+            targetDict[itemId] = item.maxStackSize;
+
+        Debug.Log($"Добавлено {amount} × {item.itemName}. Всего: {targetDict[itemId]}");
+    }
+
+    // Убрать предмет из инвентаря
+    public bool RemoveItem(string itemId, int amount = 1)
+    {
+        ItemData item = itemDatabase.GetItem(itemId);
+        if (item == null) return false;
+
+        var dict = GetDictionaryByCategory(item.category);
+
+        if (!dict.ContainsKey(itemId) || dict[itemId] < amount)
+            return false;
+
+        dict[itemId] -= amount;
+        if (dict[itemId] <= 0)
+            dict.Remove(itemId);
+
+        Debug.Log($"Удалено {amount} × {item.itemName}");
+        return true;
+    }
+
+    // Сколько есть предмета
+    public int GetCount(string itemId)
+    {
+        ItemData item = itemDatabase.GetItem(itemId);
+        if (item == null) return 0;
+
+        var dict = GetDictionaryByCategory(item.category);
+        return dict.TryGetValue(itemId, out int count) ? count : 0;
+    }
+
+    // Вспомогательный метод — выбираем правильный словарь
+    private Dictionary<string, int> GetDictionaryByCategory(ItemCategory category)
+    {
+        switch (category)
+        {
+            case ItemCategory.Material: return materials;
+            case ItemCategory.Weapon: return weapons;
+            case ItemCategory.Tool: return tools;
+            case ItemCategory.Consumable: return consumables;
+            default: return others;
+        }
+    }
+
+    // Для теста — посмотреть содержимое (можно потом убрать)
+    public void DebugPrintInventory()
+    {
+        Debug.Log("=== Инвентарь ===");
+        PrintCategory("Материалы", materials);
+        PrintCategory("Оружие", weapons);
+        PrintCategory("Инструменты", tools);
+        PrintCategory("Расходники", consumables);
+        PrintCategory("Прочее", others);
+    }
+
+    private void PrintCategory(string name, Dictionary<string, int> dict)
+    {
+        if (dict.Count == 0) return;
+        Debug.Log($"-- {name} --");
+        foreach (var kvp in dict)
+        {
+            ItemData item = itemDatabase.GetItem(kvp.Key);
+            Debug.Log($"{item?.itemName ?? kvp.Key} × {kvp.Value}");
+        }
+    }
+
+    public Dictionary<string, int> GetMaterials()
+    {
+        return materials;   // возвращаем копию или напрямую
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Wooden_Handle", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Iron_Ore", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Silver", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Long_Handler", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.M)) AddItem("Gold_Money", 15);     // замени на свой id
+
+    }
+
+}
+
+// Assets/Scripts/Inventory/InventoryController.cs
+using UnityEngine;
+
+public class InventoryController : MonoBehaviour
+{
+    [SerializeField] private GameObject inventoryPanel;     // перетащи InventoryPanel
+    [SerializeField] private PlayerMovement playerMovement; // твой скрипт движения игрока
+    [SerializeField] private MouseLook mouseLook;           // твой скрипт взгляда
+
+    private bool isOpen = false;
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            UIManager.Instance.ToggleUI(inventoryPanel);
+
+            if (inventoryPanel.activeSelf)
+            {
+                var inventoryUI = inventoryPanel.GetComponent<InventoryUI>();
+                if (inventoryUI != null) inventoryUI.Refresh();
+            }
+        }
+    }
+
+    private void ToggleInventory(bool open)
+    {
+        inventoryPanel.SetActive(open);
+
+        // Курсор
+        Cursor.visible = open;
+        Cursor.lockState = open ? CursorLockMode.None : CursorLockMode.Locked;
+
+        // Блокировка управления
+        if (playerMovement != null) playerMovement.enabled = !open;
+        if (mouseLook != null) mouseLook.enabled = !open;
+
+        // ← Добавляем обновление инвентаря при открытии
+        if (open)
+        {
+            var inventoryUI = inventoryPanel.GetComponent<InventoryUI>();
+            if (inventoryUI != null)
+            {
+                inventoryUI.Refresh();
+            }
+        }
+    }
+}
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "AlloyDatabase", menuName = "Ignis/Alloy Database")]
+public class AlloyDatabase : ScriptableObject
+{
+    [SerializeField] private List<AlloyRecipe> recipes = new List<AlloyRecipe>();
+
+    // РќР°Р№С‚Рё СЂРµС†РµРїС‚ РїРѕ СЃРїРёСЃРєСѓ ID СЂСѓРґ (СЃРѕСЂС‚РёСЂСѓРµРј РґР»СЏ СЃРѕРІРїР°РґРµРЅРёСЏ)
+    public AlloyRecipe GetRecipe(List<string> oreIds)
+    {
+        oreIds.Sort();
+        string inputKey = string.Join(",", oreIds);
+
+        foreach (var recipe in recipes)
+        {
+            List<string> requiredSorted = new List<string>(recipe.requiredOres);
+            requiredSorted.Sort();
+            string recipeKey = string.Join(",", requiredSorted);
+
+            if (inputKey == recipeKey)
+                return recipe;
+        }
+
+        return null;  // РќРµС‚ СЃРѕРІРїР°РґРµРЅРёСЏ
+    }
+}
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "NewAlloyRecipe", menuName = "Ignis/Alloy Recipe")]
+public class AlloyRecipe : ScriptableObject
+{
+    public string alloyName;                // РќР°Р·РІР°РЅРёРµ СЃРїР»Р°РІР°
+    public ItemData resultItem;             // РЎР»РёС‚РѕРє РїСЂРё СѓСЃРїРµС…Рµ
+    public ItemData slagItem;               // Р‘СЂР°Рє РїСЂРё РЅРµСѓРґР°С‡Рµ (slag)
+    public List<string> requiredOres = new List<string>();  // ID СЂСѓРґ
+    [TextArea(3, 6)]
+    public string description;              // РћРїРёСЃР°РЅРёРµ
+    public int coalRequired = 5;            // РљРѕРЅСЃС‚Р°РЅС‚Р° СѓРіР»СЏ РЅР° СЃС‚Р°СЂС‚Рµ
+    public float minTemp = 1200f;           // РќРёР¶РЅРёР№ РєСЂР°Р№ РґРёР°РїР°Р·РѕРЅР° (В°C)
+    public float maxTemp = 1600f;           // Р’РµСЂС…РЅРёР№ РєСЂР°Р№
+    public float smeltDuration = 10f;       // Р’СЂРµРјСЏ РјРёРЅРё-РёРіСЂС‹ (СЃРµРє)
+}
+using UnityEngine;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
+
+public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+{
+    [HideInInspector] public Transform homeParent;   // РјРёРЅРё-РёРЅРІРµРЅС‚Р°СЂСЊ Content вЂ” СѓСЃС‚Р°РЅР°РІР»РёРІР°РµРј РїСЂРё СЃРѕР·РґР°РЅРёРё СЃР»РѕС‚Р°
+    [HideInInspector] public string itemId;  // в†ђ РґРѕР±Р°РІСЊ СЌС‚Рѕ РїРѕР»Рµ
+
+    private Canvas canvas;
+    private CanvasGroup canvasGroup;
+
+    private void Awake()
+    {
+        canvas = FindObjectOfType<Canvas>();
+        canvasGroup = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        canvasGroup.alpha = 0.6f;
+        canvasGroup.blocksRaycasts = false;
+
+        transform.SetParent(canvas.transform, true);  // РїРѕРІРµСЂС… РІСЃРµРіРѕ
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        transform.position = eventData.position;
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        canvasGroup.alpha = 1f;
+        canvasGroup.blocksRaycasts = true;
+
+        // Raycast РїРѕРґ РєСѓСЂСЃРѕСЂРѕРј вЂ” РёС‰РµРј DropSlot
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = eventData.position
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        bool droppedOnSlot = false;
+        foreach (var result in results)
+        {
+            if (result.gameObject.GetComponent<DropSlot>() != null)
+            {
+                droppedOnSlot = true;
+                break;
+            }
+        }
+
+        if (!droppedOnSlot && homeParent != null)
+        {
+            // Р’РѕР·РІСЂР°С‚ РІ РјРёРЅРё-РёРЅРІРµРЅС‚Р°СЂСЊ (РІ РєРѕРЅРµС† СЃРїРёСЃРєР°)
+            transform.SetParent(homeParent);
+            transform.localPosition = Vector3.zero;
+
+            // в†ђ РґРѕР±Р°РІСЊ СЌС‚Рѕ
+            FurnaceUI furnaceUI = FindObjectOfType<FurnaceUI>();
+            if (furnaceUI != null) furnaceUI.UpdatePreview();
+        }
+        // Р•СЃР»Рё РїРѕРїР°Р»Рё РІ СЃР»РѕС‚ РїРµС‡Рё вЂ” DropSlot СѓР¶Рµ СЃРґРµР»Р°Р» SetParent + С†РµРЅС‚СЂРёСЂРѕРІР°РЅРёРµ
+    }
+}
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+public class DropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+{
+    [SerializeField] private Color highlightColor = new Color(0.8f, 0.9f, 1f);
+
+    private Image backgroundImage;
+
+    private void Awake()
+    {
+        backgroundImage = GetComponent<Image>();
+
+        // Защита на случай, если Image на дочернем объекте (часто бывает)
+        if (backgroundImage == null)
+        {
+            backgroundImage = GetComponentInChildren<Image>();
+        }
+
+        if (backgroundImage == null)
+        {
+            Debug.LogWarning("DropSlot: Image-компонент не найден на слоте " + name);
+        }
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        if (eventData.pointerDrag != null)
+        {
+            eventData.pointerDrag.transform.SetParent(transform);
+            eventData.pointerDrag.transform.localPosition = Vector3.zero;
+            FindObjectOfType<FurnaceUI>().UpdatePreview();  // Вызов preview
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (eventData.pointerDrag != null && backgroundImage != null)
+        {
+            backgroundImage.color = highlightColor;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (backgroundImage != null)
+        {
+            backgroundImage.color = Color.white;
+        }
+    }
+}
+// Assets/Scripts/Items/ItemCategory.cs
+public enum ItemCategory
+{
+    Material,     // Р¶РµР»РµР·Рѕ, РјРµРґСЊ, СѓРіРѕР»СЊ, Р±СЂРѕРЅР·Р° Рё С‚.Рґ.
+    Weapon,       // РіРѕС‚РѕРІС‹Рµ РјРµС‡Рё, РєРёРЅР¶Р°Р»С‹, С‚РѕРїРѕСЂС‹
+    Tool,         // РјРѕР»РѕС‚, РєР»РµС‰Рё, С‚РѕС‡РёР»Рѕ (РµСЃР»Рё Р±СѓРґРµС‚)
+    Consumable,   // РµРґР°, Р·РµР»СЊСЏ, СѓРіРѕР»СЊ РґР»СЏ РїРµС‡РєРё Рё С‚.Рї.
+    Other         // РІСЃС‘, С‡С‚Рѕ РЅРµ РїРѕРґРѕС€Р»Рѕ РІ РґСЂСѓРіРёРµ РєР°С‚РµРіРѕСЂРёРё
+}
+// Assets/Scripts/Items/ItemData.cs
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "New Item", menuName = "Ignis/Item")]
+public class ItemData : ScriptableObject
+{
+    [Header("РћСЃРЅРѕРІРЅРѕРµ")]
+    public string itemName = "РќРѕРІС‹Р№ РїСЂРµРґРјРµС‚";      // РєР°Рє Р±СѓРґРµС‚ РѕС‚РѕР±СЂР°Р¶Р°С‚СЊСЃСЏ РёРіСЂРѕРєСѓ
+    public string id;                               // СѓРЅРёРєР°Р»СЊРЅС‹Р№ РєРѕСЂРѕС‚РєРёР№ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ
+
+    [Header("РљР°С‚РµРіРѕСЂРёСЏ Рё РІРЅРµС€РЅРёР№ РІРёРґ")]
+    public ItemCategory category;                   // РєР°С‚РµРіРѕСЂРёСЏ РїСЂРµРґРјРµС‚Р°
+    public Sprite icon;                             // РёРєРѕРЅРєР° РґР»СЏ UI
+
+    [Header("Р”Р°РЅРЅС‹Рµ РґР»СЏ РёРіСЂС‹")]
+    [Tooltip("РЎРєРѕР»СЊРєРѕ С€С‚СѓРє СЃС‡РёС‚Р°РµС‚СЃСЏ РѕРґРЅРёРј СЃС‚РµРєРѕРј")]
+    public int maxStackSize = 99;                   // СЃС‚РµРє
+
+    [Tooltip("Р‘Р°Р·РѕРІР°СЏ С†РµРЅР° РїРѕРєСѓРїРєРё")]
+    public int basePrice = 10;                      // Р±Р°Р·РѕРІР°СЏ С†РµРЅР°
+
+    [TextArea(3, 6)]
+    public string description = "РћРїРёСЃР°РЅРёРµ РїСЂРµРґРјРµС‚Р°..."; // РѕРїРёСЃР°РЅРёРµ
+}
+// Assets/Scripts/Items/ItemDatabase.cs
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+[CreateAssetMenu(fileName = "ItemDatabase", menuName = "Ignis/Item Database")]
+public class ItemDatabase : ScriptableObject
+{
+    [SerializeField]
+    private List<ItemData> items = new List<ItemData>();
+
+    // Р‘С‹СЃС‚СЂС‹Р№ РїРѕРёСЃРє РїРѕ id (Р±СѓРґРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ РѕС‡РµРЅСЊ С‡Р°СЃС‚Рѕ)
+    private Dictionary<string, ItemData> itemDict;
+
+    private void OnEnable()
+    {
+        // РЎРѕР·РґР°С‘Рј СЃР»РѕРІР°СЂСЊ РїСЂРё Р·Р°РіСЂСѓР·РєРµ Р°СЃСЃРµС‚Р°
+        itemDict = new Dictionary<string, ItemData>();
+
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.id))
+            {
+                Debug.LogWarning($"РЈ РїСЂРµРґРјРµС‚Р° {item.name} РЅРµС‚ id!");
+                continue;
+            }
+
+            if (itemDict.ContainsKey(item.id))
+            {
+                Debug.LogWarning($"Р”СѓР±Р»РёРєР°С‚ id: {item.id} Сѓ РїСЂРµРґРјРµС‚Р° {item.name}");
+                continue;
+            }
+
+            itemDict[item.id] = item;
+        }
+    }
+
+    // РџРѕР»СѓС‡РёС‚СЊ РїСЂРµРґРјРµС‚ РїРѕ СѓРЅРёРєР°Р»СЊРЅРѕРјСѓ id
+    public ItemData GetItem(string id)
+    {
+        if (itemDict == null || itemDict.Count == 0)
+        {
+            Debug.LogError("Р‘Р°Р·Р° РїСЂРµРґРјРµС‚РѕРІ РЅРµ РёРЅРёС†РёР°Р»РёР·РёСЂРѕРІР°РЅР°!");
+            return null;
+        }
+
+        if (itemDict.TryGetValue(id, out ItemData item))
+        {
+            return item;
+        }
+
+        Debug.LogWarning($"РџСЂРµРґРјРµС‚ СЃ id '{id}' РЅРµ РЅР°Р№РґРµРЅ РІ Р±Р°Р·Рµ");
+        return null;
+    }
+
+    public ItemData GetItemByName(string name)
+    {
+        return items.FirstOrDefault(i => i.itemName == name);
+    }
+
+    // РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РїСЂРµРґРјРµС‚С‹ РѕРїСЂРµРґРµР»С‘РЅРЅРѕР№ РєР°С‚РµРіРѕСЂРёРё (СѓРґРѕР±РЅРѕ РґР»СЏ UI)
+    public List<ItemData> GetItemsByCategory(ItemCategory category)
+    {
+        return items.Where(i => i.category == category).ToList();
+    }
+
+    // Р”Р»СЏ РѕС‚Р»Р°РґРєРё вЂ” РїРѕСЃРјРѕС‚СЂРµС‚СЊ СЃРєРѕР»СЊРєРѕ РІСЃРµРіРѕ РїСЂРµРґРјРµС‚РѕРІ
+    public int TotalItems => items.Count;
+}
+public enum CraftCategory
+{
+    Tools,      // Инструменты
+    Weapons,    // Оружия
+    Decorations // Украшения
+}
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "New Recipe", menuName = "Ignis/Recipe")]
+public class RecipeData : ScriptableObject
+{
+    public string recipeName;           // РРјСЏ СЂРµС†РµРїС‚Р° (РѕС‚РѕР±СЂР°Р¶Р°РµС‚СЃСЏ РІ UI)
+    public CraftCategory category;      // РљР°С‚РµРіРѕСЂРёСЏ РґР»СЏ РІРєР»Р°РґРѕРє
+    public List<RequiredItem> requiredItems; // РЎРїРёСЃРѕРє РєРѕРјРїРѕРЅРµРЅС‚РѕРІ
+    public ItemData resultItem;         // Р§С‚Рѕ РїРѕР»СѓС‡Р°РµС‚СЃСЏ
+    public int resultAmount = 1;        // РљРѕР»РёС‡РµСЃС‚РІРѕ СЂРµР·СѓР»СЊС‚Р°С‚Р°
+
+    [System.Serializable]
+    public class RequiredItem
+    {
+        public ItemData item;
+        public int amount = 1;
+    }
+}
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+[CreateAssetMenu(fileName = "RecipeDatabase", menuName = "Ignis/Recipe Database")]
+public class RecipeDatabase : ScriptableObject
+{
+    [SerializeField] private List<RecipeData> recipes = new List<RecipeData>();
+
+    public List<RecipeData> GetRecipesByCategory(CraftCategory category)
+    {
+        return recipes.Where(r => r.category == category).ToList();
+    }
+}
+using UnityEngine;
+
+[System.Serializable]
+public class ActiveQuest
+{
+    public QuestData data;
+    public float remainingTimeSeconds;  // остаток времени в секундах (реал)
+
+    public ActiveQuest(QuestData questData)
+    {
+        data = questData;
+        // 1 сек реал = 1 мин игра, 60 мин/час → timeLimitHours * 60 сек реал
+        remainingTimeSeconds = questData.timeLimitHours * 60f;
+    }
+
+    public bool IsFailed() => remainingTimeSeconds <= 0;
+
+    // ИСПРАВЛЕНО: Метод для форматирования времени в MM:SS
+    public string GetFormattedTime()
+    {
+        int minutes = Mathf.FloorToInt(remainingTimeSeconds / 60f);
+        int seconds = Mathf.FloorToInt(remainingTimeSeconds % 60f);
+        return $"{minutes:00}:{seconds:00}";
+    }
+}
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+
+public class FailMessage : MonoBehaviour
+{
+    [SerializeField] private TMP_Text messageText;
+    [SerializeField] private CanvasGroup canvasGroup;
+
+    private void Awake()
+    {
+        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+        gameObject.SetActive(false);
+    }
+
+    public void Show(string message)
+    {
+        messageText.text = message;
+        StartCoroutine(ShowCoroutine());
+    }
+
+    private IEnumerator ShowCoroutine()
+    {
+        gameObject.SetActive(true);
+        canvasGroup.alpha = 0f;
+        yield return StartCoroutine(Fade(1f, 0.5f));  // fade in
+
+        yield return new WaitForSeconds(3f);
+
+        yield return StartCoroutine(Fade(0f, 0.5f));  // fade out
+        gameObject.SetActive(false);
+    }
+
+    private IEnumerator Fade(float targetAlpha, float duration)
+    {
+        float startAlpha = canvasGroup.alpha;
+        float time = 0;
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, time / duration);
+            yield return null;
+        }
+        canvasGroup.alpha = targetAlpha;
+    }
+}
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "NewQuest", menuName = "Ignis/Quest")]
+public class QuestData : ScriptableObject
+{
+    public string questID;              // СѓРЅРёРєР°Р»СЊРЅС‹Р№ id
+    public string title;                // РЅР°Р·РІР°РЅРёРµ
+    [TextArea(3, 6)]
+    public string description;          // РѕРїРёСЃР°РЅРёРµ
+    public string customerName;         // Р·Р°РєР°Р·С‡РёРє
+
+    public int rewardGold;              // РЅР°РіСЂР°РґР°
+    public float timeLimitHours;        // СЃСЂРѕРє РІ РёРіСЂРѕРІС‹С… С‡Р°СЃР°С…
+
+    [Header("Р§С‚Рѕ РЅСѓР¶РЅРѕ СЃРґР°С‚СЊ")]
+    public string requiredItemID;       // id РїСЂРµРґРјРµС‚Р°
+    public int requiredAmount = 1;
+
+    [Header("РЁС‚СЂР°С„")]
+    public float failPenaltyPercent = 30f;  // % РѕС‚ РЅР°РіСЂР°РґС‹
+}
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "QuestDatabase", menuName = "Ignis/Quest Database")]
+public class QuestDatabase : ScriptableObject
+{
+    [SerializeField] private List<QuestData> quests = new List<QuestData>();
+
+    private Dictionary<string, QuestData> questDict;
+
+    private void OnEnable()
+    {
+        questDict = new Dictionary<string, QuestData>();
+        foreach (var q in quests)
+        {
+            if (!string.IsNullOrEmpty(q.questID))
+                questDict[q.questID] = q;
+        }
+    }
+
+    public List<QuestData> GetAllQuests() => quests;
+
+    public QuestData GetQuestById(string id) =>
+        questDict.TryGetValue(id, out var q) ? q : null;
+
+    // РРЎРџР РђР’Р›Р•РќРћ: РњРµС‚РѕРґС‹ РґР»СЏ РґРёРЅР°РјРёС‡РµСЃРєРѕРіРѕ СѓРїСЂР°РІР»РµРЅРёСЏ (РІС‹Р·С‹РІР°Р№ РёР· РґСЂСѓРіРёС… СЃРєСЂРёРїС‚РѕРІ, РЅР°РїСЂРёРјРµСЂ QuestDatabase.AddQuest(myQuestData);)
+    public void AddQuest(QuestData newQuest)
+    {
+        if (newQuest == null || string.IsNullOrEmpty(newQuest.questID)) return;
+        if (questDict.ContainsKey(newQuest.questID)) return;  // РЅРµ РґСѓР±Р»РёСЂСѓРµРј
+
+        quests.Add(newQuest);
+        questDict[newQuest.questID] = newQuest;
+    }
+
+    public void RemoveQuest(string questID)
+    {
+        if (questDict.TryGetValue(questID, out var q))
+        {
+            quests.Remove(q);
+            questDict.Remove(questID);
+        }
+    }
+
+    public void ClearQuests()
+    {
+        quests.Clear();
+        questDict.Clear();
+    }
+}
+using UnityEngine;
+using System.Collections.Generic;
+using TMPro;
+using System.Collections;
+
+public class QuestManager : MonoBehaviour
+{
+    public static QuestManager Instance { get; private set; }
+
+    [SerializeField] private Inventory playerInventory;  // РїРµСЂРµС‚Р°С‰Рё Inventory
+    [SerializeField] private ItemDatabase itemDatabase;  // РїРµСЂРµС‚Р°С‰Рё
+
+    // Р”РѕР±Р°РІСЊ РІ РЅР°С‡Р°Р»Рѕ РєР»Р°СЃСЃР°, РІ [SerializeField]
+    [Header("HUD РїСЂРѕРІР°Р»Р°")]
+    [SerializeField] private GameObject failMessageCanvas;      // РІРµСЃСЊ Canvas FailMessageCanvas
+    [SerializeField] private TMP_Text failMessageText;          // TextMeshProUGUI РІРЅСѓС‚СЂРё
+    [SerializeField] private CanvasGroup failCanvasGroup;       // CanvasGroup РЅР° Canvas РёР»Рё Panel
+
+    private List<ActiveQuest> activeQuests = new List<ActiveQuest>();  // max 2
+
+    // РРЎРџР РђР’Р›Р•РќРћ: РЈР±СЂР°Р»Рё completedQuestIDs вЂ” РєРІРµСЃС‚С‹ С‚РµРїРµСЂСЊ РїРѕРІС‚РѕСЂСЏРµРјС‹Рµ
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
+        // РЎРєСЂС‹РІР°РµРј HUD РїСЂРё СЃС‚Р°СЂС‚Рµ
+        if (failMessageCanvas != null)
+            failMessageCanvas.SetActive(false);
+    }
+
+    private void Update()
+    {
+        for (int i = activeQuests.Count - 1; i >= 0; i--)
+        {
+            activeQuests[i].remainingTimeSeconds -= Time.deltaTime; 
+            if (activeQuests[i].IsFailed())
+            {
+                FailQuest(i);
+            }
+        }
+    }
+
+    public bool HasFreeSlot() => activeQuests.Count < 2;
+
+    public void AcceptQuest(QuestData quest)
+    {
+        if (!HasFreeSlot()) return;  // РРЎРџР РђР’Р›Р•РќРћ: РЈР±СЂР°Р»Рё РїСЂРѕРІРµСЂРєСѓ РЅР° completed
+
+        activeQuests.Add(new ActiveQuest(quest));
+        Debug.Log($"РџСЂРёРЅСЏС‚ Р·Р°РєР°Р·: {quest.title}");
+    }
+
+    public List<ActiveQuest> GetActiveQuests() => activeQuests;
+
+    public void SubmitQuest(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= activeQuests.Count) return;
+
+        ActiveQuest aq = activeQuests[slotIndex];
+        if (aq.IsFailed()) return;
+
+        // РџСЂРѕРІРµСЂСЏРµРј РЅР°Р»РёС‡РёРµ РїСЂРµРґРјРµС‚Р°
+        if (playerInventory.GetCount(aq.data.requiredItemID) >= aq.data.requiredAmount)
+        {
+            playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
+            playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
+            activeQuests.RemoveAt(slotIndex);
+            Debug.Log($"РЎРґР°РЅ Р·Р°РєР°Р·: {aq.data.title}. РќР°РіСЂР°РґР°: {aq.data.rewardGold}");
+        }
+        else
+        {
+            Debug.Log("РќРµС‚ РЅСѓР¶РЅРѕРіРѕ РїСЂРµРґРјРµС‚Р° РґР»СЏ СЃРґР°С‡Рё!");
+        }
+    }
+
+    private void FailQuest(int slotIndex)
+    {
+        ActiveQuest aq = activeQuests[slotIndex];
+        int penalty = Mathf.RoundToInt(aq.data.rewardGold * (aq.data.failPenaltyPercent / 100f));
+
+        int actualPenalty = Mathf.Min(penalty, playerInventory.GetCount("Gold_Money"));
+        playerInventory.RemoveItem("Gold_Money", actualPenalty);
+
+        activeQuests.RemoveAt(slotIndex);
+
+        string msg = $"РџСЂРѕРІР°Р»РµРЅ Р·Р°РєР°Р·: {aq.data.title}\nРЁС‚СЂР°С„: {actualPenalty} Р·РѕР»РѕС‚Р°";
+        Debug.Log(msg);
+
+        // РџРѕРєР°Р·С‹РІР°РµРј HUD РїСЂСЏРјРѕ Р·РґРµСЃСЊ
+        if (failMessageCanvas != null && failMessageText != null && failCanvasGroup != null)
+        {
+            failMessageText.text = msg;
+            failMessageCanvas.SetActive(true);
+            StartCoroutine(ShowFailMessageCoroutine());
+        }
+    }
+
+    private System.Collections.IEnumerator ShowFailMessageCoroutine()
+    {
+        failCanvasGroup.alpha = 0f;
+
+        // Fade in
+        float time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(0f, 1f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(3f);
+
+        // Fade out
+        time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(1f, 0f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 0f;
+
+        failMessageCanvas.SetActive(false);
+    }
+}
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+
+public class ReferenceManager : MonoBehaviour
+{
+    [Header("UI Elements")]
+    public GameObject referencePanel;           // Р’СЃСЏ РїР°РЅРµР»СЊ СЃРїСЂР°РІРѕС‡РЅРёРєР°
+    public GameObject[] contentPanels;          // РњР°СЃСЃРёРІ РёР· 4 РїР°РЅРµР»РµР№ СЃРїСЂР°РІР°: 0-Р—Р°РґР°РЅРёСЏ, 1-РњР°С‚РµСЂРёР°Р»С‹, 2-РљРѕРІРєР°, 3-РЈРїСЂР°РІР»РµРЅРёРµ
+    public Button[] chapterButtons;             // РњР°СЃСЃРёРІ РёР· 4 РєРЅРѕРїРѕРє СЃР»РµРІР° (РІ С‚РѕРј Р¶Рµ РїРѕСЂСЏРґРєРµ)
+
+    [Header("Player Control")]
+    public PlayerMovement playerMovement;        // РЎРєСЂРёРїС‚ РґРІРёР¶РµРЅРёСЏ РЅР° Player
+    public MouseLook mouseLook;                  // РЎРєСЂРёРїС‚ РѕР±Р·РѕСЂР° РЅР° РєР°РјРµСЂРµ
+
+    [Header("Canvas")]
+    public GameObject uiCanvas;  // РџРµСЂРµС‚Р°С‰РёРј СЃСЋРґР° РІРµСЃСЊ Canvas
+
+    private bool isOpen = false;
+
+    void Start()
+    {
+        // РЎРєСЂС‹РІР°РµРј СЃРїСЂР°РІРѕС‡РЅРёРє РїСЂРё СЃС‚Р°СЂС‚Рµ
+        referencePanel.SetActive(false);
+    }
+
+    void Update()
+    {
+        // РћС‚РєСЂС‹С‚РёРµ/Р·Р°РєСЂС‹С‚РёРµ РїРѕ F
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            ToggleReference();
+        }
+    }
+
+    public void ToggleReference()
+    {
+        isOpen = !isOpen;
+        referencePanel.SetActive(isOpen);
+        uiCanvas.SetActive(isOpen);  // Р’РєР»СЋС‡Р°РµРј РёР»Рё РІС‹РєР»СЋС‡Р°РµРј РІРµСЃСЊ Canvas
+
+        // РЈРїСЂР°РІР»РµРЅРёРµ РєСѓСЂСЃРѕСЂРѕРј Рё РґРІРёР¶РµРЅРёРµРј
+        Cursor.visible = isOpen;
+        Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
+
+        if (playerMovement != null) playerMovement.enabled = !isOpen;
+        if (mouseLook != null) mouseLook.enabled = !isOpen;
+
+        // РџСЂРё РѕС‚РєСЂС‹С‚РёРё РїРѕРєР°Р·С‹РІР°РµРј РїРµСЂРІСѓСЋ РіР»Р°РІСѓ
+        if (isOpen) ShowChapter(0);
+    }
+
+    public void ShowChapter(int index)
+    {
+        // Р’С‹РєР»СЋС‡Р°РµРј РІСЃРµ РїР°РЅРµР»Рё СЃРїСЂР°РІР°
+        foreach (GameObject panel in contentPanels)
+        {
+            panel.SetActive(false);
+        }
+
+        // Р’РєР»СЋС‡Р°РµРј РІС‹Р±СЂР°РЅРЅСѓСЋ
+        if (index < contentPanels.Length)
+        {
+            contentPanels[index].SetActive(true);
+        }
+
+        // РџРѕРґСЃРІРµС‡РёРІР°РµРј Р°РєС‚РёРІРЅСѓСЋ РєРЅРѕРїРєСѓ (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, РјРѕР¶РЅРѕ СѓР±СЂР°С‚СЊ)
+        for (int i = 0; i < chapterButtons.Length; i++)
+        {
+            ColorBlock colors = chapterButtons[i].colors;
+            colors.normalColor = (i == index) ? new Color(0.3f, 0.6f, 1f) : Color.white;
+            chapterButtons[i].colors = colors;
+        }
+    }
+
+    // Р’С‹Р·РѕРІРµС‚СЃСЏ СЃ РєРЅРѕРїРєРё "X"
+    public void CloseReference()
+    {
+        if (isOpen) ToggleReference();
+    }
+}
+// Assets/Scripts/Managers/UIManager.cs
+using UnityEngine;
+
+public class UIManager : MonoBehaviour
+{
+    public static UIManager Instance;
+
+    public GameObject currentUI = null;     // ← временно public для отладки
+
+    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private MouseLook mouseLook;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    // Попытка открыть конкретный UI (вызывается из контроллеров)
+    public bool TryOpenUI(GameObject uiPanel)
+    {
+        if (currentUI != null && currentUI != uiPanel)
+            return false;  // уже открыт другой → отказ
+
+        SetUI(uiPanel);
+        return true;
+    }
+
+    // Toggle для конкретного UI (Tab, F и т.д.)
+    public void ToggleUI(GameObject uiPanel)
+    {
+        if (currentUI == uiPanel)
+            SetUI(null);       // закрываем текущий
+        else if (currentUI == null)
+            SetUI(uiPanel);    // открываем только если ничего не открыто
+        // иначе — ничего не делаем (другой UI открыт)
+    }
+
+    // Принудительное закрытие текущего (Esc)
+    public void CloseCurrent()
+    {
+        SetUI(null);
+    }
+
+    private void SetUI(GameObject uiPanel)
+    {
+        if (currentUI != null)
+            currentUI.SetActive(false);
+
+        currentUI = uiPanel;
+
+        if (uiPanel != null)
+            uiPanel.SetActive(true);
+
+        UpdateControls();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape) && currentUI != null)
+        {
+            CloseCurrent();
+        }
+    }
+
+    private void UpdateControls()
+    {
+        bool uiOpen = currentUI != null;
+
+        Cursor.visible = uiOpen;
+        Cursor.lockState = uiOpen ? CursorLockMode.None : CursorLockMode.Locked;
+
+        if (playerMovement != null) playerMovement.enabled = !uiOpen;
+        if (mouseLook != null) mouseLook.enabled = !uiOpen;
+    }
+}
+// Assets/Scripts/Player/PlayerInteraction.cs
+using UnityEngine;
+
+public class PlayerInteraction : MonoBehaviour
+{
+    [SerializeField] private float interactionDistance = 3f;
+    [SerializeField] private LayerMask interactableLayer;   // слой Interactable
+    [SerializeField] private ShopUI shopUI;  // Перетащи ShopUI из сцены
+    [SerializeField] private QuestBoardUI questBoardUI;
+
+    private Camera playerCamera;
+
+    // Ссылки на UI-менеджеры
+    private FurnaceUI furnaceUI;
+    private AnvilUI anvilUI;
+
+    // Флаги открытых интерфейсов
+    private bool isFurnaceOpen = false;
+    private bool isAnvilOpen = false;
+    private bool isShopOpen = false;
+    private bool isQuestBoardOpen = false;
+
+    private void Awake()
+    {
+        playerCamera = GetComponentInChildren<Camera>();
+
+        // Находим нужные скрипты (лучше перетащить в инспекторе, но FindObjectOfType — запасной вариант)
+        furnaceUI = FindObjectOfType<FurnaceUI>();
+        anvilUI = FindObjectOfType<AnvilUI>();
+        shopUI = FindObjectOfType<ShopUI>();
+
+        if (shopUI == null) Debug.LogError("ShopUI не найден!");
+        if (furnaceUI == null) Debug.LogError("FurnaceUI не найден в сцене!");
+        if (anvilUI == null) Debug.LogWarning("AnvilUI не найден — интерфейс наковальни работать не будет.");
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward,
+                               out hit, interactionDistance, interactableLayer))
+            {
+                if (hit.collider.CompareTag("Furnace"))
+                    furnaceUI.ToggleFurnace();
+
+                else if (hit.collider.CompareTag("Anvil") && anvilUI != null)
+                    anvilUI.ToggleAnvil();
+
+                else if (hit.collider.CompareTag("ShopTable") && shopUI != null)
+                    shopUI.ToggleShop();
+
+                else if (hit.collider.CompareTag("QuestBoard") && questBoardUI != null)
+                    questBoardUI.ToggleQuestBoard();
+            }
+        }
+    }
+}
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
+
+public class AnvilUI : MonoBehaviour
+{
+    [Header("РЎСЃС‹Р»РєРё")]
+    [SerializeField] private Inventory playerInventory;
+    [SerializeField] private ItemDatabase itemDatabase;
+    [SerializeField] private RecipeDatabase recipeDatabase;
+    [SerializeField] private GameObject anvilCanvasRoot;
+    [SerializeField] private Transform recipeListContent;
+    [SerializeField] private GameObject recipeSlotPrefab;
+    [SerializeField] private Transform craftSlotsParent;
+    [SerializeField] private GameObject craftSlotPrefab;
+    [SerializeField] private Button toolsButton, weaponsButton, decorationsButton;
+
+    [Header("РљСЂР°С„С‚")]
+    [SerializeField] private Button craftButton;
+    [SerializeField] private TMP_Text successText;
+    [SerializeField] private TMP_Text errorText;
+    [SerializeField] private TMP_Text recipeNameText;
+    [SerializeField] private TMP_Text resultInventoryCountText;
+
+    private RecipeData selectedRecipe = null;
+    private int craftCount = 0;
+
+    [Header("Р¦РІРµС‚Р° СЃР»РѕС‚РѕРІ")]
+    [SerializeField] private Color availableColor = new Color(1f, 1f, 0.5f, 0.5f);
+    [SerializeField] private Color missingColor = new Color(1f, 0.2f, 0.2f, 0.5f);
+
+    private CraftCategory currentCategory = CraftCategory.Tools;
+    private List<GameObject> spawnedRecipeSlots = new List<GameObject>();
+    private List<GameObject> spawnedCraftSlots = new List<GameObject>();
+    private bool isCrafting = false;
+
+    private void Start()
+    {
+        if (recipeDatabase == null)
+        {
+            Debug.LogError("AnvilUI: RecipeDatabase РќР• РќРђР—РќРђР§Р•Рќ РІ РёРЅСЃРїРµРєС‚РѕСЂРµ!");
+            return;
+        }
+
+        if (recipeNameText != null) recipeNameText.text = "Р’С‹Р±РµСЂРёС‚Рµ СЂРµС†РµРїС‚";
+        if (resultInventoryCountText != null) resultInventoryCountText.text = "";
+
+        toolsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Tools));
+        weaponsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Weapons));
+        decorationsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Decorations));
+
+        ShowCategory(CraftCategory.Weapons);
+
+        if (craftButton != null)
+        {
+            craftButton.onClick.AddListener(TryCraft);
+            craftButton.interactable = false;
+        }
+
+        if (successText != null) successText.text = "";
+        if (errorText != null) errorText.text = "";
+    }
+
+    public void ToggleAnvil()
+    {
+        if (UIManager.Instance.TryOpenUI(anvilCanvasRoot))
+        {
+            ShowCategory(currentCategory);
+            ClearCraftSlots();
+            UpdateCraftSlotAmounts();
+            ClearFeedbackTexts();
+            ResetCraftCount();
+        }
+    }
+
+    private void OnDisable()
+    {
+        ClearRecipeList();
+        ClearCraftSlots();
+        selectedRecipe = null;
+        ClearFeedbackTexts();
+        ResetCraftCount();
+    }
+
+    private void ClearFeedbackTexts()
+    {
+        if (successText != null) successText.text = "";
+        if (errorText != null) errorText.text = "";
+    }
+
+    private void ResetCraftCount()
+    {
+        craftCount = 0;
+        if (successText != null) successText.text = "";
+        if (recipeNameText != null) recipeNameText.text = "Р’С‹Р±РµСЂРёС‚Рµ СЂРµС†РµРїС‚";
+        UpdateResultInventoryCount();
+    }
+
+    private void ShowCategory(CraftCategory category)
+    {
+        currentCategory = category;
+        ClearRecipeList();
+        ClearCraftSlots();
+        ClearFeedbackTexts();
+        ResetCraftCount();
+        selectedRecipe = null;
+
+        if (craftButton != null) craftButton.interactable = false;
+
+        var recipes = recipeDatabase.GetRecipesByCategory(category);
+        foreach (var recipe in recipes)
+        {
+            GameObject slot = Instantiate(recipeSlotPrefab, recipeListContent);
+            TMP_Text nameText = slot.GetComponentInChildren<TMP_Text>();
+            if (nameText) nameText.text = recipe.recipeName;
+
+            Button btn = slot.GetComponent<Button>();
+            if (btn != null)
+            {
+                btn.onClick.AddListener(() => ShowCraftSlots(recipe));
+            }
+            else
+            {
+                Debug.LogError($"Р’ РїСЂРµС„Р°Р±Рµ СЂРµС†РµРїС‚Р° {recipe.recipeName} РЅРµС‚ РєРѕРјРїРѕРЅРµРЅС‚Р° Button!", slot);
+            }
+
+            spawnedRecipeSlots.Add(slot);
+        }
+    }
+
+    private void ShowCraftSlots(RecipeData recipe)
+    {
+        selectedRecipe = recipe;
+        ClearCraftSlots();
+        ClearFeedbackTexts();
+        ResetCraftCount();
+
+        if (recipeNameText != null)
+        {
+            recipeNameText.text = recipe.recipeName;
+            Debug.Log($"РЈСЃС‚Р°РЅРѕРІР»РµРЅРѕ РЅР°Р·РІР°РЅРёРµ СЂРµС†РµРїС‚Р°: {recipe.recipeName}");
+        }
+
+        UpdateResultInventoryCount();
+        Debug.Log($"РџРѕРєР°Р·С‹РІР°РµРј СЂРµС†РµРїС‚: {recipe.recipeName}. РљРѕРјРїРѕРЅРµРЅС‚РѕРІ: {recipe.requiredItems.Count}");
+
+        bool canCraft = true;
+
+        foreach (var req in recipe.requiredItems)
+        {
+            if (req.item == null)
+            {
+                Debug.LogError($"Р’ СЂРµС†РµРїС‚Рµ {recipe.recipeName} РѕРґРёРЅ РёР· requiredItems РёРјРµРµС‚ item = null!");
+                canCraft = false;
+                continue;
+            }
+
+            Debug.Log($"РЎРѕР·РґР°СЋ СЃР»РѕС‚ РґР»СЏ: {req.item.itemName} x {req.amount}");
+
+            GameObject slot = Instantiate(craftSlotPrefab, craftSlotsParent);
+
+            Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
+            if (icon != null && req.item.icon != null)
+                icon.sprite = req.item.icon;
+
+            TMP_Text nameText = slot.transform.Find("Name")?.GetComponent<TMP_Text>();
+            if (nameText != null)
+                nameText.text = req.item.itemName;
+
+            TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
+            int have = playerInventory.GetCount(req.item.id);
+            if (amountText != null)
+                amountText.text = $"{have}/{req.amount}";
+
+            Image bg = slot.GetComponent<Image>();
+            if (bg != null)
+                bg.color = (have >= req.amount) ? availableColor : missingColor;
+
+            if (have < req.amount)
+                canCraft = false;
+
+            spawnedCraftSlots.Add(slot);
+        }
+
+        if (craftButton != null)
+        {
+            craftButton.interactable = canCraft;
+            Debug.Log($"РљРЅРѕРїРєР° РєСЂР°С„С‚Р° Р°РєС‚РёРІРЅР°: {canCraft}");
+        }
+
+        if (!canCraft && errorText != null)
+        {
+            errorText.text = "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РјР°С‚РµСЂРёР°Р»РѕРІ РґР»СЏ СЌС‚РѕРіРѕ СЂРµС†РµРїС‚Р°";
+        }
+    }
+
+    public void TryCraft()
+    {
+        Debug.Log("=== TryCraft РІС‹Р·РІР°РЅ ===");
+        if (isCrafting)
+        {
+            Debug.Log("TryCraft РІС‹Р·РІР°РЅ РїРѕРІС‚РѕСЂРЅРѕ вЂ” РёРіРЅРѕСЂРёСЂСѓРµРј");
+            return;
+        }
+
+        isCrafting = true;
+        Debug.Log("=== TryCraft РЅР°С‡Р°С‚ ===");
+
+        if (selectedRecipe == null) return;
+
+        bool canCraft = true;
+        foreach (var req in selectedRecipe.requiredItems)
+        {
+            int currentCount = playerInventory.GetCount(req.item.id);
+            if (currentCount < req.amount)
+            {
+                canCraft = false;
+                break;
+            }
+        }
+
+        if (!canCraft)
+        {
+            if (errorText != null)
+                errorText.text = "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РјР°С‚РµСЂРёР°Р»РѕРІ!";
+            if (successText != null)
+                successText.text = "";
+            return;
+        }
+
+        foreach (var req in selectedRecipe.requiredItems)
+        {
+            playerInventory.RemoveItem(req.item.id, req.amount);
+        }
+
+        playerInventory.AddItem(selectedRecipe.resultItem.id, selectedRecipe.resultAmount);
+        UpdateResultInventoryCount();
+
+        craftCount += selectedRecipe.resultAmount;
+        if (successText != null)
+        {
+            successText.text = $"РЎРѕР·РґР°РЅРѕ: {selectedRecipe.resultItem.itemName} Г— {craftCount}";
+        }
+
+        if (errorText != null)
+            errorText.text = "";
+
+        UpdateCraftSlotAmounts();
+
+        bool stillCanCraft = true;
+        foreach (var req in selectedRecipe.requiredItems)
+        {
+            if (playerInventory.GetCount(req.item.id) < req.amount)
+            {
+                stillCanCraft = false;
+                break;
+            }
+        }
+
+        craftButton.interactable = stillCanCraft;
+        if (!stillCanCraft && errorText != null)
+            errorText.text = "РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РґР»СЏ РїРѕРІС‚РѕСЂРЅРѕРіРѕ РєСЂР°С„С‚Р°";
+
+        isCrafting = false;
+    }
+
+    private void UpdateCraftSlotAmounts()
+    {
+        if (selectedRecipe == null) return;
+
+        for (int i = 0; i < spawnedCraftSlots.Count; i++)
+        {
+            GameObject slot = spawnedCraftSlots[i];
+            if (slot == null) continue;
+
+            var req = selectedRecipe.requiredItems[i];
+            int have = playerInventory.GetCount(req.item.id);
+
+            TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
+            if (amountText != null)
+            {
+                amountText.text = $"{have}/{req.amount}";
+            }
+
+            Image bg = slot.GetComponent<Image>();
+            if (bg != null)
+            {
+                bg.color = (have >= req.amount) ? availableColor : missingColor;
+            }
+        }
+
+        UpdateResultInventoryCount();
+    }
+
+    private void ClearRecipeList()
+    {
+        foreach (var slot in spawnedRecipeSlots) Destroy(slot);
+        spawnedRecipeSlots.Clear();
+    }
+
+    private void ClearCraftSlots()
+    {
+        foreach (var slot in spawnedCraftSlots) Destroy(slot);
+        spawnedCraftSlots.Clear();
+
+        if (craftButton != null) craftButton.interactable = false;
+        ClearFeedbackTexts();
+    }
+
+    private void UpdateResultInventoryCount()
+    {
+        if (resultInventoryCountText == null) return;
+        if (selectedRecipe == null || selectedRecipe.resultItem == null)
+        {
+            resultInventoryCountText.text = "";
+            return;
+        }
+
+        int count = playerInventory.GetCount(selectedRecipe.resultItem.id);
+        resultInventoryCountText.text = $"Р’ РёРЅРІРµРЅС‚Р°СЂРµ: {count}";
+    }
+}
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Linq;
+using System;
+
+public class FurnaceUI : MonoBehaviour
+{
+    [Header("Ссылки")]
+    [SerializeField] private Inventory playerInventory;
+    [SerializeField] private Transform miniInventoryContent;
+    [SerializeField] private GameObject slotPrefab;
+    [SerializeField] private ItemDatabase itemDatabase;
+    [SerializeField] private GameObject furnaceCanvasRoot;
+    [SerializeField] private AlloyDatabase alloyDatabase;
+
+    [Header("Какие руды можно плавить")]
+    [SerializeField] private List<string> smeltableItemIds = new List<string>();
+
+    [Header("Настройки")]
+    [SerializeField] private float heatPerCoal = 300f;
+    [SerializeField] private float temperatureDecay = 50f;
+    [SerializeField] private float maxTemperature = 2000f;
+
+    [Header("UI Элементы")]
+    [SerializeField] private Button igniteButton;
+    [SerializeField] private Button bellowsButton;
+    [SerializeField] private Button cancelButton;
+    [SerializeField] private Slider tempBar;
+    [SerializeField] private Slider brokBar;
+    [SerializeField] private Slider readinessBar;
+    [SerializeField] private TMP_Text previewName;
+    [SerializeField] private TMP_Text previewDescription;
+    [SerializeField] private TMP_Text coalText;
+    [SerializeField] private TMP_Text tempLabel;
+    [SerializeField] private TMP_Text noCoalWarning;
+    [SerializeField] private Image previewIcon;
+    [SerializeField] private Transform[] oreSlots = new Transform[4];
+
+    private List<GameObject> spawnedSlots = new List<GameObject>();
+    private bool isSmelting = false;
+    private bool miniGameActive = false;
+    private float currentTemperature = 0f;
+    private float brokProgress = 0f;
+    private float readinessProgress = 0f;
+    private AlloyRecipe currentRecipe = null;
+    private float timer = 0f;
+    private const float decayInterval = 0.2f;
+
+    private void Start()
+    {
+        igniteButton.onClick.AddListener(OnIgniteButtonPressed);
+        bellowsButton.onClick.AddListener(OnBellowsPressed);
+        cancelButton.onClick.AddListener(CancelSmelting);
+        bellowsButton.gameObject.SetActive(false);
+        cancelButton.gameObject.SetActive(false);
+        noCoalWarning.gameObject.SetActive(false);
+    }
+
+    public void ToggleFurnace()
+    {
+        if (UIManager.Instance.TryOpenUI(furnaceCanvasRoot))
+        {
+            RefreshMiniInventory();
+            UpdatePreview();
+            UpdateCoalText();
+        }
+    }
+
+    private void OnDisable()
+    {
+        ReturnOresToInventory();
+        ClearFurnaceSlots();
+    }
+
+    private void RefreshMiniInventory()
+    {
+        ClearMiniInventory();
+        var materialsDict = playerInventory.GetMaterials();
+
+        Debug.Log("Все id материалов в инвентаре: " + string.Join(", ", materialsDict.Keys));
+
+        foreach (var kvp in materialsDict)
+        {
+            if (kvp.Value <= 0) continue;
+            if (!smeltableItemIds.Any(id => string.Equals(id, kvp.Key, StringComparison.OrdinalIgnoreCase))) continue;
+
+            ItemData item = itemDatabase.GetItem(kvp.Key);
+            if (item == null) continue;
+
+            GameObject slot = Instantiate(slotPrefab, miniInventoryContent);
+
+            Image iconImage = slot.transform.Find("Icon")?.GetComponent<Image>();
+            if (iconImage != null && item.icon != null) iconImage.sprite = item.icon;
+
+            TMP_Text nameText = slot.transform.Find("Name")?.GetComponent<TMP_Text>();
+            if (nameText != null) nameText.text = item.itemName;
+
+            TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
+            if (amountText != null) amountText.text = kvp.Value.ToString();
+
+            DraggableItem draggable = slot.GetComponent<DraggableItem>() ?? slot.AddComponent<DraggableItem>();
+            draggable.homeParent = miniInventoryContent;
+            draggable.itemId = item.id;
+
+            spawnedSlots.Add(slot);
+        }
+    }
+
+    private void ClearMiniInventory()
+    {
+        foreach (var slot in spawnedSlots)
+            if (slot != null) Destroy(slot.gameObject);
+
+        spawnedSlots.Clear();
+    }
+
+    public void UpdatePreview()
+    {
+        List<string> loadedOres = new List<string>();
+        for (int i = 0; i < 4; i++)
+        {
+            if (oreSlots[i].childCount > 0)
+            {
+                DraggableItem slotDraggable = oreSlots[i].GetChild(0).GetComponent<DraggableItem>();
+                if (slotDraggable != null && !string.IsNullOrEmpty(slotDraggable.itemId))
+                    loadedOres.Add(slotDraggable.itemId);
+            }
+        }
+
+        currentRecipe = alloyDatabase.GetRecipe(loadedOres);
+
+        if (currentRecipe == null)
+        {
+            previewName.text = "Неизвестный сплав";
+            previewDescription.text = "Такого сплава не бывает";
+            previewIcon.gameObject.SetActive(false);
+            igniteButton.interactable = false;
+        }
+        else
+        {
+            previewName.text = currentRecipe.alloyName;
+            previewDescription.text = $"{currentRecipe.description}\nУголь: {currentRecipe.coalRequired}\nДиапазон: {currentRecipe.minTemp}-{currentRecipe.maxTemp}°C\nВремя: {currentRecipe.smeltDuration} сек";
+            previewIcon.sprite = currentRecipe.resultItem.icon;
+            previewIcon.gameObject.SetActive(true);
+            igniteButton.interactable = true;
+        }
+    }
+
+    public void OnIgniteButtonPressed()
+    {
+        if (isSmelting || miniGameActive || currentRecipe == null) return;
+
+        if (playerInventory.GetCount("Coal") < currentRecipe.coalRequired)
+        {
+            noCoalWarning.gameObject.SetActive(true);
+            return;
+        }
+
+        playerInventory.RemoveItem("Coal", currentRecipe.coalRequired);
+        UpdateCoalText();
+
+        isSmelting = true;
+        miniGameActive = true;
+        ConsumeOresFromSlots();
+
+        currentTemperature = 0f;
+        brokProgress = 0f;
+        readinessProgress = 0f;
+        tempBar.value = 0f;
+        tempLabel.text = "0°C";
+        brokBar.value = 0f;
+        readinessBar.value = 0f;
+
+        DisableSlotDragging(true);
+        bellowsButton.gameObject.SetActive(true);
+        cancelButton.gameObject.SetActive(true);
+        igniteButton.interactable = false;
+        noCoalWarning.gameObject.SetActive(false);
+    }
+
+    private void OnBellowsPressed()
+    {
+        currentTemperature += heatPerCoal;
+        currentTemperature = Mathf.Min(currentTemperature, maxTemperature);
+        tempBar.value = currentTemperature / maxTemperature;
+        tempLabel.text = Mathf.RoundToInt(currentTemperature) + "°C";
+    }
+
+    private void Update()
+    {
+        if (!miniGameActive) return;
+
+        timer += Time.deltaTime;
+        if (timer >= decayInterval)
+        {
+            currentTemperature -= temperatureDecay * decayInterval;
+            currentTemperature = Mathf.Max(currentTemperature, 0f);
+            tempBar.value = currentTemperature / maxTemperature;
+            tempLabel.text = Mathf.RoundToInt(currentTemperature) + "°C";
+            timer = 0f;
+        }
+
+        float deltaTime = Time.deltaTime / currentRecipe.smeltDuration;
+
+        if (currentTemperature < currentRecipe.minTemp || currentTemperature > currentRecipe.maxTemp)
+        {
+            brokProgress += deltaTime;
+            brokBar.value = brokProgress;
+
+            if (brokProgress >= 1f)
+            {
+                FinishWithSlag();
+            }
+        }
+        else
+        {
+            readinessProgress += deltaTime;
+            readinessBar.value = readinessProgress;
+
+            if (readinessProgress >= 1f)
+            {
+                FinishSmelting();
+            }
+        }
+
+        cancelButton.gameObject.SetActive(readinessProgress < 0.3f);
+    }
+
+    private void FinishSmelting()
+    {
+        miniGameActive = false;
+        isSmelting = false;
+        playerInventory.AddItem(currentRecipe.resultItem.id, 1);
+        previewDescription.text = "Готово: " + currentRecipe.alloyName;
+        ResetFurnace();
+    }
+
+    private void FinishWithSlag()
+    {
+        miniGameActive = false;
+        isSmelting = false;
+        playerInventory.AddItem(currentRecipe.slagItem.id, 1);
+        previewDescription.text = "Брак: шлак";
+        ResetFurnace();
+    }
+
+    private void ResetFurnace()
+    {
+        bellowsButton.gameObject.SetActive(false);
+        cancelButton.gameObject.SetActive(false);
+        igniteButton.interactable = true;
+        DisableSlotDragging(false);
+        ClearFurnaceSlots();
+        UpdatePreview();
+        tempLabel.text = "0°C";
+        brokBar.value = 0f;
+        readinessBar.value = 0f;
+        RefreshMiniInventory();
+    }
+
+    private void CancelSmelting()
+    {
+        if (!isSmelting || readinessProgress >= 0.3f) return;
+
+        ReturnOresToInventory();
+
+        isSmelting = false;
+        miniGameActive = false;
+        currentTemperature = 0f;
+        brokProgress = 0f;
+        readinessProgress = 0f;
+        tempBar.value = 0f;
+        tempLabel.text = "0°C";
+        brokBar.value = 0f;
+        readinessBar.value = 0f;
+
+        bellowsButton.gameObject.SetActive(false);
+        cancelButton.gameObject.SetActive(false);
+        igniteButton.interactable = true;
+        DisableSlotDragging(false);
+        ClearFurnaceSlots();
+        UpdatePreview();
+        RefreshMiniInventory();
+        previewDescription.text = "";
+    }
+
+    private void ConsumeOresFromSlots()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (oreSlots[i].childCount > 0)
+            {
+                GameObject slotObj = oreSlots[i].GetChild(0).gameObject;
+                DraggableItem slotDraggable = slotObj.GetComponent<DraggableItem>();
+                TMP_Text amountText = slotObj.transform.Find("Amount")?.GetComponent<TMP_Text>();
+
+                if (slotDraggable != null && amountText != null && !string.IsNullOrEmpty(slotDraggable.itemId))
+                {
+                    playerInventory.RemoveItem(slotDraggable.itemId, 1);
+                    int newAmount = int.Parse(amountText.text) - 1;
+                    amountText.text = newAmount.ToString();
+                    if (newAmount <= 0) Destroy(slotObj);
+                }
+            }
+        }
+        UpdatePreview();
+    }
+
+    private void ReturnOresToInventory()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (oreSlots[i].childCount > 0)
+            {
+                GameObject slotObj = oreSlots[i].GetChild(0).gameObject;
+                DraggableItem slotDraggable = slotObj.GetComponent<DraggableItem>();
+                TMP_Text amountText = slotObj.transform.Find("Amount")?.GetComponent<TMP_Text>();
+
+                if (slotDraggable != null && amountText != null && !string.IsNullOrEmpty(slotDraggable.itemId))
+                {
+                    playerInventory.AddItem(slotDraggable.itemId, 1);
+                    int newAmount = int.Parse(amountText.text) + 1;
+                    amountText.text = newAmount.ToString();
+                }
+                Destroy(slotObj);
+            }
+        }
+    }
+
+    private void DisableSlotDragging(bool disable)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (oreSlots[i].childCount > 0)
+            {
+                DraggableItem draggable = oreSlots[i].GetChild(0).GetComponent<DraggableItem>();
+                if (draggable != null) draggable.enabled = !disable;
+            }
+        }
+    }
+
+    private void ClearFurnaceSlots()
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (oreSlots[i].childCount > 0)
+                Destroy(oreSlots[i].GetChild(0).gameObject);
+        }
+    }
+
+    private void UpdateCoalText()
+    {
+        coalText.text = "Уголь: " + playerInventory.GetCount("Coal");
+    }
+}
+// Assets/Scripts/Inventory/InventoryUI.cs
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
+
+public class InventoryUI : MonoBehaviour
+{
+    [Header("РЎСЃС‹Р»РєРё")]
+    [SerializeField] private Inventory inventory;           // СЃСЃС‹Р»РєР° РЅР° РЅР°С€ РёРЅРІРµРЅС‚Р°СЂСЊ
+    [SerializeField] private ItemDatabase itemDatabase;     // Р±Р°Р·Р° РїСЂРµРґРјРµС‚РѕРІ
+    [SerializeField] private GameObject slotPrefab;         // РїСЂРµС„Р°Р± СЃР»РѕС‚Р°
+    [SerializeField] private Transform contentParent;       // Content РІРЅСѓС‚СЂРё ScrollView
+
+    [Header("Р’РєР»Р°РґРєРё")]
+    [SerializeField] private Button materialsButton;
+    [SerializeField] private Button weaponsButton;
+    [SerializeField] private Button toolsButton;
+    [SerializeField] private Button otherButton;
+
+
+    private ItemCategory currentCategory = ItemCategory.Material;
+
+    private void Start()
+    {
+        // РџРѕРґРєР»СЋС‡Р°РµРј РєРЅРѕРїРєРё РІРєР»Р°РґРѕРє
+        materialsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Material));
+        weaponsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Weapon));
+        toolsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Tool));
+        otherButton.onClick.AddListener(() => ShowCategory(ItemCategory.Other));
+
+        // РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ РїРѕРєР°Р·С‹РІР°РµРј РјР°С‚РµСЂРёР°Р»С‹
+        ShowCategory(ItemCategory.Material);
+
+        // РќР°С‡Р°Р»СЊРЅРѕРµ РІС‹РґРµР»РµРЅРёРµ
+        HighlightButton(materialsButton);
+    }
+
+    public void ShowCategory(ItemCategory category)
+    {
+        Button targetButton = GetButtonForCategory(category);
+        if (targetButton != null) HighlightButton(targetButton);
+
+        currentCategory = category;
+        ClearSlots();
+
+        // РџРѕР»СѓС‡Р°РµРј РІСЃРµ РїСЂРµРґРјРµС‚С‹ СЌС‚РѕР№ РєР°С‚РµРіРѕСЂРёРё
+        List<ItemData> items = itemDatabase.GetItemsByCategory(category);
+
+        foreach (ItemData item in items)
+        {
+            int count = inventory.GetCount(item.id);
+            if (count <= 0) continue;  // РЅРµ РїРѕРєР°Р·С‹РІР°РµРј РїСЂРµРґРјРµС‚С‹ СЃ РЅСѓР»РµРІС‹Рј РєРѕР»РёС‡РµСЃС‚РІРѕРј
+
+            CreateSlot(item, count);
+        }
+    }
+
+    private void ClearSlots()
+    {
+        foreach (Transform child in contentParent)
+        {
+            Destroy(child.gameObject);
+        }
+    }
+
+    private void CreateSlot(ItemData item, int amount)
+    {
+        GameObject slot = Instantiate(slotPrefab, contentParent);
+
+        // РРєРѕРЅРєР°
+        Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
+        if (icon != null && item.icon != null)
+            icon.sprite = item.icon;
+
+        // РљРѕР»РёС‡РµСЃС‚РІРѕ
+        TextMeshProUGUI amountText = slot.transform.Find("Amount")?.GetComponent<TextMeshProUGUI>();
+        if (amountText != null)
+            amountText.text = amount.ToString();
+
+        // РќР°Р·РІР°РЅРёРµ
+        TextMeshProUGUI nameText = slot.transform.Find("Name")?.GetComponent<TextMeshProUGUI>();
+        if (nameText != null)
+            nameText.text = item.itemName;
+    }
+
+    // Р’С‹Р·С‹РІР°С‚СЊ РїСЂРё РѕС‚РєСЂС‹С‚РёРё РёРЅРІРµРЅС‚Р°СЂСЏ
+    public void Refresh()
+    {
+        ShowCategory(currentCategory);
+    }
+
+    // Р”РѕР±Р°РІСЊ РІ РєРѕРЅРµС† РєР»Р°СЃСЃР° InventoryUI.cs СЌС‚Рё РїРѕР»СЏ Рё РјРµС‚РѕРґС‹
+
+    [Header("Р’РёР·СѓР°Р»СЊРЅРѕРµ РІС‹РґРµР»РµРЅРёРµ РІРєР»Р°РґРѕРє")]
+    [SerializeField] private Color normalColor = new Color(0.2f, 0.2f, 0.2f, 1f);    // РѕР±С‹С‡РЅС‹Р№ С„РѕРЅ
+    [SerializeField] private Color selectedColor = new Color(0.4f, 0.4f, 0.6f, 1f);  // РІС‹РґРµР»РµРЅРЅС‹Р№
+
+    private Button currentActiveButton = null;
+
+    private void HighlightButton(Button button)
+    {
+        if (currentActiveButton != null)
+        {
+            var img = currentActiveButton.GetComponent<Image>();
+            if (img != null) img.color = normalColor;
+        }
+
+        currentActiveButton = button;
+
+        var activeImg = button.GetComponent<Image>();
+        if (activeImg != null) activeImg.color = selectedColor;
+    }
+
+    private Button GetButtonForCategory(ItemCategory category)
+    {
+        switch (category)
+        {
+            case ItemCategory.Material: return materialsButton;
+            case ItemCategory.Weapon: return weaponsButton;
+            case ItemCategory.Tool: return toolsButton;
+            case ItemCategory.Other: return otherButton;
+            default: return materialsButton; // Р·Р°РїР°СЃРЅРѕР№ РІР°СЂРёР°РЅС‚
+        }
+    }
+}
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
+
+public class QuestBoardUI : MonoBehaviour
+{
+    [Header("РЎСЃС‹Р»РєРё")]
+    [SerializeField] private QuestDatabase questDatabase;
+    [SerializeField] private ItemDatabase itemDatabase;
+    [SerializeField] private Transform availableContent;
+    [SerializeField] private GameObject questSlotPrefab;
+    [SerializeField] private Inventory playerInventory;
+    [SerializeField] private Image detailsItemIcon;
+
+    [Header("Р’РєР»Р°РґРєРё")]
+    [SerializeField] private Button availableTabButton;
+    [SerializeField] private Button activeTabButton;
+
+    [Header("РџР°РЅРµР»Рё")]
+    [SerializeField] private GameObject availablePanel;
+    [SerializeField] private GameObject activePanel;
+    [SerializeField] private GameObject detailsPanel;
+
+    [Header("РљРѕСЂРµРЅСЊ РёРЅС‚РµСЂС„РµР№СЃР°")]
+    [SerializeField] private GameObject questBoardRoot;  // в†ђ РїРµСЂРµС‚Р°С‰Рё СЃСЋРґР° РѕСЃРЅРѕРІРЅРѕР№ Canvas РёР»Рё Panel РґРѕСЃРєРё Р·Р°РєР°Р·РѕРІ
+
+    [Header("Р”РµС‚Р°Р»Рё РІС‹Р±СЂР°РЅРЅРѕРіРѕ")]
+    [SerializeField] private TMP_Text detailsTitle;
+    [SerializeField] private TMP_Text detailsCustomer;
+    [SerializeField] private TMP_Text detailsReward;
+    [SerializeField] private TMP_Text detailsTime;
+    [SerializeField] private TMP_Text detailsDescription;
+    [SerializeField] private Button acceptButton;
+    [SerializeField] private Button backButton;
+
+    [Header("РђРєС‚РёРІРЅС‹Рµ СЃР»РѕС‚С‹")]
+    [SerializeField] private Transform[] activeSlotParents = new Transform[2];
+    [SerializeField] private GameObject activeSlotPrefab;
+
+    private QuestData selectedQuest = null;
+    private List<GameObject> spawnedActiveSlots = new List<GameObject>();
+
+    private void Start()
+    {
+        availableTabButton.onClick.AddListener(() => ShowTab(true));
+        activeTabButton.onClick.AddListener(() => ShowTab(false));
+        acceptButton.onClick.AddListener(AcceptSelectedQuest);
+        backButton.onClick.AddListener(ShowAvailableList);
+        ShowTab(true);
+    }
+
+    public void ToggleQuestBoard()
+    {
+        if (questBoardRoot == null)
+        {
+            Debug.LogError("[QuestBoardUI] questBoardRoot РЅРµ РЅР°Р·РЅР°С‡РµРЅ!");
+            return;
+        }
+
+        Debug.Log("[QuestBoardUI] РџС‹С‚Р°РµРјСЃСЏ РѕС‚РєСЂС‹С‚СЊ РґРѕСЃРєСѓ Р·Р°РєР°Р·РѕРІ. РўРµРєСѓС‰РёР№ UI РІ UIManager: " +
+                  (UIManager.Instance.currentUI != null ? UIManager.Instance.currentUI.name : "РЅРёС‡РµРіРѕ"));
+
+        bool success = UIManager.Instance.TryOpenUI(questBoardRoot);
+
+        if (success)
+        {
+            Debug.Log("[QuestBoardUI] РЈСЃРїРµС€РЅРѕ РѕС‚РєСЂС‹Р»Рё questBoardRoot: " + questBoardRoot.name);
+            ShowTab(true);
+            RefreshAvailableQuests();
+            RefreshActiveQuests();
+        }
+        else
+        {
+            Debug.LogWarning("[QuestBoardUI] РќРµ СѓРґР°Р»РѕСЃСЊ РѕС‚РєСЂС‹С‚СЊ вЂ” РґСЂСѓРіРѕР№ UI СѓР¶Рµ Р°РєС‚РёРІРµРЅ РёР»Рё РѕС€РёР±РєР°");
+        }
+    }
+
+    private void OnDisable()
+    {
+        detailsPanel.SetActive(false);
+        availablePanel.SetActive(false);
+        activePanel.SetActive(false);
+    }
+
+    private void ShowTab(bool showAvailable)
+    {
+        availablePanel.SetActive(showAvailable);
+        activePanel.SetActive(!showAvailable);
+        detailsPanel.SetActive(false);
+
+        availableTabButton.image.color = showAvailable ? new Color(0.4f, 0.4f, 0.6f) : Color.gray;
+        activeTabButton.image.color = !showAvailable ? new Color(0.4f, 0.4f, 0.6f) : Color.gray;
+
+        if (showAvailable)
+            RefreshAvailableQuests();
+        else
+            RefreshActiveQuests();
+    }
+
+    private void RefreshAvailableQuests()
+    {
+        foreach (Transform child in availableContent) Destroy(child.gameObject);
+
+        foreach (var quest in questDatabase.GetAllQuests())
+        {
+            CreateAvailableSlot(quest);
+        }
+    }
+
+    private void CreateAvailableSlot(QuestData quest)
+    {
+        GameObject slot = Instantiate(questSlotPrefab, availableContent);
+        slot.transform.Find("Title").GetComponent<TMP_Text>().text = quest.title;
+        slot.transform.Find("Reward").GetComponent<TMP_Text>().text = $"{quest.rewardGold} Р·РѕР».";
+        slot.GetComponent<Button>().onClick.AddListener(() => ShowQuestDetails(quest));
+    }
+
+    private void RefreshActiveQuests()
+    {
+        foreach (var slot in spawnedActiveSlots) Destroy(slot);
+        spawnedActiveSlots.Clear();
+
+        var quests = QuestManager.Instance.GetActiveQuests();
+
+        for (int i = 0; i < 2; i++)
+        {
+            if (i < quests.Count)
+            {
+                GameObject slot = Instantiate(activeSlotPrefab, activeSlotParents[i]);
+                ActiveQuest aq = quests[i];
+
+                slot.transform.Find("Title").GetComponent<TMP_Text>().text = aq.data.title;
+                slot.transform.Find("Description").GetComponent<TMP_Text>().text = aq.data.description;
+
+                ItemData reqItem = itemDatabase.GetItem(aq.data.requiredItemID);
+                string itemName = (reqItem != null) ? reqItem.itemName : aq.data.requiredItemID;
+                slot.transform.Find("RequiredAmount").GetComponent<TMP_Text>().text = $"{aq.data.requiredAmount} x {itemName}";
+
+                Image iconImg = slot.transform.Find("RequiredItemIcon").GetComponent<Image>();
+                if (iconImg != null && reqItem != null && reqItem.icon != null)
+                    iconImg.sprite = reqItem.icon;
+
+                int slotIndex = i;
+                slot.transform.Find("SubmitButton").GetComponent<Button>().onClick.AddListener(() =>
+                {
+                    QuestManager.Instance.SubmitQuest(slotIndex);
+                    RefreshActiveQuests();
+                });
+
+                spawnedActiveSlots.Add(slot);
+            }
+        }
+    }
+
+    private void Update()
+    {
+        if (activePanel.activeSelf)
+        {
+            var quests = QuestManager.Instance.GetActiveQuests();
+
+            if (quests.Count != spawnedActiveSlots.Count)
+            {
+                RefreshActiveQuests();
+                return;
+            }
+
+            for (int i = 0; i < quests.Count; i++)
+            {
+                if (i >= spawnedActiveSlots.Count) continue;
+
+                ActiveQuest aq = quests[i];
+
+                TMP_Text timerText = spawnedActiveSlots[i].transform.Find("Timer")?.GetComponent<TMP_Text>();
+                if (timerText != null)
+                    timerText.text = $"РћСЃС‚Р°Р»РѕСЃСЊ: {aq.GetFormattedTime()}";
+
+                Button submitBtn = spawnedActiveSlots[i].transform.Find("SubmitButton")?.GetComponent<Button>();
+                if (submitBtn != null)
+                {
+                    bool canSubmit = playerInventory.GetCount(aq.data.requiredItemID) >= aq.data.requiredAmount;
+                    submitBtn.interactable = canSubmit && !aq.IsFailed();
+                }
+            }
+        }
+    }
+
+    private void ShowQuestDetails(QuestData quest)
+    {
+        selectedQuest = quest;
+        detailsPanel.SetActive(true);
+        availablePanel.SetActive(false);
+
+        ItemData reqItem = itemDatabase.GetItem(quest.requiredItemID);
+        if (detailsItemIcon != null && reqItem != null && reqItem.icon != null)
+            detailsItemIcon.sprite = reqItem.icon;
+
+        float totalMinutes = quest.timeLimitHours;
+        int initMinutes = Mathf.FloorToInt(totalMinutes);
+        int initSeconds = Mathf.FloorToInt((totalMinutes - initMinutes) * 60f);
+        detailsTime.text = $"РЎСЂРѕРє: {initMinutes:00}:{initSeconds:00}";
+
+        detailsTitle.text = quest.title;
+        detailsCustomer.text = $"Р—Р°РєР°Р·С‡РёРє: {quest.customerName}";
+        detailsReward.text = $"РќР°РіСЂР°РґР°: {quest.rewardGold} Р·РѕР»РѕС‚Р°";
+        detailsDescription.text = quest.description;
+
+        acceptButton.interactable = QuestManager.Instance.HasFreeSlot();
+    }
+
+    private void ShowAvailableList()
+    {
+        detailsPanel.SetActive(false);
+        availablePanel.SetActive(true);
+        selectedQuest = null;
+    }
+
+    private void AcceptSelectedQuest()
+    {
+        if (selectedQuest != null)
+        {
+            QuestManager.Instance.AcceptQuest(selectedQuest);
+            ShowAvailableList();
+            RefreshAvailableQuests();
+            ShowTab(false);
+        }
+    }
+}
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class ShopUI : MonoBehaviour
+{
+    [Header("Ссылки")]
+    [SerializeField] private Inventory inventory;
+    [SerializeField] private ItemDatabase itemDatabase;
+    [SerializeField] private GameObject shopCanvasRoot;
+    [SerializeField] private Transform contentParent;
+    [SerializeField] private GameObject slotPrefab;
+    [SerializeField] private Button materialsButton, weaponsButton, toolsButton, otherButton;
+
+    [Header("Детали справа")]
+    [SerializeField] private Image itemIcon;
+    [SerializeField] private TMP_Text itemNameText;
+    [SerializeField] private TMP_Text itemPriceText;
+    [SerializeField] private Button plusButton, minusButton, buyButton;
+
+    [Header("Детали справа - доп")]
+    [SerializeField] private TMP_Text inventoryCountText;
+    [SerializeField] private TMP_InputField quantityInput;
+
+    [Header("Правая панель")]
+    [SerializeField] private GameObject rightDetailsPanel;
+
+    [Header("Статус покупки")]
+    [SerializeField] private TMP_Text statusText;
+
+    private Color successColor = new Color(0f, 1f, 0f, 1f);
+    private Color errorColor = new Color(1f, 0f, 0f, 1f);
+
+    [Header("Счётчик золота")]
+    [SerializeField] private TMP_Text goldCounterText;
+
+    [Header("Цвет денег")]
+    [SerializeField] private Color moneyColor = new Color(1f, 1f, 0f, 1f);
+
+    private ItemData selectedItem = null;
+    private int quantity = 0;
+    private ItemCategory currentCategory = ItemCategory.Material;
+
+    private void Start()
+    {
+        if (statusText != null) statusText.text = "";
+
+        materialsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Material));
+        weaponsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Weapon));
+        toolsButton.onClick.AddListener(() => ShowCategory(ItemCategory.Tool));
+        otherButton.onClick.AddListener(() => ShowCategory(ItemCategory.Other));
+
+        plusButton.onClick.AddListener(() => ChangeQuantity(1));
+        minusButton.onClick.AddListener(() => ChangeQuantity(-1));
+        buyButton.onClick.AddListener(BuyItem);
+
+        if (quantityInput != null)
+        {
+            quantityInput.onValueChanged.AddListener(OnQuantityInputChanged);
+        }
+
+        ShowCategory(ItemCategory.Material);
+        UpdateGoldDisplay();
+    }
+
+    public void ToggleShop()
+    {
+        if (UIManager.Instance.TryOpenUI(shopCanvasRoot))
+        {
+            ShowCategory(ItemCategory.Material);
+            ResetSelection();
+            ClearDetails();
+            UpdateGoldDisplay();
+        }
+    }
+
+    private void OnDisable()
+    {
+        ResetSelection();
+        ClearDetails();
+    }
+
+    private void UpdateStatus(string message, Color color)
+    {
+        if (statusText == null) return;
+        statusText.text = message;
+        statusText.color = color;
+        UpdateGoldDisplay();
+    }
+
+    private void UpdateGoldDisplay()
+    {
+        if (goldCounterText == null) return;
+        int gold = inventory.GetCount("Gold_Money");
+        Debug.Log($"Монеты: {gold}");
+        goldCounterText.text = $"Золото: {gold}";
+        goldCounterText.color = moneyColor;
+    }
+
+    private void ShowCategory(ItemCategory category)
+    {
+        currentCategory = category;
+        ClearSlots();
+
+        if (rightDetailsPanel != null) rightDetailsPanel.SetActive(false);
+        ResetSelection();
+
+        var items = itemDatabase.GetItemsByCategory(category);
+        foreach (var item in items)
+        {
+            if (item.basePrice <= 0) continue;
+            CreateSlot(item);
+        }
+
+        UpdateGoldDisplay();
+    }
+
+    private void ClearSlots()
+    {
+        foreach (Transform child in contentParent) Destroy(child.gameObject);
+        UpdateGoldDisplay();
+    }
+
+    private void CreateSlot(ItemData item)
+    {
+        GameObject slot = Instantiate(slotPrefab, contentParent);
+
+        Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
+        if (icon != null && item.icon != null) icon.sprite = item.icon;
+
+        TMP_Text nameText = slot.transform.Find("Name")?.GetComponent<TMP_Text>();
+        if (nameText != null) nameText.text = item.itemName;
+
+        TMP_Text priceText = slot.transform.Find("Price")?.GetComponent<TMP_Text>();
+        if (priceText != null)
+        {
+            priceText.text = $"{item.basePrice}";
+            priceText.color = moneyColor;
+        }
+
+        Button button = slot.GetComponent<Button>();
+        if (button != null) button.onClick.AddListener(() => SelectItem(item));
+    }
+
+    private void SelectItem(ItemData item)
+    {
+        if (rightDetailsPanel != null) rightDetailsPanel.SetActive(true);
+        ClearDetails();
+
+        selectedItem = item;
+        itemIcon.sprite = item.icon;
+        itemNameText.text = item.itemName;
+        itemPriceText.text = $"Цена: {item.basePrice} золота за 1";
+        itemPriceText.color = moneyColor;
+
+        quantity = 1;
+        UpdateQuantityText();
+        ChangeQuantity(0);
+        UpdateInventoryCount();
+    }
+
+    private void ChangeQuantity(int delta)
+    {
+        quantity = Mathf.Max(0, quantity + delta);
+        if (selectedItem == null) return;
+
+        int maxAffordable = inventory.GetCount("Gold_Money") / selectedItem.basePrice;
+        quantity = Mathf.Min(quantity, maxAffordable);
+
+        UpdateQuantityText();
+
+        bool canBuy = quantity > 0 && inventory.GetCount("Gold_Money") >= (selectedItem.basePrice * quantity);
+        buyButton.interactable = canBuy;
+
+        if (!canBuy && quantity > 0)
+        {
+            UpdateStatus("Недостаточно денег!", errorColor);
+        }
+        else
+        {
+            UpdateStatus("", Color.white);
+        }
+    }
+
+    private void UpdateQuantityText()
+    {
+        if (quantityInput != null)
+            quantityInput.text = quantity.ToString();
+    }
+
+    private void BuyItem()
+    {
+        if (selectedItem == null || quantity <= 0) return;
+
+        int totalCost = selectedItem.basePrice * quantity;
+        if (inventory.GetCount("Gold_Money") < totalCost)
+        {
+            UpdateStatus("Недостаточно денег!", errorColor);
+            return;
+        }
+
+        inventory.RemoveItem("Gold_Money", totalCost);
+        inventory.AddItem(selectedItem.id, quantity);
+
+        Debug.Log($"Куплено {quantity} x {selectedItem.itemName}");
+        UpdateGoldDisplay();
+        UpdateStatus("Куплено!", successColor);
+
+        quantity = 0;
+        UpdateQuantityText();
+        buyButton.interactable = false;
+        UpdateInventoryCount();
+    }
+
+    private void ResetSelection()
+    {
+        selectedItem = null;
+        quantity = 0;
+        UpdateQuantityText();
+        buyButton.interactable = false;
+    }
+
+    private void ClearDetails()
+    {
+        itemIcon.sprite = null;
+        itemNameText.text = "";
+        itemPriceText.text = "";
+        if (statusText != null) statusText.text = "";
+    }
+
+    private void UpdateInventoryCount()
+    {
+        if (selectedItem == null || inventoryCountText == null) return;
+        int count = inventory.GetCount(selectedItem.id);
+        inventoryCountText.text = $"В инвентаре: {count}";
+    }
+
+    private void OnQuantityInputChanged(string input)
+    {
+        if (int.TryParse(input, out int newQuantity))
+        {
+            quantity = newQuantity;
+            ChangeQuantity(0);
+        }
+        else
+        {
+            quantityInput.text = quantity.ToString();
+        }
+    }
+}
