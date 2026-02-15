@@ -55,6 +55,14 @@ public class TutorialManager : MonoBehaviour
     {
         if (PlayerPrefs.GetInt(SaveKey, 0) == 1) return;
 
+        foreach (var step in steps)
+        {
+            foreach (var goal in step.goals)
+            {
+                goal.isCompleted = false;
+            }
+        }
+
         isActive = true;
         currentStepIndex = 0;
         currentSlideIndex = 0;
@@ -196,6 +204,12 @@ public class TutorialManager : MonoBehaviour
                 }
                 else { goal.isCompleted = true; }
             }
+        }
+
+        Debug.Log($"Проверка цели: тип={type}, itemID={itemID}, текущий шаг={currentStepIndex}");
+        foreach (var goal in step.goals)
+        {
+            Debug.Log($"  Цель: тип={goal.type}, targetID='{goal.targetID}', выполнено={goal.isCompleted}");
         }
 
         UpdateTaskPanel();
