@@ -4720,6 +4720,22 @@ PrefabInstance:
       propertyPath: miniInventoryContent
       value: 
       objectReference: {fileID: 1268366851}
+    - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: 'oreSlots.Array.data[0]'
+      value: 
+      objectReference: {fileID: 1950790356}
+    - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: 'oreSlots.Array.data[1]'
+      value: 
+      objectReference: {fileID: 1950790355}
+    - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: 'oreSlots.Array.data[2]'
+      value: 
+      objectReference: {fileID: 1950790354}
+    - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: 'oreSlots.Array.data[3]'
+      value: 
+      objectReference: {fileID: 1950790353}
     - target: {fileID: 1883067424104088220, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: mouseLook
       value: 
@@ -5064,6 +5080,26 @@ PrefabInstance:
       addedObject: {fileID: 1690802966}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+--- !u!224 &1950790353 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 601777315011788550, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+  m_PrefabInstance: {fileID: 1950790352}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &1950790354 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 3668133126285084275, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+  m_PrefabInstance: {fileID: 1950790352}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &1950790355 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 6202660096401099176, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+  m_PrefabInstance: {fileID: 1950790352}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &1950790356 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 7861483694716114031, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+  m_PrefabInstance: {fileID: 1950790352}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2003474743
 GameObject:
   m_ObjectHideFlags: 0
