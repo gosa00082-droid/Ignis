@@ -1,0 +1,125 @@
+{
+  "alloys": [
+    {
+      "alloyName": "Бронза классическая",
+      "resultItemId": "Bronze_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Copper_Ore", "Copper_Ore", "Copper_Ore", "Tin_Ore"],
+      "coalRequired": 5,
+      "minTemp": 1100,
+      "maxTemp": 1300,
+      "smeltDuration": 10,
+      "description": "Классическая бронза из меди и олова"
+    },
+    {
+      "alloyName": "Бронза оружейная",
+      "resultItemId": "Bronze_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Copper_Ore", "Copper_Ore", "Tin_Ore", "Iron_Ore"],
+      "coalRequired": 6,
+      "minTemp": 1200,
+      "maxTemp": 1400,
+      "smeltDuration": 12,
+      "description": "Улучшенная бронза с добавлением железа"
+    },
+    {
+      "alloyName": "Железо",
+      "resultItemId": "Iron_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Iron_Ore", "Iron_Ore", "Iron_Ore"],
+      "coalRequired": 5,
+      "minTemp": 1200,
+      "maxTemp": 1500,
+      "smeltDuration": 8,
+      "description": "Чистое железо из руды"
+    },
+    {
+      "alloyName": "Железо улучшенное",
+      "resultItemId": "Iron_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Iron_Ore", "Iron_Ore", "Coal"],
+      "coalRequired": 6,
+      "minTemp": 1300,
+      "maxTemp": 1500,
+      "smeltDuration": 10,
+      "description": "Железо с углеродным отжигом"
+    },
+    {
+      "alloyName": "Сталь",
+      "resultItemId": "Steel_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Iron_Ore", "Iron_Ore", "Iron_Ore", "Coal", "Coal"],
+      "coalRequired": 8,
+      "minTemp": 1400,
+      "maxTemp": 1600,
+      "smeltDuration": 15,
+      "description": "Углеродистая сталь"
+    },
+    {
+      "alloyName": "Сталь качественная",
+      "resultItemId": "Steel_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Iron_Ore", "Iron_Ore", "Coal", "Coal"],
+      "coalRequired": 10,
+      "minTemp": 1450,
+      "maxTemp": 1600,
+      "smeltDuration": 18,
+      "description": "Высококачественная сталь"
+    },
+    {
+      "alloyName": "Дамасская сталь",
+      "resultItemId": "Damascus_Steel",
+      "slagItemId": "Slag",
+      "requiredOres": ["Steel_Ingot", "Steel_Ingot", "Iron_Ore", "Coal", "Coal", "Coal"],
+      "coalRequired": 12,
+      "minTemp": 1500,
+      "maxTemp": 1650,
+      "smeltDuration": 25,
+      "description": "Легендарная дамасская сталь"
+    },
+    {
+      "alloyName": "Медь",
+      "resultItemId": "Copper_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Copper_Ore", "Copper_Ore", "Copper_Ore"],
+      "coalRequired": 4,
+      "minTemp": 1000,
+      "maxTemp": 1200,
+      "smeltDuration": 6,
+      "description": "Чистая медь"
+    },
+    {
+      "alloyName": "Серебро",
+      "resultItemId": "Silver_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Silver_Ore", "Silver_Ore"],
+      "coalRequired": 6,
+      "minTemp": 1100,
+      "maxTemp": 1300,
+      "smeltDuration": 8,
+      "description": "Чистое серебро"
+    },
+    {
+      "alloyName": "Золото",
+      "resultItemId": "Gold_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Gold_Ore", "Gold_Ore"],
+      "coalRequired": 8,
+      "minTemp": 1200,
+      "maxTemp": 1400,
+      "smeltDuration": 10,
+      "description": "Чистое золото"
+    },
+    {
+      "alloyName": "Электрум",
+      "resultItemId": "Gold_Ingot",
+      "slagItemId": "Slag",
+      "requiredOres": ["Gold_Ore", "Silver_Ore"],
+      "coalRequired": 7,
+      "minTemp": 1150,
+      "maxTemp": 1350,
+      "smeltDuration": 9,
+      "description": "Сплав золота и серебра"
+    }
+  ]
+}

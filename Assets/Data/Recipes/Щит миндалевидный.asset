@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c31ec67a527f91747b60e79c42af8700, type: 3}
+  m_Name: "\u0429\u0438\u0442 \u043C\u0438\u043D\u0434\u0430\u043B\u0435\u0432\u0438\u0434\u043D\u044B\u0439"
+  m_EditorClassIdentifier: Assembly-CSharp::RecipeData
+  recipeName: "\u0429\u0438\u0442 \u043C\u0438\u043D\u0434\u0430\u043B\u0435\u0432\u0438\u0434\u043D\u044B\u0439"
+  category: 1
+  requiredItems:
+  - item: {fileID: 11400000, guid: 08272f9ad56506340bfaa9e03621f60c, type: 2}
+    amount: 2
+  - item: {fileID: 11400000, guid: 51419c48c023df249bd199c775c63f08, type: 2}
+    amount: 4
+  - item: {fileID: 11400000, guid: a0659d9dd80ef934e83e89b7d21e9bb3, type: 2}
+    amount: 2
+  resultItem: {fileID: 11400000, guid: 7411a645944b53643ad9a9db91540173, type: 2}
+  resultAmount: 1

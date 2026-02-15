@@ -1,0 +1,224 @@
+{
+  "quests": [
+    {
+      "questID": "Quest_Nails_1",
+      "title": "Гвозди для постройки",
+      "description": "Плотнику Федору нужны гвозди для строительства нового дома. Выкуй 2 пачки гвоздей.",
+      "customerName": "Плотник Федор",
+      "rewardGold": 20,
+      "timeLimitHours": 5,
+      "requiredItemID": "Nails_100",
+      "requiredAmount": 2,
+      "failPenaltyPercent": 30
+    },
+    {
+      "questID": "Quest_Hoe_1",
+      "title": "Мотыга для огорода",
+      "description": "Крестьянин Иван просит выковать новые мотыги для весенних работ.",
+      "customerName": "Крестьянин Иван",
+      "rewardGold": 30,
+      "timeLimitHours": 8,
+      "requiredItemID": "Hoe",
+      "requiredAmount": 2,
+      "failPenaltyPercent": 25
+    },
+    {
+      "questID": "Quest_Axe_1",
+      "title": "Топор для дров",
+      "description": "Крестьянину Петру нужен надежный топор для заготовки дров на зиму.",
+      "customerName": "Крестьянин Петр",
+      "rewardGold": 25,
+      "timeLimitHours": 6,
+      "requiredItemID": "Axe",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 25
+    },
+    {
+      "questID": "Quest_Horseshoe_1",
+      "title": "Подковы для лошади",
+      "description": "Конюху Михайло нужны подковы для господских лошадей.",
+      "customerName": "Конюх Михайло",
+      "rewardGold": 30,
+      "timeLimitHours": 6,
+      "requiredItemID": "Horseshoe",
+      "requiredAmount": 4,
+      "failPenaltyPercent": 30
+    },
+    {
+      "questID": "Quest_Sickle_1",
+      "title": "Серпы к жатве",
+      "description": "Староста деревни заказывает серпы перед началом жатвы. Срочный заказ!",
+      "customerName": "Староста деревни",
+      "rewardGold": 50,
+      "timeLimitHours": 10,
+      "requiredItemID": "Sickle",
+      "requiredAmount": 3,
+      "failPenaltyPercent": 25
+    },
+    {
+      "questID": "Quest_Spear_1",
+      "title": "Копья для ополчения",
+      "description": "Воевода Дмитрий готовит ополчение и требует боевые копья.",
+      "customerName": "Воевода Дмитрий",
+      "rewardGold": 80,
+      "timeLimitHours": 12,
+      "requiredItemID": "Spear",
+      "requiredAmount": 3,
+      "failPenaltyPercent": 30
+    },
+    {
+      "questID": "Quest_Lock_1",
+      "title": "Замок для амбара",
+      "description": "Купец Сидор строит новый амбар и нужен надежный замок.",
+      "customerName": "Купец Сидор",
+      "rewardGold": 70,
+      "timeLimitHours": 10,
+      "requiredItemID": "Lock",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 35
+    },
+    {
+      "questID": "Quest_Dagger_1",
+      "title": "Кинжалы для охраны",
+      "description": "Купец Анисим набирает охрану для каравана, нужны кинжалы.",
+      "customerName": "Купец Анисим",
+      "rewardGold": 90,
+      "timeLimitHours": 12,
+      "requiredItemID": "Dagger",
+      "requiredAmount": 2,
+      "failPenaltyPercent": 30
+    },
+    {
+      "questID": "Quest_BattleAxe_1",
+      "title": "Боевые топоры",
+      "description": "Воевода Глеб готовит дружину к походу, нужны боевые топоры.",
+      "customerName": "Воевода Глеб",
+      "rewardGold": 180,
+      "timeLimitHours": 15,
+      "requiredItemID": "Battle_Axe",
+      "requiredAmount": 2,
+      "failPenaltyPercent": 35
+    },
+    {
+      "questID": "Quest_Sword_1",
+      "title": "Меч для дружинника",
+      "description": "Дружинник Олег отличился в бою и заслужил хороший меч.",
+      "customerName": "Дружинник Олег",
+      "rewardGold": 200,
+      "timeLimitHours": 20,
+      "requiredItemID": "Sword_Basic",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 40
+    },
+    {
+      "questID": "Quest_Helmet_1",
+      "title": "Шлемы для воинов",
+      "description": "Для княжеской дружины нужны защитные шлемы.",
+      "customerName": "Княжеский дружинник",
+      "rewardGold": 250,
+      "timeLimitHours": 18,
+      "requiredItemID": "Helmet_Basic",
+      "requiredAmount": 2,
+      "failPenaltyPercent": 35
+    },
+    {
+      "questID": "Quest_Chainmail_1",
+      "title": "Кольчуга для боя",
+      "description": "Боярин Всеволод готовится к войне и заказывает кольчугу.",
+      "customerName": "Боярин Всеволод",
+      "rewardGold": 400,
+      "timeLimitHours": 25,
+      "requiredItemID": "Chainmail",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 40
+    },
+    {
+      "questID": "Quest_QualitySword_1",
+      "title": "Меч для боярина",
+      "description": "Боярин Ярослав хочет качественный меч для себя.",
+      "customerName": "Боярин Ярослав",
+      "rewardGold": 500,
+      "timeLimitHours": 30,
+      "requiredItemID": "Sword_Quality",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 45
+    },
+    {
+      "questID": "Quest_QualityChainmail_1",
+      "title": "Кольчуга для князя",
+      "description": "Князю нужна лучшая кольчуга для важного сражения.",
+      "customerName": "Княжеский слуга",
+      "rewardGold": 800,
+      "timeLimitHours": 35,
+      "requiredItemID": "Chainmail_Quality",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 50
+    },
+    {
+      "questID": "Quest_GreatHelmet_1",
+      "title": "Великий шлем",
+      "description": "Для княжеской дружины нужен великий шлем.",
+      "customerName": "Княжеский оружничий",
+      "rewardGold": 400,
+      "timeLimitHours": 25,
+      "requiredItemID": "Helmet_Great",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 40
+    },
+    {
+      "questID": "Quest_Sabre_1",
+      "title": "Сабля для всадника",
+      "description": "Дворянину Андрею нужна хорошая сабля для конного боя.",
+      "customerName": "Дворянин Андрей",
+      "rewardGold": 350,
+      "timeLimitHours": 22,
+      "requiredItemID": "Sabre",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 40
+    },
+    {
+      "questID": "Quest_DamascusSword_1",
+      "title": "Дамасский меч",
+      "description": "Царю нужен легендарный меч из дамасской стали!",
+      "customerName": "Царский оружничий",
+      "rewardGold": 1200,
+      "timeLimitHours": 50,
+      "requiredItemID": "Sword_Damascus",
+      "requiredAmount": 1,
+      "failPenaltyPercent": 60
+    },
+    {
+      "questID": "Quest_Halberd_1",
+      "title": "Алебарды для стрельцов",
+      "description": "Для царской стражи нужны алебарды.",
+      "customerName": "Голова стрелецкий",
+      "rewardGold": 400,
+      "timeLimitHours": 20,
+      "requiredItemID": "Halberd",
+      "requiredAmount": 3,
+      "failPenaltyPercent": 35
+    },
+    {
+      "questID": "Quest_Cross_1",
+      "title": "Кресты для церкви",
+      "description": "Священник Никита заказывает нательные кресты для прихожан.",
+      "customerName": "Священник Никита",
+      "rewardGold": 150,
+      "timeLimitHours": 12,
+      "requiredItemID": "Cross",
+      "requiredAmount": 5,
+      "failPenaltyPercent": 30
+    },
+    {
+      "questID": "Quest_Candlestick_1",
+      "title": "Канделябр для храма",
+      "description": "Настоятель монастыря заказывает канделябры для нового храма.",
+      "customerName": "Настоятель монастыря",
+      "rewardGold": 100,
+      "timeLimitHours": 15,
+      "requiredItemID": "Candlestick",
+      "requiredAmount": 2,
+      "failPenaltyPercent": 35
+    }
+  ]
+}
