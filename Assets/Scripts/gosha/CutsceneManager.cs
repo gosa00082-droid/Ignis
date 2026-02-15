@@ -55,6 +55,12 @@ public class CutsceneManager : MonoBehaviour
     {
         Debug.Log("Катсцена завершена, возвращаем всё");
 
+        // ЗАПУСК ОБУЧЕНИЯ
+        if (TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.StartTutorial();
+        }
+
         // Отключить все катсценные vcam
         foreach (var vcam in cutsceneVCams)
         {

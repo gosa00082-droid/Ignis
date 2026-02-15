@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\MouseLook.cs ----- 
+using UnityEngine;
 
 public class MouseLook : MonoBehaviour
 {
@@ -21,6 +23,8 @@ public class MouseLook : MonoBehaviour
         playerBody.Rotate(Vector3.up * mouseX);
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\PlayerMovement.cs ----- 
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
@@ -60,6 +64,8 @@ public class PlayerMovement : MonoBehaviour
         controller.Move(velocity * Time.deltaTime);
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\gosha\CutsceneManager.cs ----- 
 using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.Playables;
@@ -117,6 +123,12 @@ public class CutsceneManager : MonoBehaviour
     {
         Debug.Log("Катсцена завершена, возвращаем всё");
 
+        // ЗАПУСК ОБУЧЕНИЯ
+        if (TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.StartTutorial();
+        }
+
         // Отключить все катсценные vcam
         foreach (var vcam in cutsceneVCams)
         {
@@ -153,6 +165,8 @@ public class CutsceneManager : MonoBehaviour
         cutsceneDirector.stopped -= OnCutsceneFinished;
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Inventory\Inventory.cs ----- 
 // Assets/Scripts/Inventory/Inventory.cs
 using UnityEngine;
 using System.Collections.Generic;
@@ -208,6 +222,12 @@ public class Inventory : MonoBehaviour
             targetDict[itemId] = item.maxStackSize;
 
         Debug.Log($"Добавлено {amount} × {item.itemName}. Всего: {targetDict[itemId]}");
+
+        if (TutorialManager.Instance != null)
+        {
+            int currentCount = GetCount(itemId);
+            TutorialManager.Instance.CheckGoals(itemId, currentCount, GoalType.CollectItem);
+        }
     }
 
     // Убрать предмет из инвентаря
@@ -295,6 +315,9 @@ public class Inventory : MonoBehaviour
 
 }
 
+
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Inventory\InventoryController.cs ----- 
 // Assets/Scripts/Inventory/InventoryController.cs
 using UnityEngine;
 
@@ -343,6 +366,8 @@ public class InventoryController : MonoBehaviour
         }
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\AlloyDatabase.cs ----- 
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -370,6 +395,8 @@ public class AlloyDatabase : ScriptableObject
         return null;  // РќРµС‚ СЃРѕРІРїР°РґРµРЅРёСЏ
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\AlloyRecipe.cs ----- 
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -387,6 +414,8 @@ public class AlloyRecipe : ScriptableObject
     public float maxTemp = 1600f;           // Р’РµСЂС…РЅРёР№ РєСЂР°Р№
     public float smeltDuration = 10f;       // Р’СЂРµРјСЏ РјРёРЅРё-РёРіСЂС‹ (СЃРµРє)
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\DraggableItem.cs ----- 
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
@@ -455,6 +484,8 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         // Р•СЃР»Рё РїРѕРїР°Р»Рё РІ СЃР»РѕС‚ РїРµС‡Рё вЂ” DropSlot СѓР¶Рµ СЃРґРµР»Р°Р» SetParent + С†РµРЅС‚СЂРёСЂРѕРІР°РЅРёРµ
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\DropSlot.cs ----- 
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -507,6 +538,8 @@ public class DropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
         }
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemCategory.cs ----- 
 // Assets/Scripts/Items/ItemCategory.cs
 public enum ItemCategory
 {
@@ -516,6 +549,9 @@ public enum ItemCategory
     Consumable,   // РµРґР°, Р·РµР»СЊСЏ, СѓРіРѕР»СЊ РґР»СЏ РїРµС‡РєРё Рё С‚.Рї.
     Other         // РІСЃС‘, С‡С‚Рѕ РЅРµ РїРѕРґРѕС€Р»Рѕ РІ РґСЂСѓРіРёРµ РєР°С‚РµРіРѕСЂРёРё
 }
+
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemData.cs ----- 
 // Assets/Scripts/Items/ItemData.cs
 using UnityEngine;
 
@@ -540,6 +576,8 @@ public class ItemData : ScriptableObject
     [TextArea(3, 6)]
     public string description = "РћРїРёСЃР°РЅРёРµ РїСЂРµРґРјРµС‚Р°..."; // РѕРїРёСЃР°РЅРёРµ
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemDatabase.cs ----- 
 // Assets/Scripts/Items/ItemDatabase.cs
 using UnityEngine;
 using System.Collections.Generic;
@@ -609,12 +647,16 @@ public class ItemDatabase : ScriptableObject
     // Р”Р»СЏ РѕС‚Р»Р°РґРєРё вЂ” РїРѕСЃРјРѕС‚СЂРµС‚СЊ СЃРєРѕР»СЊРєРѕ РІСЃРµРіРѕ РїСЂРµРґРјРµС‚РѕРІ
     public int TotalItems => items.Count;
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\CraftCategory.cs ----- 
 public enum CraftCategory
 {
     Tools,      // Инструменты
     Weapons,    // Оружия
     Decorations // Украшения
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\RecipeData.cs ----- 
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -634,6 +676,8 @@ public class RecipeData : ScriptableObject
         public int amount = 1;
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\RecipeDatabase.cs ----- 
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -648,6 +692,8 @@ public class RecipeDatabase : ScriptableObject
         return recipes.Where(r => r.category == category).ToList();
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\ActiveQuest.cs ----- 
 using UnityEngine;
 
 [System.Serializable]
@@ -673,6 +719,8 @@ public class ActiveQuest
         return $"{minutes:00}:{seconds:00}";
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\FailMessage.cs ----- 
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -720,6 +768,8 @@ public class FailMessage : MonoBehaviour
         canvasGroup.alpha = targetAlpha;
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\QuestData.cs ----- 
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewQuest", menuName = "Ignis/Quest")]
@@ -741,6 +791,8 @@ public class QuestData : ScriptableObject
     [Header("РЁС‚СЂР°С„")]
     public float failPenaltyPercent = 30f;  // % РѕС‚ РЅР°РіСЂР°РґС‹
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\QuestDatabase.cs ----- 
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -791,6 +843,8 @@ public class QuestDatabase : ScriptableObject
         questDict.Clear();
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\QuestManager.cs ----- 
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
@@ -860,6 +914,12 @@ public class QuestManager : MonoBehaviour
             playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
             playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
             activeQuests.RemoveAt(slotIndex);
+
+            if (TutorialManager.Instance != null)
+            {
+                TutorialManager.Instance.CheckGoals(aq.data.questID, 1, GoalType.CompleteQuest);
+            }
+
             Debug.Log($"РЎРґР°РЅ Р·Р°РєР°Р·: {aq.data.title}. РќР°РіСЂР°РґР°: {aq.data.rewardGold}");
         }
         else
@@ -919,6 +979,8 @@ public class QuestManager : MonoBehaviour
         failMessageCanvas.SetActive(false);
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Managers\ReferenceManager.cs ----- 
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -1001,6 +1063,8 @@ public class ReferenceManager : MonoBehaviour
         if (isOpen) ToggleReference();
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Managers\UIManager.cs ----- 
 // Assets/Scripts/Managers/UIManager.cs
 using UnityEngine;
 
@@ -1084,6 +1148,8 @@ public class UIManager : MonoBehaviour
         if (mouseLook != null) mouseLook.enabled = !uiOpen;
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Player\PlayerInteraction.cs ----- 
 // Assets/Scripts/Player/PlayerInteraction.cs
 using UnityEngine;
 
@@ -1143,6 +1209,340 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Tutorial\TutorialData.cs ----- 
+using UnityEngine;
+using System.Collections.Generic;
+
+// Типы целей
+public enum GoalType
+{
+    None,
+    CollectItem,
+    CraftItem,
+    CompleteQuest,
+    Interact
+}
+
+[System.Serializable]
+public class TutorialGoal
+{
+    public GoalType type;
+    public string targetID;
+    public int requiredAmount = 1;
+    [TextArea] public string description;
+    [HideInInspector] public bool isCompleted = false;
+}
+
+[CreateAssetMenu(fileName = "New Tutorial Step", menuName = "Ignis/Tutorial Step")]
+public class TutorialStep : ScriptableObject
+{
+    [Header("Настройки Шага")]
+    public bool isFinalStep = false; // Галочка: последний ли это шаг?
+
+    [Header("Слайды (Тексты диалогов)")]
+    // Сюда пишем тексты. Размер массива = кол-во слайдов.
+    [TextArea(3, 10)] public List<string> slides = new List<string>();
+
+    [Header("Цели (Выполняются для завершения шага)")]
+    public List<TutorialGoal> goals = new List<TutorialGoal>();
+
+    // Проверка выполнения всех целей
+    public bool IsGoalsComplete()
+    {
+        if (goals.Count == 0) return true; // Если целей нет — считаем выполненным сразу
+
+        foreach (var goal in goals)
+        {
+            if (!goal.isCompleted) return false;
+        }
+        return true;
+    }
+}
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Tutorial\TutorialManager.cs ----- 
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
+
+public class TutorialManager : MonoBehaviour
+{
+    public static TutorialManager Instance { get; private set; }
+
+    [Header("РЎРїРёСЃРѕРє С€Р°РіРѕРІ")]
+    public List<TutorialStep> steps = new List<TutorialStep>();
+
+    [Header("UI РЎСЃС‹Р»РєРё")]
+    [SerializeField] private Canvas tutorialCanvas; // Canvas СЃ Sort Order 100
+    [SerializeField] private TextMeshProUGUI dialogueText;
+    [SerializeField] private GameObject taskPanel; // РџР°РЅРµР»СЊ Р·Р°РґР°С‡ РІ СѓРіР»Сѓ
+    [SerializeField] private TextMeshProUGUI taskListText;
+    [SerializeField] private Button btnBack;
+    [SerializeField] private Button btnUnderstood;
+    [SerializeField] private Button panelClickArea;
+
+    [Header("РРіСЂРѕРє")]
+    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private MouseLook mouseLook;
+
+    private int currentStepIndex = 0;
+    private int currentSlideIndex = 0;
+    private bool isActive = false; // РђРєС‚РёРІРЅР° Р»Рё СЃРёСЃС‚РµРјР° РѕР±СѓС‡РµРЅРёСЏ РІРѕРѕР±С‰Рµ
+    private bool isWaitingForGoals = false; // Р–РґРµРј Р»Рё РІС‹РїРѕР»РЅРµРЅРёСЏ С†РµР»РµР№ (РїР°РЅРµР»СЊ СЃРєСЂС‹С‚Р°)
+    private const string SaveKey = "TutorialComplete";
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+
+        // РђРІС‚РѕСЃС‚Р°СЂС‚ СѓР±СЂР°Р»Рё! Р—Р°РїСѓСЃРє Р±СѓРґРµС‚ РёР· CutsceneManager
+        if (PlayerPrefs.GetInt(SaveKey, 0) == 1)
+        {
+            ForceFinish();
+            return;
+        }
+
+        // РќР°СЃС‚СЂРѕР№РєР° РєРЅРѕРїРѕРє
+        panelClickArea.onClick.AddListener(OnPanelClicked);
+        btnBack.onClick.AddListener(PrevSlide);
+        btnUnderstood.onClick.AddListener(OnUnderstoodClicked);
+
+        // РЎРєСЂС‹РІР°РµРј UI РЅР° СЃС‚Р°СЂС‚Рµ
+        if (tutorialCanvas != null) tutorialCanvas.gameObject.SetActive(false);
+        if (taskPanel != null) taskPanel.SetActive(false);
+    }
+
+    // РњРµС‚РѕРґ РІС‹Р·С‹РІР°РµС‚СЃСЏ РёР· CutsceneManager
+    public void StartTutorial()
+    {
+        if (PlayerPrefs.GetInt(SaveKey, 0) == 1) return;
+
+        isActive = true;
+        currentStepIndex = 0;
+        currentSlideIndex = 0;
+
+        ShowCurrentSlide();
+    }
+
+    // РљР»РёРє РїРѕ РїР°РЅРµР»Рё (РџРµСЂРµС…РѕРґ РІРїРµСЂРµРґ РїРѕ СЃР»Р°Р№РґР°Рј)
+    private void OnPanelClicked()
+    {
+        // Р•СЃР»Рё Р¶РґРµРј РІС‹РїРѕР»РЅРµРЅРёСЏ С†РµР»РµР№ РёР»Рё РЅРµ Р°РєС‚РёРІРЅС‹ - РёРіРЅРѕСЂ
+        if (!isActive || isWaitingForGoals) return;
+
+        TutorialStep step = steps[currentStepIndex];
+
+        // Р•СЃР»Рё РµСЃС‚СЊ РµС‰Рµ СЃР»Р°Р№РґС‹
+        if (currentSlideIndex < step.slides.Count - 1)
+        {
+            currentSlideIndex++;
+            ShowCurrentSlide();
+        }
+        // Р•СЃР»Рё СЃР»Р°Р№Рґ РїРѕСЃР»РµРґРЅРёР№, РЅРѕ С†РµР»РµР№ РЅРµС‚ -> СЃСЂР°Р·Сѓ СЃР»РµРґСѓСЋС‰РёР№ С€Р°Рі
+        else if (step.goals.Count == 0)
+        {
+            GoToNextStep();
+        }
+        // Р•СЃР»Рё СЃР»Р°Р№Рґ РїРѕСЃР»РµРґРЅРёР№ Рё РµСЃС‚СЊ С†РµР»Рё -> РЅРёС‡РµРіРѕ РЅРµ РґРµР»Р°РµРј (Р¶РґРµРј РєРЅРѕРїРєСѓ "РЇ РІСЃРµ РїРѕРЅСЏР»")
+    }
+
+    // РљРЅРѕРїРєР° "РЇ РІСЃРµ РїРѕРЅСЏР»!"
+    private void OnUnderstoodClicked()
+    {
+        TutorialStep step = steps[currentStepIndex];
+
+        // Р•СЃР»Рё СЌС‚Рѕ РїРѕСЃР»РµРґРЅРёР№ С€Р°Рі РѕР±СѓС‡РµРЅРёСЏ Р С†РµР»Рё РІС‹РїРѕР»РЅРµРЅС‹ (РёР»Рё РёС… РЅРµС‚)
+        if (step.isFinalStep && step.IsGoalsComplete())
+        {
+            FinishTutorial();
+            return;
+        }
+
+        // Р•СЃР»Рё С†РµР»Рё РµСЃС‚СЊ, РЅРѕ РµС‰Рµ РЅРµ РІС‹РїРѕР»РЅРµРЅС‹ -> РџСЂСЏС‡РµРј РїР°РЅРµР»СЊ, РґР°РµРј РёРіСЂР°С‚СЊ
+        if (step.goals.Count > 0)
+        {
+            HideDialoguePanel();
+        }
+        else
+        {
+            // Р•СЃР»Рё С†РµР»РµР№ РЅРµС‚ Рё СЌС‚Рѕ РЅРµ РєРѕРЅРµС† -> РїСЂРѕСЃС‚Рѕ СЃР»РµРґСѓСЋС‰РёР№ С€Р°Рі
+            GoToNextStep();
+        }
+    }
+
+    private void PrevSlide()
+    {
+        if (!isActive || isWaitingForGoals) return;
+
+        if (currentSlideIndex > 0)
+        {
+            currentSlideIndex--;
+            ShowCurrentSlide();
+        }
+        else if (currentStepIndex > 0)
+        {
+            currentStepIndex--;
+            TutorialStep prevStep = steps[currentStepIndex];
+            currentSlideIndex = prevStep.slides.Count - 1;
+            ShowCurrentSlide();
+        }
+    }
+
+    private void ShowCurrentSlide()
+    {
+        TutorialStep step = steps[currentStepIndex];
+
+        // РџРѕРєР°Р·С‹РІР°РµРј Canvas
+        tutorialCanvas.gameObject.SetActive(true);
+        isWaitingForGoals = false;
+
+        // Р‘Р›РћРљРР РЈР•Рњ РР“Р РћРљРђ (РѕРЅ РЅРµ РјРѕР¶РµС‚ РґРІРёРіР°С‚СЊСЃСЏ, РїРѕРєР° С‡РёС‚Р°РµС‚)
+        LockPlayer(true);
+
+        // РћР±РЅРѕРІР»СЏРµРј С‚РµРєСЃС‚
+        if (step.slides.Count > 0)
+            dialogueText.text = step.slides[currentSlideIndex];
+
+        // РљРЅРѕРїРєР° РќР°Р·Р°Рґ
+        btnBack.gameObject.SetActive(currentSlideIndex > 0 || currentStepIndex > 0);
+
+        // Р›РѕРіРёРєР° РєРЅРѕРїРєРё "РЇ РІСЃРµ РїРѕРЅСЏР»"
+        bool isLastSlide = (currentSlideIndex == step.slides.Count - 1);
+        btnUnderstood.gameObject.SetActive(isLastSlide);
+
+        // РўРµРєСЃС‚ РЅР° РєРЅРѕРїРєРµ
+        TMP_Text btnText = btnUnderstood.GetComponentInChildren<TMP_Text>();
+        if (btnText != null)
+        {
+            if (step.isFinalStep && isLastSlide)
+                btnText.text = "Р—Р°РІРµСЂС€РёС‚СЊ";
+            else
+                btnText.text = "РџСЂРёСЃС‚СѓРїРёС‚СЊ";
+        }
+
+        UpdateTaskPanel();
+    }
+
+    private void HideDialoguePanel()
+    {
+        tutorialCanvas.gameObject.SetActive(false);
+        isWaitingForGoals = true;
+
+        // Р РђР—Р‘Р›РћРљРР РЈР•Рњ РР“Р РћРљРђ (РѕРЅ РјРѕР¶РµС‚ РёРґС‚Рё РІС‹РїРѕР»РЅСЏС‚СЊ С†РµР»Рё)
+        LockPlayer(false);
+
+        // РџРѕРєР°Р·С‹РІР°РµРј Р·Р°РґР°С‡Рё РІ СѓРіР»Сѓ
+        if (steps[currentStepIndex].goals.Count > 0)
+            taskPanel.SetActive(true);
+
+        Debug.Log("РћР±СѓС‡РµРЅРёРµ: Р’С‹РїРѕР»РЅРёС‚Рµ Р·Р°РґР°С‡Рё РІ СѓРіР»Сѓ СЌРєСЂР°РЅР°.");
+    }
+
+    // РџСЂРѕРІРµСЂРєР° С†РµР»РµР№ (РІС‹Р·С‹РІР°РµС‚СЃСЏ РёР· Inventory/Anvil/Quest)
+    public void CheckGoals(string itemID, int amount, GoalType type)
+    {
+        if (!isActive) return;
+
+        TutorialStep step = steps[currentStepIndex];
+        bool wasComplete = step.IsGoalsComplete();
+
+        // РћР±РЅРѕРІР»СЏРµРј СЃС‚Р°С‚СѓСЃС‹ С†РµР»РµР№
+        foreach (var goal in step.goals)
+        {
+            if (goal.isCompleted) continue;
+            if (goal.type == type && goal.targetID == itemID)
+            {
+                if (type == GoalType.CollectItem)
+                {
+                    if (amount >= goal.requiredAmount) goal.isCompleted = true;
+                }
+                else { goal.isCompleted = true; }
+            }
+        }
+
+        UpdateTaskPanel();
+
+        // Р•СЃР»Рё РјС‹ Р¶РґР°Р»Рё РІС‹РїРѕР»РЅРµРЅРёСЏ С†РµР»РµР№ Рё РѕРЅРё РІС‹РїРѕР»РЅРµРЅС‹ -> РЎР»РµРґСѓСЋС‰РёР№ С€Р°Рі
+        if (isWaitingForGoals && step.IsGoalsComplete())
+        {
+            Debug.Log("Р¦РµР»Рё РІС‹РїРѕР»РЅРµРЅС‹! РџРµСЂРµС…РѕРґ Рє СЃР»РµРґСѓСЋС‰РµРјСѓ С€Р°РіСѓ.");
+            GoToNextStep();
+        }
+    }
+
+    private void GoToNextStep()
+    {
+        // Р•СЃР»Рё С‚РµРєСѓС‰РёР№ С€Р°Рі Р±С‹Р» РїРѕСЃР»РµРґРЅРёРј
+        if (steps[currentStepIndex].isFinalStep)
+        {
+            FinishTutorial();
+            return;
+        }
+
+        currentStepIndex++;
+        currentSlideIndex = 0;
+
+        if (currentStepIndex < steps.Count)
+        {
+            ShowCurrentSlide();
+        }
+        else
+        {
+            FinishTutorial(); // РЎС‚СЂР°С…РѕРІРєР°
+        }
+    }
+
+    private void UpdateTaskPanel()
+    {
+        TutorialStep step = steps[currentStepIndex];
+        if (step.goals.Count == 0)
+        {
+            taskPanel.SetActive(false);
+            return;
+        }
+
+        taskPanel.SetActive(true);
+        string tasks = "";
+        foreach (var goal in step.goals)
+        {
+            string status = goal.isCompleted ? "<color=green>вњ”</color>" : "в—‹";
+            tasks += $"{status} {goal.description}\n";
+        }
+        taskListText.text = tasks;
+    }
+
+    private void FinishTutorial()
+    {
+        PlayerPrefs.SetInt(SaveKey, 1);
+        isActive = false;
+        isWaitingForGoals = false;
+
+        tutorialCanvas.gameObject.SetActive(false);
+        taskPanel.SetActive(false);
+
+        LockPlayer(false); // Р Р°Р·Р±Р»РѕРєРёСЂСѓРµРј СѓРїСЂР°РІР»РµРЅРёРµ (РЅР° РІСЃСЏРєРёР№ СЃР»СѓС‡Р°Р№)
+        Debug.Log("РћР±СѓС‡РµРЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ!");
+    }
+
+    private void ForceFinish()
+    {
+        isActive = false;
+        tutorialCanvas.gameObject.SetActive(false);
+        taskPanel.SetActive(false);
+    }
+
+    // Р‘Р»РѕРєРёСЂРѕРІРєР° РёРіСЂРѕРєР° (РѕРїС†РёРѕРЅР°Р»СЊРЅРѕ, РµСЃР»Рё С…РѕС‡РµС€СЊ Р±Р»РѕРєРёСЂРѕРІР°С‚СЊ РІРѕ РІСЂРµРјСЏ С‡С‚РµРЅРёСЏ)
+    private void LockPlayer(bool isLocked)
+    {
+        if (playerMovement != null) playerMovement.enabled = !isLocked;
+        if (mouseLook != null) mouseLook.enabled = !isLocked;
+        Cursor.visible = isLocked;
+        Cursor.lockState = isLocked ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+}
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\UI\AnvilUI.cs ----- 
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -1382,6 +1782,12 @@ public class AnvilUI : MonoBehaviour
         playerInventory.AddItem(selectedRecipe.resultItem.id, selectedRecipe.resultAmount);
         UpdateResultInventoryCount();
 
+        if (TutorialManager.Instance != null)
+        {
+            // РџРµСЂРµРґР°РµРј ID СЃРѕР·РґР°РЅРЅРѕРіРѕ РїСЂРµРґРјРµС‚Р°
+            TutorialManager.Instance.CheckGoals(selectedRecipe.resultItem.id, 1, GoalType.CraftItem);
+        }
+
         craftCount += selectedRecipe.resultAmount;
         if (successText != null)
         {
@@ -1466,6 +1872,8 @@ public class AnvilUI : MonoBehaviour
         resultInventoryCountText.text = $"Р’ РёРЅРІРµРЅС‚Р°СЂРµ: {count}";
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\UI\FurnaceUI.cs ----- 
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -1823,6 +2231,8 @@ public class FurnaceUI : MonoBehaviour
         coalText.text = "Уголь: " + playerInventory.GetCount("Coal");
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\UI\InventoryUI.cs ----- 
 // Assets/Scripts/Inventory/InventoryUI.cs
 using UnityEngine;
 using UnityEngine.UI;
@@ -1949,6 +2359,8 @@ public class InventoryUI : MonoBehaviour
         }
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\UI\QuestBoardUI.cs ----- 
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -2177,6 +2589,8 @@ public class QuestBoardUI : MonoBehaviour
         }
     }
 }
+ 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\UI\ShopUI.cs ----- 
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -2427,3 +2841,4 @@ public class ShopUI : MonoBehaviour
         }
     }
 }
+ 

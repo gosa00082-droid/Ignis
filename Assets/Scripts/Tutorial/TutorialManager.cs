@@ -7,139 +7,232 @@ public class TutorialManager : MonoBehaviour
 {
     public static TutorialManager Instance { get; private set; }
 
-    [Header("Данные")]
+    [Header("Список шагов")]
     public List<TutorialStep> steps = new List<TutorialStep>();
 
     [Header("UI Ссылки")]
-    [SerializeField] private GameObject tutorialCanvas;      // <--- ТЕПЕРЬ СЮДА КИДАЕМ CANVAS
-    [SerializeField] private TextMeshProUGUI dialogueText;   // Текст внутри панели
-    [SerializeField] private GameObject taskPanel;           // Панель задач (Должна быть ВНЕ tutorialCanvas или в другом Canvas!)
-    [SerializeField] private TextMeshProUGUI taskListText;   // Текст задач
+    [SerializeField] private Canvas tutorialCanvas; // Canvas с Sort Order 100
+    [SerializeField] private TextMeshProUGUI dialogueText;
+    [SerializeField] private GameObject taskPanel; // Панель задач в углу
+    [SerializeField] private TextMeshProUGUI taskListText;
     [SerializeField] private Button btnBack;
     [SerializeField] private Button btnUnderstood;
-    [SerializeField] private Button panelClickArea;          // Кнопка на панели
+    [SerializeField] private Button panelClickArea;
 
-    [Header("Ссылки на игрока")]
+    [Header("Игрок")]
     [SerializeField] private PlayerMovement playerMovement;
     [SerializeField] private MouseLook mouseLook;
 
     private int currentStepIndex = 0;
-    private bool isActive = false;
+    private int currentSlideIndex = 0;
+    private bool isActive = false; // Активна ли система обучения вообще
+    private bool isWaitingForGoals = false; // Ждем ли выполнения целей (панель скрыта)
     private const string SaveKey = "TutorialComplete";
 
     private void Awake()
     {
         if (Instance == null) Instance = this;
 
+        // Автостарт убрали! Запуск будет из CutsceneManager
         if (PlayerPrefs.GetInt(SaveKey, 0) == 1)
         {
-            FinishTutorial(false);
+            ForceFinish();
             return;
         }
 
+        // Настройка кнопок
         panelClickArea.onClick.AddListener(OnPanelClicked);
         btnBack.onClick.AddListener(PrevSlide);
         btnUnderstood.onClick.AddListener(OnUnderstoodClicked);
 
-        StartTutorial();
+        // Скрываем UI на старте
+        if (tutorialCanvas != null) tutorialCanvas.gameObject.SetActive(false);
+        if (taskPanel != null) taskPanel.SetActive(false);
     }
 
-    private void StartTutorial()
+    // Метод вызывается из CutsceneManager
+    public void StartTutorial()
     {
+        if (PlayerPrefs.GetInt(SaveKey, 0) == 1) return;
+
         isActive = true;
         currentStepIndex = 0;
-        LockPlayer(true);
+        currentSlideIndex = 0;
 
-        // Включаем Canvas
-        if (tutorialCanvas != null) tutorialCanvas.SetActive(true);
-
-        ShowStep(currentStepIndex);
+        ShowCurrentSlide();
     }
 
+    // Клик по панели (Переход вперед по слайдам)
     private void OnPanelClicked()
     {
-        if (currentStepIndex == steps.Count - 1) return;
+        // Если ждем выполнения целей или не активны - игнор
+        if (!isActive || isWaitingForGoals) return;
 
         TutorialStep step = steps[currentStepIndex];
 
-        if (step.goals.Count > 0)
+        // Если есть еще слайды
+        if (currentSlideIndex < step.slides.Count - 1)
         {
-            if (!step.IsComplete())
-            {
-                Debug.Log("Сначала выполни задачи!");
-                return;
-            }
+            currentSlideIndex++;
+            ShowCurrentSlide();
         }
-
-        NextSlide();
+        // Если слайд последний, но целей нет -> сразу следующий шаг
+        else if (step.goals.Count == 0)
+        {
+            GoToNextStep();
+        }
+        // Если слайд последний и есть цели -> ничего не делаем (ждем кнопку "Я все понял")
     }
 
-    private void NextSlide()
+    // Кнопка "Я все понял!"
+    private void OnUnderstoodClicked()
     {
-        if (currentStepIndex < steps.Count - 1)
+        TutorialStep step = steps[currentStepIndex];
+
+        // Если это последний шаг обучения И цели выполнены (или их нет)
+        if (step.isFinalStep && step.IsGoalsComplete())
         {
-            currentStepIndex++;
-            ShowStep(currentStepIndex);
+            FinishTutorial();
+            return;
+        }
+
+        // Если цели есть, но еще не выполнены -> Прячем панель, даем играть
+        if (step.goals.Count > 0)
+        {
+            HideDialoguePanel();
+        }
+        else
+        {
+            // Если целей нет и это не конец -> просто следующий шаг
+            GoToNextStep();
         }
     }
 
     private void PrevSlide()
     {
-        if (currentStepIndex > 0)
+        if (!isActive || isWaitingForGoals) return;
+
+        if (currentSlideIndex > 0)
+        {
+            currentSlideIndex--;
+            ShowCurrentSlide();
+        }
+        else if (currentStepIndex > 0)
         {
             currentStepIndex--;
-            ShowStep(currentStepIndex);
+            TutorialStep prevStep = steps[currentStepIndex];
+            currentSlideIndex = prevStep.slides.Count - 1;
+            ShowCurrentSlide();
         }
     }
 
-    private void OnUnderstoodClicked()
+    private void ShowCurrentSlide()
     {
-        PlayerPrefs.SetInt(SaveKey, 1);
-        FinishTutorial(true);
-    }
+        TutorialStep step = steps[currentStepIndex];
 
-    private void ShowStep(int index)
-    {
-        TutorialStep step = steps[index];
-        dialogueText.text = step.dialogueText;
+        // Показываем Canvas
+        tutorialCanvas.gameObject.SetActive(true);
+        isWaitingForGoals = false;
 
-        btnBack.gameObject.SetActive(index > 0);
+        // БЛОКИРУЕМ ИГРОКА (он не может двигаться, пока читает)
+        LockPlayer(true);
 
-        bool isLastStep = (index == steps.Count - 1);
-        btnUnderstood.gameObject.SetActive(isLastStep && step.IsComplete());
+        // Обновляем текст
+        if (step.slides.Count > 0)
+            dialogueText.text = step.slides[currentSlideIndex];
+
+        // Кнопка Назад
+        btnBack.gameObject.SetActive(currentSlideIndex > 0 || currentStepIndex > 0);
+
+        // Логика кнопки "Я все понял"
+        bool isLastSlide = (currentSlideIndex == step.slides.Count - 1);
+        btnUnderstood.gameObject.SetActive(isLastSlide);
+
+        // Текст на кнопке
+        TMP_Text btnText = btnUnderstood.GetComponentInChildren<TMP_Text>();
+        if (btnText != null)
+        {
+            if (step.isFinalStep && isLastSlide)
+                btnText.text = "Завершить";
+            else
+                btnText.text = "Приступить";
+        }
 
         UpdateTaskPanel();
     }
 
+    private void HideDialoguePanel()
+    {
+        tutorialCanvas.gameObject.SetActive(false);
+        isWaitingForGoals = true;
+
+        // РАЗБЛОКИРУЕМ ИГРОКА (он может идти выполнять цели)
+        LockPlayer(false);
+
+        // Показываем задачи в углу
+        if (steps[currentStepIndex].goals.Count > 0)
+            taskPanel.SetActive(true);
+
+        Debug.Log("Обучение: Выполните задачи в углу экрана.");
+    }
+
+    // Проверка целей (вызывается из Inventory/Anvil/Quest)
     public void CheckGoals(string itemID, int amount, GoalType type)
     {
         if (!isActive) return;
-        TutorialStep step = steps[currentStepIndex];
 
+        TutorialStep step = steps[currentStepIndex];
+        bool wasComplete = step.IsGoalsComplete();
+
+        // Обновляем статусы целей
         foreach (var goal in step.goals)
         {
             if (goal.isCompleted) continue;
-
             if (goal.type == type && goal.targetID == itemID)
             {
                 if (type == GoalType.CollectItem)
                 {
                     if (amount >= goal.requiredAmount) goal.isCompleted = true;
                 }
-                else
-                {
-                    goal.isCompleted = true;
-                }
+                else { goal.isCompleted = true; }
             }
         }
+
         UpdateTaskPanel();
+
+        // Если мы ждали выполнения целей и они выполнены -> Следующий шаг
+        if (isWaitingForGoals && step.IsGoalsComplete())
+        {
+            Debug.Log("Цели выполнены! Переход к следующему шагу.");
+            GoToNextStep();
+        }
+    }
+
+    private void GoToNextStep()
+    {
+        // Если текущий шаг был последним
+        if (steps[currentStepIndex].isFinalStep)
+        {
+            FinishTutorial();
+            return;
+        }
+
+        currentStepIndex++;
+        currentSlideIndex = 0;
+
+        if (currentStepIndex < steps.Count)
+        {
+            ShowCurrentSlide();
+        }
+        else
+        {
+            FinishTutorial(); // Страховка
+        }
     }
 
     private void UpdateTaskPanel()
     {
-        if (!isActive) return;
         TutorialStep step = steps[currentStepIndex];
-
         if (step.goals.Count == 0)
         {
             taskPanel.SetActive(false);
@@ -154,30 +247,29 @@ public class TutorialManager : MonoBehaviour
             tasks += $"{status} {goal.description}\n";
         }
         taskListText.text = tasks;
-
-        if (step.IsComplete())
-        {
-            if (currentStepIndex == steps.Count - 1)
-            {
-                btnUnderstood.gameObject.SetActive(true);
-            }
-        }
     }
 
-    private void FinishTutorial(bool playAnim)
+    private void FinishTutorial()
+    {
+        PlayerPrefs.SetInt(SaveKey, 1);
+        isActive = false;
+        isWaitingForGoals = false;
+
+        tutorialCanvas.gameObject.SetActive(false);
+        taskPanel.SetActive(false);
+
+        LockPlayer(false); // Разблокируем управление (на всякий случай)
+        Debug.Log("Обучение завершено!");
+    }
+
+    private void ForceFinish()
     {
         isActive = false;
-
-        // Выключаем Canvas обучения
-        if (tutorialCanvas != null) tutorialCanvas.SetActive(false);
-
-        // Панель задач оставляем включенной!
-        // Но только если она нужна для следующих целей (логику задач нужно доработать отдельно)
-        // taskPanel.SetActive(false); <-- НЕ ВЫКЛЮЧАЕМ
-
-        LockPlayer(false);
+        tutorialCanvas.gameObject.SetActive(false);
+        taskPanel.SetActive(false);
     }
 
+    // Блокировка игрока (опционально, если хочешь блокировать во время чтения)
     private void LockPlayer(bool isLocked)
     {
         if (playerMovement != null) playerMovement.enabled = !isLocked;

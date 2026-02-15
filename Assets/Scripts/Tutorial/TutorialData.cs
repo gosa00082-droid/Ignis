@@ -4,38 +4,41 @@ using System.Collections.Generic;
 // Типы целей
 public enum GoalType
 {
-    None,           // Нет цели (просто текст)
-    CollectItem,    // Собрать предмет
-    CraftItem,      // Скрафтить предмет
-    CompleteQuest,  // Сдать квест
-    Interact        // Взаимодействовать с объектом (по Тегу)
+    None,
+    CollectItem,
+    CraftItem,
+    CompleteQuest,
+    Interact
 }
 
-// Класс одной цели (подзадачи)
 [System.Serializable]
 public class TutorialGoal
 {
-    public GoalType type;           // Тип цели
-    public string targetID;         // ID предмета или квеста (или Тег для Interact)
-    public int requiredAmount = 1;  // Сколько нужно
-    [TextArea] public string description; // Текст для игрока (например, "Найди 3 железа")
-
-    [HideInInspector] public bool isCompleted = false; // Статус (меняет менеджер)
+    public GoalType type;
+    public string targetID;
+    public int requiredAmount = 1;
+    [TextArea] public string description;
+    [HideInInspector] public bool isCompleted = false;
 }
 
-// Сам шаг обучения (ScriptableObject)
 [CreateAssetMenu(fileName = "New Tutorial Step", menuName = "Ignis/Tutorial Step")]
 public class TutorialStep : ScriptableObject
 {
-    [Header("Текст слайда")]
-    [TextArea(3, 10)] public string dialogueText; // Текст на панели
+    [Header("Настройки Шага")]
+    public bool isFinalStep = false; // Галочка: последний ли это шаг?
 
-    [Header("Цели и подзадачи")]
-    public List<TutorialGoal> goals = new List<TutorialGoal>(); // Список целей
+    [Header("Слайды (Тексты диалогов)")]
+    // Сюда пишем тексты. Размер массива = кол-во слайдов.
+    [TextArea(3, 10)] public List<string> slides = new List<string>();
 
-    // Проверка, выполнены ли все цели в этом шаге
-    public bool IsComplete()
+    [Header("Цели (Выполняются для завершения шага)")]
+    public List<TutorialGoal> goals = new List<TutorialGoal>();
+
+    // Проверка выполнения всех целей
+    public bool IsGoalsComplete()
     {
+        if (goals.Count == 0) return true; // Если целей нет — считаем выполненным сразу
+
         foreach (var goal in goals)
         {
             if (!goal.isCompleted) return false;
