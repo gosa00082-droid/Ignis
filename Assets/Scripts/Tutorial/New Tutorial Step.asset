@@ -12,6 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 0}
   m_Name: New Tutorial Step
   m_EditorClassIdentifier: Assembly-CSharp::TutorialStep
-  isFinalStep: 0
-  slides: []
-  goals: []
+  isFinalStep: 1
+  slides:
+  - "\u0442\u0435\u043F\u0435\u0440\u044C \u0438\u0434\u0438 \u0437\u0430\u0439\u043C\u0438\u0441\u044C
+    \u0445\u0443\u0439\u043D\u0435\u0439"
+  - "\u0442\u043E\u0447\u043D\u0435\u0435 \u0445\u0437 \u0442\u0430\u043C \u0438\u0433\u0440\u0430\u0439
+    \u043A\u0430\u0440\u043E\u0447\u0435"
+  goals:
+  - type: 1
+    targetID: Iron
+    requiredAmount: 10
+    description: 
+    isCompleted: 0
