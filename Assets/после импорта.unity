@@ -791,8 +791,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7666a936220c22d47a3b2390500f7c63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialManager
-  steps: []
-  tutorialCanvas: {fileID: 304678899}
+  steps:
+  - {fileID: 11400000, guid: ea98a7d33fb2ab942af1584c0d58b7fd, type: 2}
+  tutorialCanvas: {fileID: 304678902}
   dialogueText: {fileID: 460177080}
   taskPanel: {fileID: 841057271}
   taskListText: {fileID: 1056036740}
@@ -881,7 +882,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 100
   m_TargetDisplay: 0
 --- !u!224 &304678903
 RectTransform:
@@ -4320,7 +4321,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 100
   m_TargetDisplay: 0
 --- !u!1001 &1692487443
 PrefabInstance:
