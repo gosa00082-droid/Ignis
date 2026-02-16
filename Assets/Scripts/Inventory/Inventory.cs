@@ -19,6 +19,7 @@ public class Inventory : MonoBehaviour
         AddItem("Iron_Ore", 10);
         AddItem("Coal", 20);
         AddItem("Gold_Money", 500);
+        AddItem("Wood", 5);
     }
 
     private void Awake()
