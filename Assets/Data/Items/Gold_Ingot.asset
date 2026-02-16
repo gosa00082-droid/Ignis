@@ -17,5 +17,5 @@ MonoBehaviour:
   category: 0
   icon: {fileID: 0}
   maxStackSize: 10
-  basePrice: 300
+  basePrice: 350
   description: "\u0427\u0438\u0441\u0442\u043E\u0435 \u0437\u043E\u043B\u043E\u0442\u043E"

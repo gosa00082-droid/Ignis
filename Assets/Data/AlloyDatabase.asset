@@ -13,14 +13,13 @@ MonoBehaviour:
   m_Name: AlloyDatabase
   m_EditorClassIdentifier: Assembly-CSharp::AlloyDatabase
   recipes:
+  - {fileID: 11400000, guid: 7b4cf7a868dc35843bdf6d00bea9b6dd, type: 2}
+  - {fileID: 11400000, guid: bb0e4c176d901514298b71760e0348e5, type: 2}
   - {fileID: 11400000, guid: 949b5fa7dc9363c4eb3ec0911382149b, type: 2}
   - {fileID: 11400000, guid: c54c8f0a502ce92448c39f379ce244b8, type: 2}
-  - {fileID: 11400000, guid: e4ccebe1bf9884b42b44784c86c361b8, type: 2}
-  - {fileID: 11400000, guid: dc0b46e7d006163489b11c5e8e366193, type: 2}
-  - {fileID: 11400000, guid: e804473fcc3b73d4b9c6747aa3c91b83, type: 2}
+  - {fileID: 11400000, guid: 210ba52b0b8a8fd4ca5cea2a017ef7fe, type: 2}
   - {fileID: 11400000, guid: db0ec24731b8b9d40b14adb789925ecd, type: 2}
   - {fileID: 11400000, guid: ea5661c7c5d3aab48b1c75984b07cfb0, type: 2}
-  - {fileID: 11400000, guid: 5eafeb72797580d47b4981ee6ca2558d, type: 2}
-  - {fileID: 11400000, guid: 8c456e260edd2f5419adabb665f751cc, type: 2}
-  - {fileID: 11400000, guid: 5e624e7bf4dbef54bb007e12d45174ed, type: 2}
+  - {fileID: 11400000, guid: 8ab576cdbc485b346bd44b7e5b4443d7, type: 2}
+  - {fileID: 11400000, guid: 4bbff7f8e2ad69a4e9e732b1faa88651, type: 2}
   - {fileID: 11400000, guid: 49e5eb87af44455408dd3e7d95ad606d, type: 2}

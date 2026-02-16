@@ -56,6 +56,19 @@ public class FurnaceUI : MonoBehaviour
         bellowsButton.gameObject.SetActive(false);
         cancelButton.gameObject.SetActive(false);
         noCoalWarning.gameObject.SetActive(false);
+
+        // АВТО-ЗАПОЛНЕНИЕ СПИСКА ПЛАВКИ (чтобы не заполнять вручную в инспекторе)
+        if (smeltableItemIds.Count == 0)
+        {
+            smeltableItemIds = new List<string>
+        {
+            // Руды
+            "Iron_Ore", "Copper_Ore", "Tin_Ore", "Silver_Ore", "Gold_Ore",
+            // Слитки (для переработки в сталь/дамаск)
+            "Iron_Ingot", "Steel_Ingot"
+        };
+            Debug.Log("FurnaceUI: Список плавимых предметов автоматически заполнен.");
+        }
     }
 
     public void ToggleFurnace()

@@ -4690,9 +4690,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1636556238}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: itemDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+    - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: readinessBar
       value: 
       objectReference: {fileID: 478911042}
+    - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: alloyDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 237f3f06f7b8d944eaca5db6c1d5f28e, type: 2}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: bellowsButton
       value: 
@@ -4748,7 +4756,7 @@ PrefabInstance:
     - target: {fileID: 1883067424104088220, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: playerMovement
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 2083097361}
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: errorText
       value: 
@@ -4770,6 +4778,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 991068604}
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: itemDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+    - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: weaponsButton
       value: 
       objectReference: {fileID: 1442480484}
@@ -4777,6 +4789,10 @@ PrefabInstance:
       propertyPath: playerMovement
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: recipeDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 4fe88190dfd28ee4998e86bf4f0700b2, type: 2}
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: recipeNameText
       value: 
@@ -4841,6 +4857,10 @@ PrefabInstance:
       propertyPath: toolsButton
       value: 
       objectReference: {fileID: 934187118}
+    - target: {fileID: 2843798940187508109, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: itemDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
     - target: {fileID: 2843798940187508109, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: itemNameText
       value: 
@@ -4938,6 +4958,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 7347533057949409742, guid: b2743aec8d937a941b16732f224a5588, type: 3}
+      propertyPath: itemDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+    - target: {fileID: 7347533057949409742, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: failCanvasGroup
       value: 
       objectReference: {fileID: 409729106}
@@ -4970,6 +4994,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 681135398}
     m_Modifications:
+    - target: {fileID: 905640114318191149, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+      propertyPath: itemDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+    - target: {fileID: 905640114318191149, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+      propertyPath: questDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 4b3c168f9e9922f4a9a6d385977ea396, type: 2}
     - target: {fileID: 905640114318191149, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: questBoardRoot
       value: 
@@ -5391,7 +5423,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8aca1467bc38dff41b0ad9780a7ffb09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
-  itemDatabase: {fileID: 11400000, guid: eae493646857cca47978b0f43b9d4a19, type: 2}
+  itemDatabase: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
 --- !u!114 &2083097358
 MonoBehaviour:
   m_ObjectHideFlags: 0

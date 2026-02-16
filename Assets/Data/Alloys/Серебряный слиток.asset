@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f0bf113f5bd09f4588669f3ac4a7c27, type: 3}
-  m_Name: "\u0421\u0435\u0440\u0435\u0431\u0440\u043E"
+  m_Name: "\u0421\u0435\u0440\u0435\u0431\u0440\u044F\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
   m_EditorClassIdentifier: Assembly-CSharp::AlloyRecipe
-  alloyName: "\u0421\u0435\u0440\u0435\u0431\u0440\u043E"
+  alloyName: "\u0421\u0435\u0440\u0435\u0431\u0440\u044F\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
   resultItem: {fileID: 11400000, guid: ffdc7923544237e45a37d2ca78e20f7b, type: 2}
   slagItem: {fileID: 11400000, guid: f3b2adb71590eee45b951ecd63295d31, type: 2}
   requiredOres:

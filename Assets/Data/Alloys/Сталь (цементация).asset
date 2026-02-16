@@ -10,19 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f0bf113f5bd09f4588669f3ac4a7c27, type: 3}
-  m_Name: "\u0421\u0442\u0430\u043B\u044C \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0430\u044F"
+  m_Name: "\u0421\u0442\u0430\u043B\u044C (\u0446\u0435\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F)"
   m_EditorClassIdentifier: Assembly-CSharp::AlloyRecipe
-  alloyName: "\u0421\u0442\u0430\u043B\u044C \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0430\u044F"
+  alloyName: "\u0421\u0442\u0430\u043B\u044C (\u0446\u0435\u043C\u0435\u043D\u0442\u0430\u0446\u0438\u044F)"
   resultItem: {fileID: 11400000, guid: 08272f9ad56506340bfaa9e03621f60c, type: 2}
   slagItem: {fileID: 11400000, guid: f3b2adb71590eee45b951ecd63295d31, type: 2}
   requiredOres:
   - Iron_Ingot
   - Iron_Ingot
-  - Iron_Ingot
-  description: "\u041A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u0430\u044F
-    \u0441\u0442\u0430\u043B\u044C \u0438\u0437 \u0447\u0438\u0441\u0442\u043E\u0433\u043E
-    \u0436\u0435\u043B\u0435\u0437\u0430"
-  coalRequired: 10
-  minTemp: 1450
+  description: "\u041F\u0435\u0440\u0435\u043F\u043B\u0430\u0432\u043A\u0430 \u0436\u0435\u043B\u0435\u0437\u0430
+    \u0432 \u0441\u0442\u0430\u043B\u044C (\u0442\u0440\u0435\u0431\u0443\u0435\u0442
+    \u043C\u043D\u043E\u0433\u043E \u0443\u0433\u043B\u044F)"
+  coalRequired: 8
+  minTemp: 1400
   maxTemp: 1600
-  smeltDuration: 18
+  smeltDuration: 15

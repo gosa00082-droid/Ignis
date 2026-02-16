@@ -18,8 +18,8 @@ MonoBehaviour:
   requiredOres:
   - Gold_Ore
   - Silver_Ore
-  description: "\u0421\u043F\u043B\u0430\u0432 \u0437\u043E\u043B\u043E\u0442\u0430
-    \u0438 \u0441\u0435\u0440\u0435\u0431\u0440\u0430"
+  description: "\u041F\u0440\u0438\u0440\u043E\u0434\u043D\u044B\u0439 \u0441\u043F\u043B\u0430\u0432
+    \u0437\u043E\u043B\u043E\u0442\u0430 \u0438 \u0441\u0435\u0440\u0435\u0431\u0440\u0430"
   coalRequired: 7
   minTemp: 1150
   maxTemp: 1350
