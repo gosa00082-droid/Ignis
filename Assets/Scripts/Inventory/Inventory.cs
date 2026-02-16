@@ -13,6 +13,14 @@ public class Inventory : MonoBehaviour
 
     [SerializeField] private ItemDatabase itemDatabase;  // ссылка на нашу базу
 
+    void Start()
+    {
+        // ... существующий код ...
+        AddItem("Iron_Ore", 10);
+        AddItem("Coal", 20);
+        AddItem("Gold_Money", 500);
+    }
+
     private void Awake()
     {
         if (itemDatabase == null)
