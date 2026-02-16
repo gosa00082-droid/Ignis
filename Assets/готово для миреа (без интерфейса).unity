@@ -936,9 +936,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialManager
   steps:
-  - {fileID: 11400000, guid: ea98a7d33fb2ab942af1584c0d58b7fd, type: 2}
-  - {fileID: 11400000, guid: 1b7059f3d3cef0e4495e276a53f9bbd7, type: 2}
-  - {fileID: 11400000, guid: 10f95c9e6dace2b439d3f930628b44f6, type: 2}
+  - {fileID: 11400000, guid: f083c7d50c145ec4eaaa28d92ef7f449, type: 2}
+  - {fileID: 11400000, guid: 380162ead29b8d34aa32517c8f598ce8, type: 2}
+  - {fileID: 11400000, guid: b5e1853aac816bc4fb3b3565f5c6478c, type: 2}
+  - {fileID: 11400000, guid: 1627404cb30552f42b257d6e7a85b738, type: 2}
+  - {fileID: 11400000, guid: 309afda6120225943b82e00a833de427, type: 2}
   tutorialCanvas: {fileID: 304678902}
   dialogueText: {fileID: 460177080}
   taskPanel: {fileID: 841057271}
