@@ -822,9 +822,9 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2083148620061883824}
   - {fileID: 7603904404170758298}
   - {fileID: 3220841118179100465}
+  - {fileID: 2083148620061883824}
   m_Father: {fileID: 5155547493443171586}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -19370,6 +19370,7 @@ MonoBehaviour:
   availablePanel: {fileID: 9110923597701202474}
   activePanel: {fileID: 5692385905049175545}
   detailsPanel: {fileID: 1729029336863483830}
+  questBoardRoot: {fileID: 0}
   detailsTitle: {fileID: 2396907311959465741}
   detailsCustomer: {fileID: 7537251888202401346}
   detailsReward: {fileID: 7433248959319777767}
@@ -19381,8 +19382,6 @@ MonoBehaviour:
   - {fileID: 3666589763912022207}
   - {fileID: 1753773326227652345}
   activeSlotPrefab: {fileID: 3132430271759498937, guid: 335629db8ea0e8b4387a527e92eeb95c, type: 3}
-  playerMovement: {fileID: 0}
-  mouseLook: {fileID: 0}
 --- !u!1 &8855458130290399605
 GameObject:
   m_ObjectHideFlags: 0
