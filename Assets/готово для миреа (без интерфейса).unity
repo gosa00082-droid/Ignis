@@ -3249,8 +3249,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 926756599}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.28813827, y: 0, z: 0, w: 0.95758885}
-  m_LocalPosition: {x: -1.7217207, y: 3.56, z: -13.618252}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0.27999973, y: 0.47000003, z: -13.52}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5467,7 +5467,7 @@ PrefabInstance:
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: itemDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+      objectReference: {fileID: 11400000, guid: 250cddb9d6a1efe4eb5ad3d7b981e363, type: 2}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: readinessBar
       value: 
@@ -5475,7 +5475,7 @@ PrefabInstance:
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: alloyDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 237f3f06f7b8d944eaca5db6c1d5f28e, type: 2}
+      objectReference: {fileID: 11400000, guid: 0c3b3247c4b30aa4eaf8159e7bfd8a0d, type: 2}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: bellowsButton
       value: 
@@ -5555,7 +5555,7 @@ PrefabInstance:
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: itemDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+      objectReference: {fileID: 11400000, guid: 250cddb9d6a1efe4eb5ad3d7b981e363, type: 2}
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: weaponsButton
       value: 
@@ -5567,7 +5567,7 @@ PrefabInstance:
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: recipeDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 4fe88190dfd28ee4998e86bf4f0700b2, type: 2}
+      objectReference: {fileID: 11400000, guid: 4aef0a107117e7c4d899f9d957fbe330, type: 2}
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: recipeNameText
       value: 
@@ -5635,7 +5635,7 @@ PrefabInstance:
     - target: {fileID: 2843798940187508109, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: itemDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+      objectReference: {fileID: 11400000, guid: 250cddb9d6a1efe4eb5ad3d7b981e363, type: 2}
     - target: {fileID: 2843798940187508109, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: itemNameText
       value: 
@@ -5735,7 +5735,7 @@ PrefabInstance:
     - target: {fileID: 7347533057949409742, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: itemDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+      objectReference: {fileID: 11400000, guid: 250cddb9d6a1efe4eb5ad3d7b981e363, type: 2}
     - target: {fileID: 7347533057949409742, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: failCanvasGroup
       value: 
@@ -6128,11 +6128,11 @@ PrefabInstance:
     - target: {fileID: 905640114318191149, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: itemDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+      objectReference: {fileID: 11400000, guid: 250cddb9d6a1efe4eb5ad3d7b981e363, type: 2}
     - target: {fileID: 905640114318191149, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: questDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 4b3c168f9e9922f4a9a6d385977ea396, type: 2}
+      objectReference: {fileID: 11400000, guid: d8eeb7273db1b2844a6bf0694daae8f6, type: 2}
     - target: {fileID: 905640114318191149, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: questBoardRoot
       value: 
@@ -8608,7 +8608,7 @@ PrefabInstance:
     - target: {fileID: 8486304221659315403, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: itemDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+      objectReference: {fileID: 11400000, guid: 250cddb9d6a1efe4eb5ad3d7b981e363, type: 2}
     - target: {fileID: 8518890379083127467, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -9214,7 +9214,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8aca1467bc38dff41b0ad9780a7ffb09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
-  itemDatabase: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
+  itemDatabase: {fileID: 11400000, guid: 250cddb9d6a1efe4eb5ad3d7b981e363, type: 2}
 --- !u!114 &2083097358
 MonoBehaviour:
   m_ObjectHideFlags: 0
