@@ -18,7 +18,7 @@ MonoBehaviour:
     \u0445\u043E\u0447\u0435\u0442 \u043A\u0430\u0447\u0435\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439
     \u043C\u0435\u0447 \u0434\u043B\u044F \u0441\u0435\u0431\u044F."
   customerName: "\u0411\u043E\u044F\u0440\u0438\u043D \u042F\u0440\u043E\u0441\u043B\u0430\u0432"
-  rewardGold: 500
+  rewardGold: 800
   timeLimitHours: 30
   requiredItemID: Sword_Quality
   requiredAmount: 1

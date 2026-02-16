@@ -17,9 +17,8 @@ MonoBehaviour:
   slagItem: {fileID: 11400000, guid: f3b2adb71590eee45b951ecd63295d31, type: 2}
   requiredOres:
   - Gold_Ore
-  - Gold_Ore
   description: "\u0427\u0438\u0441\u0442\u043E\u0435 \u0437\u043E\u043B\u043E\u0442\u043E"
-  coalRequired: 8
+  coalRequired: 5
   minTemp: 1200
   maxTemp: 1400
   smeltDuration: 10

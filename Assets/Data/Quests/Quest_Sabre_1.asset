@@ -18,7 +18,7 @@ MonoBehaviour:
     \u043D\u0443\u0436\u043D\u0430 \u0445\u043E\u0440\u043E\u0448\u0430\u044F \u0441\u0430\u0431\u043B\u044F
     \u0434\u043B\u044F \u043A\u043E\u043D\u043D\u043E\u0433\u043E \u0431\u043E\u044F."
   customerName: "\u0414\u0432\u043E\u0440\u044F\u043D\u0438\u043D \u0410\u043D\u0434\u0440\u0435\u0439"
-  rewardGold: 350
+  rewardGold: 700
   timeLimitHours: 22
   requiredItemID: Sabre
   requiredAmount: 1

@@ -18,7 +18,7 @@ MonoBehaviour:
     \u0434\u0440\u0443\u0436\u0438\u043D\u044B \u043D\u0443\u0436\u043D\u044B \u0437\u0430\u0449\u0438\u0442\u043D\u044B\u0435
     \u0448\u043B\u0435\u043C\u044B."
   customerName: "\u041A\u043D\u044F\u0436\u0435\u0441\u043A\u0438\u0439 \u0434\u0440\u0443\u0436\u0438\u043D\u043D\u0438\u043A"
-  rewardGold: 250
+  rewardGold: 500
   timeLimitHours: 18
   requiredItemID: Helmet_Basic
   requiredAmount: 2

@@ -20,8 +20,9 @@ MonoBehaviour:
   - Tin_Ore
   - Iron_Ore
   description: "\u0423\u043F\u0440\u043E\u0447\u043D\u0435\u043D\u043D\u0430\u044F
-    \u0431\u0440\u043E\u043D\u0437\u0430"
-  coalRequired: 6
+    \u0431\u0440\u043E\u043D\u0437\u0430 \u0441 \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u0438\u0435\u043C
+    \u0436\u0435\u043B\u0435\u0437\u0430"
+  coalRequired: 5
   minTemp: 1200
   maxTemp: 1400
   smeltDuration: 12

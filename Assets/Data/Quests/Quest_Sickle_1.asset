@@ -19,7 +19,7 @@ MonoBehaviour:
     \u043F\u0435\u0440\u0435\u0434 \u043D\u0430\u0447\u0430\u043B\u043E\u043C \u0436\u0430\u0442\u0432\u044B.
     \u0421\u0440\u043E\u0447\u043D\u044B\u0439 \u0437\u0430\u043A\u0430\u0437!"
   customerName: "\u0421\u0442\u0430\u0440\u043E\u0441\u0442\u0430 \u0434\u0435\u0440\u0435\u0432\u043D\u0438"
-  rewardGold: 50
+  rewardGold: 180
   timeLimitHours: 10
   requiredItemID: Sickle
   requiredAmount: 3

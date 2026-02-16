@@ -5098,6 +5098,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8486304221659315403, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+      propertyPath: inventory
+      value: 
+      objectReference: {fileID: 2083097357}
+    - target: {fileID: 8486304221659315403, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+      propertyPath: itemDatabase
+      value: 
+      objectReference: {fileID: 11400000, guid: 82359563534b5094a8254f4680468750, type: 2}
     - target: {fileID: 8853668344391760002, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_IsActive
       value: 0
