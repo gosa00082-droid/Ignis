@@ -4013,9 +4013,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cde267b22299ed848b16868f249b3c18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MouseLook
-  moveSpeed: 25
-  lockCursor: 0
-  smoothMovement: 1
+  moveSpeed: 5
+  lockCursor: 1
   rotationSpeed: 2.5
 --- !u!114 &1267766221
 MonoBehaviour:
@@ -4659,7 +4658,23 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 6085148245361488169, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 8428048319542981228, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 8459544681240636896, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 3585293367381129308, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 5203635248794759632, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 3342865399990492463, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 6712638087114098690, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 2671362824055712435, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 1282447129772337002, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 8828110632659941239, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 1929700550639835030, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 3128160613597817031, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 2332866186570906627, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 5257312841877733273, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 5845346538246153979, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
+    - {fileID: 1919549632606283374, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}

@@ -7,13 +7,12 @@ public class CeilingCameraController : MonoBehaviour
 
     [Header("Управление (настрой в инспекторе)")]
     [SerializeField] private bool lockCursor = true;
-    [SerializeField] private bool smoothMovement = true;
 
     [Header("Поворот (настрой в инспекторе)")]
     [SerializeField] private float rotationSpeed = 2.5f;
 
     private float mouseX;
-    private float mouseY;  // Новый: для поворота по X
+    private float mouseY;  // Для поворота по X
     private bool canControl = true;
     private float currentYaw = 0f;
     private float currentPitch = 90f;  // Базовый pitch=90 (смотрит вниз)
@@ -21,7 +20,7 @@ public class CeilingCameraController : MonoBehaviour
     void Start()
     {
         // Начальная позиция и поворот (hardcoded — измени здесь)
-        transform.position = new Vector3(-16.19f, 2f, -0.51f);  // Спавн в (-16.19, 2, -0.51)
+        transform.position = new Vector3(-16.19f, 6f, -0.51f);  // Спавн в (-16.19, 2, -0.51)
         transform.rotation = Quaternion.Euler(90f, 0f, 0f);  // Вид сверху вниз
 
         if (lockCursor)
@@ -43,37 +42,27 @@ public class CeilingCameraController : MonoBehaviour
         float h = Input.GetAxis("Horizontal");  // A/D: влево/вправо
         float v = Input.GetAxis("Vertical");    // W: вперёд (+v), S: назад (-v)
 
-        Vector3 dir = new Vector3(h, 0, v).normalized;
+        // Проекция forward на горизонтальную плоскость (XZ) для нормального движения
+        Vector3 horizontalForward = new Vector3(transform.forward.x, 0f, transform.forward.z).normalized;
+        Vector3 movement = horizontalForward * v + transform.right * h;
+        movement = movement.normalized * moveSpeed * Time.deltaTime;
 
-        if (smoothMovement)
-        {
-            Vector3 target = transform.position +
-                             transform.forward * dir.z * moveSpeed * Time.deltaTime +
-                             transform.right * dir.x * moveSpeed * Time.deltaTime;
-
-            transform.position = Vector3.Lerp(transform.position, target, 0.15f);
-        }
-        else
-        {
-            transform.Translate(dir * moveSpeed * Time.deltaTime, Space.Self);
-        }
+        // Без Lerp — мгновенная остановка
+        transform.position += movement;
     }
 
     private void HandleRotation()
     {
         mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
-        mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;  // Новый: поворот по X (pitch)
+        mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;  // Поворот по X (pitch)
 
-        // Поворот yaw (Y) с ограничением
-        float minYaw = -45f;
-        float maxYaw = 45f;
+        // Поворот yaw (Y) на 360 градусов (без ограничения)
         currentYaw += mouseX;
-        currentYaw = Mathf.Clamp(currentYaw, minYaw, maxYaw);
 
-        // Поворот pitch (X) с ограничением "в другую сторону" (от 90 до 130, например, для наклона вверх)
-        float minPitch = 90f;    // Базовый (сверху)
-        float maxPitch = 130f;   // +40 градусов (наклон "вверх" или в другую сторону — настрой здесь)
-        currentPitch += mouseY;  // Изменил знак для "другой стороны" (мышь вверх — наклон вверх)
+        // Поворот pitch (X) с ограничением: мышь вниз — до 45, вверх — до 90
+        float minPitch = 30f;    // Мин. (опустить мышь вниз)
+        float maxPitch = 90f;    // Макс. (поднять мышь вверх)
+        currentPitch -= mouseY;  // Инвертированный знак: мышь вниз — pitch уменьшается
         currentPitch = Mathf.Clamp(currentPitch, minPitch, maxPitch);
 
         transform.localRotation = Quaternion.Euler(currentPitch, currentYaw, 0f);
@@ -84,13 +73,15 @@ public class CeilingCameraController : MonoBehaviour
         Vector3 pos = transform.position;
 
         // Ограничения (hardcoded — измени здесь)
-        float maxX = 2f;   // Камера не дальше x=2
-        float fixedY = 2f; // Фиксировано y=2
-        float maxZ = 5f;   // Камера не дальше z=5
+        float minX = -21f;   // Мин. X
+        float maxX = -10.4f;    // Макс. X
+        float fixedY = 6f;   // Фиксировано y=2
+        float minZ = -8f;    // Мин. Z
+        float maxZ = 7.2f;    // Макс. Z
 
         pos.y = fixedY;
-        pos.x = Mathf.Min(pos.x, maxX);  // Только <= maxX (можно добавить minX = -2f; pos.x = Mathf.Clamp(pos.x, minX, maxX);)
-        pos.z = Mathf.Min(pos.z, maxZ);
+        pos.x = Mathf.Clamp(pos.x, minX, maxX);
+        pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
 
         transform.position = pos;
     }
