@@ -11,8 +11,8 @@ public class ReferenceManager : MonoBehaviour
     public Button[] chapterButtons;             // Массив из 4 кнопок слева (в том же порядке)
 
     [Header("Player Control")]
-    public PlayerMovement playerMovement;        // Скрипт движения на Player
-    public MouseLook mouseLook;                  // Скрипт обзора на камере
+    
+    public CeilingCameraController ceilingCamera;                 // Скрипт обзора на камере
 
     [Header("Canvas")]
     public GameObject uiCanvas;  // Перетащим сюда весь Canvas
@@ -44,8 +44,8 @@ public class ReferenceManager : MonoBehaviour
         Cursor.visible = isOpen;
         Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
 
-        if (playerMovement != null) playerMovement.enabled = !isOpen;
-        if (mouseLook != null) mouseLook.enabled = !isOpen;
+       
+        if (ceilingCamera != null) ceilingCamera.SetControl(!isOpen);
 
         // При открытии показываем первую главу
         if (isOpen) ShowChapter(0);

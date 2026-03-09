@@ -20,8 +20,8 @@ public class TutorialManager : MonoBehaviour
     [SerializeField] private Button panelClickArea;
 
     [Header("Игрок")]
-    [SerializeField] private PlayerMovement playerMovement;
-    [SerializeField] private MouseLook mouseLook;
+   
+    [SerializeField] private CeilingCameraController ceilingCamera;
 
     private int currentStepIndex = 0;
     private int currentSlideIndex = 0;
@@ -284,11 +284,10 @@ public class TutorialManager : MonoBehaviour
     }
 
     // Блокировка игрока (опционально, если хочешь блокировать во время чтения)
+    
     private void LockPlayer(bool isLocked)
     {
-        if (playerMovement != null) playerMovement.enabled = !isLocked;
-        if (mouseLook != null) mouseLook.enabled = !isLocked;
-        Cursor.visible = isLocked;
-        Cursor.lockState = isLocked ? CursorLockMode.None : CursorLockMode.Locked;
+        
+        if (ceilingCamera != null) ceilingCamera.SetControl(!isLocked);
     }
 }

@@ -7,8 +7,8 @@ public class UIManager : MonoBehaviour
 
     public GameObject currentUI = null;     // ← временно public для отладки
 
-    [SerializeField] private PlayerMovement playerMovement;
-    [SerializeField] private MouseLook mouseLook;
+    
+    [SerializeField] private CeilingCameraController ceilingCamera;
 
     private void Awake()
     {
@@ -74,10 +74,9 @@ public class UIManager : MonoBehaviour
     {
         bool uiOpen = currentUI != null;
 
-        Cursor.visible = uiOpen;
-        Cursor.lockState = uiOpen ? CursorLockMode.None : CursorLockMode.Locked;
+        if (ceilingCamera != null)
+            ceilingCamera.SetControl(!uiOpen);
 
-        if (playerMovement != null) playerMovement.enabled = !uiOpen;
-        if (mouseLook != null) mouseLook.enabled = !uiOpen;
+        
     }
 }

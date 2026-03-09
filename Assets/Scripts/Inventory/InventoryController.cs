@@ -1,13 +1,10 @@
-﻿// Assets/Scripts/Inventory/InventoryController.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 public class InventoryController : MonoBehaviour
 {
-    [SerializeField] private GameObject inventoryPanel;     // перетащи InventoryPanel
-    [SerializeField] private PlayerMovement playerMovement; // твой скрипт движения игрока
-    [SerializeField] private MouseLook mouseLook;           // твой скрипт взгляда
-
-    private bool isOpen = false;
+    [SerializeField] private GameObject inventoryPanel;
+    // УДАЛИТЬ: [SerializeField] private PlayerMovement playerMovement; 
+    [SerializeField] private CeilingCameraController ceilingCamera;
 
     private void Update()
     {
@@ -27,22 +24,16 @@ public class InventoryController : MonoBehaviour
     {
         inventoryPanel.SetActive(open);
 
-        // Курсор
-        Cursor.visible = open;
-        Cursor.lockState = open ? CursorLockMode.None : CursorLockMode.Locked;
+        if (ceilingCamera != null)
+            ceilingCamera.SetControl(!open);
 
-        // Блокировка управления
-        if (playerMovement != null) playerMovement.enabled = !open;
-        if (mouseLook != null) mouseLook.enabled = !open;
+        // УДАЛИТЬ: if (playerMovement != null) playerMovement.enabled = !open;
 
-        // ← Добавляем обновление инвентаря при открытии
         if (open)
         {
             var inventoryUI = inventoryPanel.GetComponent<InventoryUI>();
             if (inventoryUI != null)
-            {
                 inventoryUI.Refresh();
-            }
         }
     }
 }

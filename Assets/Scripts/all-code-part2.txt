@@ -1,0 +1,713 @@
+﻿
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\QuestManager.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+using TMPro;
+using System.Collections;
+
+public class QuestManager : MonoBehaviour
+{
+    public static QuestManager Instance { get; private set; }
+
+    [SerializeField] private Inventory playerInventory;  // перетащи Inventory
+    [SerializeField] private ItemDatabase itemDatabase;  // перетащи
+
+    // Добавь в начало класса, в [SerializeField]
+    [Header("HUD провала")]
+    [SerializeField] private GameObject failMessageCanvas;      // весь Canvas FailMessageCanvas
+    [SerializeField] private TMP_Text failMessageText;          // TextMeshProUGUI внутри
+    [SerializeField] private CanvasGroup failCanvasGroup;       // CanvasGroup на Canvas или Panel
+
+    private List<ActiveQuest> activeQuests = new List<ActiveQuest>();  // max 2
+
+    // ИСПРАВЛЕНО: Убрали completedQuestIDs — квесты теперь повторяемые
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
+        // Скрываем HUD при старте
+        if (failMessageCanvas != null)
+            failMessageCanvas.SetActive(false);
+    }
+
+    private void Update()
+    {
+        for (int i = activeQuests.Count - 1; i >= 0; i--)
+        {
+            activeQuests[i].remainingTimeSeconds -= Time.deltaTime; 
+            if (activeQuests[i].IsFailed())
+            {
+                FailQuest(i);
+            }
+        }
+    }
+
+    public bool HasFreeSlot() => activeQuests.Count < 2;
+
+    public void AcceptQuest(QuestData quest)
+    {
+        if (!HasFreeSlot()) return;  // ИСПРАВЛЕНО: Убрали проверку на completed
+
+        activeQuests.Add(new ActiveQuest(quest));
+        Debug.Log($"Принят заказ: {quest.title}");
+    }
+
+    public List<ActiveQuest> GetActiveQuests() => activeQuests;
+
+    public void SubmitQuest(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= activeQuests.Count) return;
+
+        ActiveQuest aq = activeQuests[slotIndex];
+        if (aq.IsFailed()) return;
+
+        // Проверяем наличие предмета
+        if (playerInventory.GetCount(aq.data.requiredItemID) >= aq.data.requiredAmount)
+        {
+            playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
+            playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
+            activeQuests.RemoveAt(slotIndex);
+
+            if (TutorialManager.Instance != null)
+            {
+                TutorialManager.Instance.CheckGoals(aq.data.questID, 1, GoalType.CompleteQuest);
+            }
+
+            Debug.Log($"Сдан заказ: {aq.data.title}. Награда: {aq.data.rewardGold}");
+        }
+        else
+        {
+            Debug.Log("Нет нужного предмета для сдачи!");
+        }
+    }
+
+    private void FailQuest(int slotIndex)
+    {
+        ActiveQuest aq = activeQuests[slotIndex];
+        int penalty = Mathf.RoundToInt(aq.data.rewardGold * (aq.data.failPenaltyPercent / 100f));
+
+        int actualPenalty = Mathf.Min(penalty, playerInventory.GetCount("Gold_Money"));
+        playerInventory.RemoveItem("Gold_Money", actualPenalty);
+
+        activeQuests.RemoveAt(slotIndex);
+
+        string msg = $"Провален заказ: {aq.data.title}\nШтраф: {actualPenalty} золота";
+        Debug.Log(msg);
+
+        // Показываем HUD прямо здесь
+        if (failMessageCanvas != null && failMessageText != null && failCanvasGroup != null)
+        {
+            failMessageText.text = msg;
+            failMessageCanvas.SetActive(true);
+            StartCoroutine(ShowFailMessageCoroutine());
+        }
+    }
+
+    private System.Collections.IEnumerator ShowFailMessageCoroutine()
+    {
+        failCanvasGroup.alpha = 0f;
+
+        // Fade in
+        float time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(0f, 1f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(3f);
+
+        // Fade out
+        time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(1f, 0f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 0f;
+
+        failMessageCanvas.SetActive(false);
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Managers\ReferenceManager.cs -----
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+
+public class ReferenceManager : MonoBehaviour
+{
+    [Header("UI Elements")]
+    public GameObject referencePanel;           // Вся панель справочника
+    public GameObject[] contentPanels;          // Массив из 4 панелей справа: 0-Задания, 1-Материалы, 2-Ковка, 3-Управление
+    public Button[] chapterButtons;             // Массив из 4 кнопок слева (в том же порядке)
+
+    [Header("Player Control")]
+    public PlayerMovement playerMovement;        // Скрипт движения на Player
+    public MouseLook mouseLook;                  // Скрипт обзора на камере
+
+    [Header("Canvas")]
+    public GameObject uiCanvas;  // Перетащим сюда весь Canvas
+
+    private bool isOpen = false;
+
+    void Start()
+    {
+        // Скрываем справочник при старте
+        referencePanel.SetActive(false);
+    }
+
+    void Update()
+    {
+        // Открытие/закрытие по F
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            ToggleReference();
+        }
+    }
+
+    public void ToggleReference()
+    {
+        isOpen = !isOpen;
+        referencePanel.SetActive(isOpen);
+        uiCanvas.SetActive(isOpen);  // Включаем или выключаем весь Canvas
+
+        // Управление курсором и движением
+        Cursor.visible = isOpen;
+        Cursor.lockState = isOpen ? CursorLockMode.None : CursorLockMode.Locked;
+
+        if (playerMovement != null) playerMovement.enabled = !isOpen;
+        if (mouseLook != null) mouseLook.enabled = !isOpen;
+
+        // При открытии показываем первую главу
+        if (isOpen) ShowChapter(0);
+    }
+
+    public void ShowChapter(int index)
+    {
+        // Выключаем все панели справа
+        foreach (GameObject panel in contentPanels)
+        {
+            panel.SetActive(false);
+        }
+
+        // Включаем выбранную
+        if (index < contentPanels.Length)
+        {
+            contentPanels[index].SetActive(true);
+        }
+
+        // Подсвечиваем активную кнопку (опционально, можно убрать)
+        for (int i = 0; i < chapterButtons.Length; i++)
+        {
+            ColorBlock colors = chapterButtons[i].colors;
+            colors.normalColor = (i == index) ? new Color(0.3f, 0.6f, 1f) : Color.white;
+            chapterButtons[i].colors = colors;
+        }
+    }
+
+    // Вызовется с кнопки "X"
+    public void CloseReference()
+    {
+        if (isOpen) ToggleReference();
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Managers\UIManager.cs -----
+// Assets/Scripts/Managers/UIManager.cs
+using UnityEngine;
+
+public class UIManager : MonoBehaviour
+{
+    public static UIManager Instance;
+
+    public GameObject currentUI = null;     // ← временно public для отладки
+
+    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private MouseLook mouseLook;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    // Попытка открыть конкретный UI (вызывается из контроллеров)
+    public bool TryOpenUI(GameObject uiPanel)
+    {
+        if (currentUI != null && currentUI != uiPanel)
+            return false;  // уже открыт другой → отказ
+
+        SetUI(uiPanel);
+        return true;
+    }
+
+    // Toggle для конкретного UI (Tab, F и т.д.)
+    public void ToggleUI(GameObject uiPanel)
+    {
+        if (currentUI == uiPanel)
+            SetUI(null);       // закрываем текущий
+        else if (currentUI == null)
+            SetUI(uiPanel);    // открываем только если ничего не открыто
+        // иначе — ничего не делаем (другой UI открыт)
+    }
+
+    // Принудительное закрытие текущего (Esc)
+    public void CloseCurrent()
+    {
+        SetUI(null);
+    }
+
+    private void SetUI(GameObject uiPanel)
+    {
+        if (currentUI != null)
+            currentUI.SetActive(false);
+
+        currentUI = uiPanel;
+
+        if (uiPanel != null)
+            uiPanel.SetActive(true);
+
+        UpdateControls();
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape) && currentUI != null)
+        {
+            CloseCurrent();
+        }
+    }
+
+    private void UpdateControls()
+    {
+        bool uiOpen = currentUI != null;
+
+        Cursor.visible = uiOpen;
+        Cursor.lockState = uiOpen ? CursorLockMode.None : CursorLockMode.Locked;
+
+        if (playerMovement != null) playerMovement.enabled = !uiOpen;
+        if (mouseLook != null) mouseLook.enabled = !uiOpen;
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Player\PlayerInteraction.cs -----
+// Assets/Scripts/Player/PlayerInteraction.cs
+using UnityEngine;
+
+public class PlayerInteraction : MonoBehaviour
+{
+    [SerializeField] private float interactionDistance = 3f;
+    [SerializeField] private LayerMask interactableLayer;   // слой Interactable
+    [SerializeField] private ShopUI shopUI;  // Перетащи ShopUI из сцены
+    [SerializeField] private QuestBoardUI questBoardUI;
+
+    private Camera playerCamera;
+
+    // Ссылки на UI-менеджеры
+    private FurnaceUI furnaceUI;
+    private AnvilUI anvilUI;
+
+    // Флаги открытых интерфейсов
+    private bool isFurnaceOpen = false;
+    private bool isAnvilOpen = false;
+    private bool isShopOpen = false;
+    private bool isQuestBoardOpen = false;
+
+    private void Awake()
+    {
+        playerCamera = GetComponentInChildren<Camera>();
+
+        // Находим нужные скрипты (лучше перетащить в инспекторе, но FindObjectOfType — запасной вариант)
+        furnaceUI = FindObjectOfType<FurnaceUI>();
+        anvilUI = FindObjectOfType<AnvilUI>();
+        shopUI = FindObjectOfType<ShopUI>();
+
+        if (shopUI == null) Debug.LogError("ShopUI не найден!");
+        if (furnaceUI == null) Debug.LogError("FurnaceUI не найден в сцене!");
+        if (anvilUI == null) Debug.LogWarning("AnvilUI не найден — интерфейс наковальни работать не будет.");
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            RaycastHit hit;
+            if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward,
+                               out hit, interactionDistance, interactableLayer))
+            {
+                if (hit.collider.CompareTag("Furnace"))
+                    furnaceUI.ToggleFurnace();
+
+                else if (hit.collider.CompareTag("Anvil") && anvilUI != null)
+                    anvilUI.ToggleAnvil();
+
+                else if (hit.collider.CompareTag("ShopTable") && shopUI != null)
+                    shopUI.ToggleShop();
+
+                else if (hit.collider.CompareTag("QuestBoard") && questBoardUI != null)
+                    questBoardUI.ToggleQuestBoard();
+            }
+        }
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Tutorial\TutorialData.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+
+// ���� �����
+public enum GoalType
+{
+    None,
+    CollectItem,
+    CraftItem,
+    CompleteQuest,
+    Interact
+}
+
+[System.Serializable]
+public class TutorialGoal
+{
+    public GoalType type;
+    public string targetID;
+    public int requiredAmount = 1;
+    [TextArea] public string description;
+    [HideInInspector] public bool isCompleted = false;
+}
+
+[CreateAssetMenu(fileName = "New Tutorial Step", menuName = "Ignis/Tutorial Step")]
+public class TutorialStep : ScriptableObject
+{
+    [Header("��������� ����")]
+    public bool isFinalStep = false; // �������: ��������� �� ��� ���?
+
+    [Header("������ (������ ��������)")]
+    // ���� ����� ������. ������ ������� = ���-�� �������.
+    [TextArea(3, 10)] public List<string> slides = new List<string>();
+
+    [Header("���� (����������� ��� ���������� ����)")]
+    public List<TutorialGoal> goals = new List<TutorialGoal>();
+
+    // �������� ���������� ���� �����
+    public bool IsGoalsComplete()
+    {
+        if (goals.Count == 0) return true; // ���� ����� ��� � ������� ����������� �����
+
+        foreach (var goal in goals)
+        {
+            if (!goal.isCompleted) return false;
+        }
+        return true;
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Tutorial\TutorialManager.cs -----
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections.Generic;
+
+public class TutorialManager : MonoBehaviour
+{
+    public static TutorialManager Instance { get; private set; }
+
+    [Header("Список шагов")]
+    public List<TutorialStep> steps = new List<TutorialStep>();
+
+    [Header("UI Ссылки")]
+    [SerializeField] private Canvas tutorialCanvas; // Canvas с Sort Order 100
+    [SerializeField] private TextMeshProUGUI dialogueText;
+    [SerializeField] private GameObject taskPanel; // Панель задач в углу
+    [SerializeField] private TextMeshProUGUI taskListText;
+    [SerializeField] private Button btnBack;
+    [SerializeField] private Button btnUnderstood;
+    [SerializeField] private Button panelClickArea;
+
+    [Header("Игрок")]
+    [SerializeField] private PlayerMovement playerMovement;
+    [SerializeField] private MouseLook mouseLook;
+
+    private int currentStepIndex = 0;
+    private int currentSlideIndex = 0;
+    private bool isActive = false; // Активна ли система обучения вообще
+    private bool isWaitingForGoals = false; // Ждем ли выполнения целей (панель скрыта)
+    private const string SaveKey = "TutorialComplete";
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+
+        // Автостарт убрали! Запуск будет из CutsceneManager
+        if (PlayerPrefs.GetInt(SaveKey, 0) == 1)
+        {
+            ForceFinish();
+            return;
+        }
+
+        // Настройка кнопок
+        panelClickArea.onClick.AddListener(OnPanelClicked);
+        btnBack.onClick.AddListener(PrevSlide);
+        btnUnderstood.onClick.AddListener(OnUnderstoodClicked);
+
+        // Скрываем UI на старте
+        if (tutorialCanvas != null) tutorialCanvas.gameObject.SetActive(false);
+        if (taskPanel != null) taskPanel.SetActive(false);
+    }
+
+    // Метод вызывается из CutsceneManager
+    public void StartTutorial()
+    {
+        if (PlayerPrefs.GetInt(SaveKey, 0) == 1) return;
+
+        foreach (var step in steps)
+        {
+            foreach (var goal in step.goals)
+            {
+                goal.isCompleted = false;
+            }
+        }
+
+        isActive = true;
+        currentStepIndex = 0;
+        currentSlideIndex = 0;
+
+        ShowCurrentSlide();
+    }
+
+    // Клик по панели (Переход вперед по слайдам)
+    private void OnPanelClicked()
+    {
+        // Если ждем выполнения целей или не активны - игнор
+        if (!isActive || isWaitingForGoals) return;
+
+        TutorialStep step = steps[currentStepIndex];
+
+        // Если есть еще слайды
+        if (currentSlideIndex < step.slides.Count - 1)
+        {
+            currentSlideIndex++;
+            ShowCurrentSlide();
+        }
+        // Если слайд последний, но целей нет -> сразу следующий шаг
+        else if (step.goals.Count == 0)
+        {
+            GoToNextStep();
+        }
+        // Если слайд последний и есть цели -> ничего не делаем (ждем кнопку "Я все понял")
+    }
+
+    // Кнопка "Я все понял!"
+    private void OnUnderstoodClicked()
+    {
+        TutorialStep step = steps[currentStepIndex];
+
+        // Если это последний шаг обучения И цели выполнены (или их нет)
+        if (step.isFinalStep && step.IsGoalsComplete())
+        {
+            FinishTutorial();
+            return;
+        }
+
+        // Если цели есть, но еще не выполнены -> Прячем панель, даем играть
+        if (step.goals.Count > 0)
+        {
+            HideDialoguePanel();
+        }
+        else
+        {
+            // Если целей нет и это не конец -> просто следующий шаг
+            GoToNextStep();
+        }
+    }
+
+    private void PrevSlide()
+    {
+        if (!isActive || isWaitingForGoals) return;
+
+        if (currentSlideIndex > 0)
+        {
+            currentSlideIndex--;
+            ShowCurrentSlide();
+        }
+        else if (currentStepIndex > 0)
+        {
+            currentStepIndex--;
+            TutorialStep prevStep = steps[currentStepIndex];
+            currentSlideIndex = prevStep.slides.Count - 1;
+            ShowCurrentSlide();
+        }
+    }
+
+    private void ShowCurrentSlide()
+    {
+        TutorialStep step = steps[currentStepIndex];
+
+        // Показываем Canvas
+        tutorialCanvas.gameObject.SetActive(true);
+        isWaitingForGoals = false;
+
+        // БЛОКИРУЕМ ИГРОКА (он не может двигаться, пока читает)
+        LockPlayer(true);
+
+        // Обновляем текст
+        if (step.slides.Count > 0)
+            dialogueText.text = step.slides[currentSlideIndex];
+
+        // Кнопка Назад
+        btnBack.gameObject.SetActive(currentSlideIndex > 0 || currentStepIndex > 0);
+
+        // Логика кнопки "Я все понял"
+        bool isLastSlide = (currentSlideIndex == step.slides.Count - 1);
+        btnUnderstood.gameObject.SetActive(isLastSlide);
+
+        // Текст на кнопке
+        TMP_Text btnText = btnUnderstood.GetComponentInChildren<TMP_Text>();
+        if (btnText != null)
+        {
+            if (step.isFinalStep && isLastSlide)
+                btnText.text = "Завершить";
+            else
+                btnText.text = "Приступить";
+        }
+
+        UpdateTaskPanel();
+    }
+
+    private void HideDialoguePanel()
+    {
+        tutorialCanvas.gameObject.SetActive(false);
+        isWaitingForGoals = true;
+
+        // РАЗБЛОКИРУЕМ ИГРОКА (он может идти выполнять цели)
+        LockPlayer(false);
+
+        // Показываем задачи в углу
+        if (steps[currentStepIndex].goals.Count > 0)
+            taskPanel.SetActive(true);
+
+        Debug.Log("Обучение: Выполните задачи в углу экрана.");
+    }
+
+    // Проверка целей (вызывается из Inventory/Anvil/Quest)
+    public void CheckGoals(string itemID, int amount, GoalType type)
+    {
+        if (!isActive) return;
+
+        TutorialStep step = steps[currentStepIndex];
+        bool wasComplete = step.IsGoalsComplete();
+
+        // Обновляем статусы целей
+        foreach (var goal in step.goals)
+        {
+            if (goal.isCompleted) continue;
+            if (goal.type == type && goal.targetID == itemID)
+            {
+                if (type == GoalType.CollectItem)
+                {
+                    if (amount >= goal.requiredAmount) goal.isCompleted = true;
+                }
+                else { goal.isCompleted = true; }
+            }
+        }
+
+        Debug.Log($"Проверка цели: тип={type}, itemID={itemID}, текущий шаг={currentStepIndex}");
+        foreach (var goal in step.goals)
+        {
+            Debug.Log($"  Цель: тип={goal.type}, targetID='{goal.targetID}', выполнено={goal.isCompleted}");
+        }
+
+        UpdateTaskPanel();
+
+        // Если мы ждали выполнения целей и они выполнены -> Следующий шаг
+        if (isWaitingForGoals && step.IsGoalsComplete())
+        {
+            Debug.Log("Цели выполнены! Переход к следующему шагу.");
+            GoToNextStep();
+        }
+    }
+
+    private void GoToNextStep()
+    {
+        // Если текущий шаг был последним
+        if (steps[currentStepIndex].isFinalStep)
+        {
+            FinishTutorial();
+            return;
+        }
+
+        currentStepIndex++;
+        currentSlideIndex = 0;
+
+        if (currentStepIndex < steps.Count)
+        {
+            ShowCurrentSlide();
+        }
+        else
+        {
+            FinishTutorial(); // Страховка
+        }
+    }
+
+    private void UpdateTaskPanel()
+    {
+        TutorialStep step = steps[currentStepIndex];
+        if (step.goals.Count == 0)
+        {
+            taskPanel.SetActive(false);
+            return;
+        }
+
+        taskPanel.SetActive(true);
+        string tasks = "";
+        foreach (var goal in step.goals)
+        {
+            string status = goal.isCompleted ? "<color=green>✔</color>" : "○";
+            tasks += $"{status} {goal.description}\n";
+        }
+        taskListText.text = tasks;
+    }
+
+    private void FinishTutorial()
+    {
+        PlayerPrefs.SetInt(SaveKey, 1);
+        isActive = false;
+        isWaitingForGoals = false;
+
+        tutorialCanvas.gameObject.SetActive(false);
+        taskPanel.SetActive(false);
+
+        LockPlayer(false); // Разблокируем управление (на всякий случай)
+        Debug.Log("Обучение завершено!");
+    }
+
+    private void ForceFinish()
+    {
+        isActive = false;
+        tutorialCanvas.gameObject.SetActive(false);
+        taskPanel.SetActive(false);
+    }
+
+    // Блокировка игрока (опционально, если хочешь блокировать во время чтения)
+    private void LockPlayer(bool isLocked)
+    {
+        if (playerMovement != null) playerMovement.enabled = !isLocked;
+        if (mouseLook != null) mouseLook.enabled = !isLocked;
+        Cursor.visible = isLocked;
+        Cursor.lockState = isLocked ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+}
+
