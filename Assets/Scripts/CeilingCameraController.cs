@@ -1,97 +1,125 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class CeilingCameraController : MonoBehaviour
 {
-    [Header("Перемещение (настрой в инспекторе)")]
+    [Header("Перемещение")]
     [SerializeField] private float moveSpeed = 25f;
 
-    [Header("Управление (настрой в инспекторе)")]
-    [SerializeField] private bool lockCursor = true;
+    [Header("Приближение колёсиком мыши")]
+    [SerializeField] private float zoomSpeed = 2f;
+    [SerializeField] private float minHeight = 3f;
+    [SerializeField] private float maxHeight = 5.5f;
 
-    [Header("Поворот (настрой в инспекторе)")]
+    [Header("Поворот (правая кнопка мыши)")]
     [SerializeField] private float rotationSpeed = 2.5f;
 
-    private float mouseX;
-    private float mouseY;  // Для поворота по X
-    private bool canControl = true;
+    [Header("Коллизия")]
+    [SerializeField] private float collisionRadius = 0.3f; // радиус сферы коллайдера
+
+    private CharacterController controller;
+    private float currentHeight = 5.5f;
     private float currentYaw = 0f;
-    private float currentPitch = 90f;  // Базовый pitch=90 (смотрит вниз)
+    private float currentPitch = 90f;
 
-    void Start()
+    // Для точного возврата курсора после поворота
+    private Vector3 savedMousePosition;
+
+    void Awake()
     {
-        // Начальная позиция и поворот (hardcoded — измени здесь)
-        transform.position = new Vector3(-16.19f, 6f, -0.51f);  // Спавн в (-16.19, 2, -0.51)
-        transform.rotation = Quaternion.Euler(90f, 0f, 0f);  // Вид сверху вниз
+        controller = GetComponent<CharacterController>();
+        controller.radius = collisionRadius;
+        controller.height = 0.1f;           // почти плоский
+        controller.skinWidth = 0.05f;
+        controller.stepOffset = 0f;
 
-        if (lockCursor)
-            Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = !lockCursor;
+        // Начальная настройка
+        transform.position = new Vector3(-16.19f, 5.5f, -0.51f);
+        transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+
+        currentHeight = transform.position.y;
+        currentYaw = transform.eulerAngles.y;
     }
 
     void Update()
     {
-        if (!canControl) return;
-
-        HandleMovement();
+        HandleZoom();
         HandleRotation();
-        ClampPosition();
+        HandleMovement();
+        ClampHeight();
     }
 
     private void HandleMovement()
     {
-        float h = Input.GetAxis("Horizontal");  // A/D: влево/вправо
-        float v = Input.GetAxis("Vertical");    // W: вперёд (+v), S: назад (-v)
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
 
-        // Проекция forward на горизонтальную плоскость (XZ) для нормального движения
         Vector3 horizontalForward = new Vector3(transform.forward.x, 0f, transform.forward.z).normalized;
         Vector3 movement = horizontalForward * v + transform.right * h;
-        movement = movement.normalized * moveSpeed * Time.deltaTime;
+        movement *= moveSpeed * Time.deltaTime;
 
-        // Без Lerp — мгновенная остановка
-        transform.position += movement;
+        // Двигаем через CharacterController — теперь стены и декор будут блокировать!
+        controller.Move(movement);
+    }
+
+    private void HandleZoom()
+    {
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (scroll != 0f)
+        {
+            currentHeight -= scroll * zoomSpeed;
+            currentHeight = Mathf.Clamp(currentHeight, minHeight, maxHeight);
+        }
     }
 
     private void HandleRotation()
     {
-        mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
-        mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;  // Поворот по X (pitch)
+        // === ПРАВАЯ КНОПКА НАЖАТА ===
+        if (Input.GetMouseButtonDown(1))
+        {
+            // Сохраняем позицию курсора
+            savedMousePosition = Input.mousePosition;
 
-        // Поворот yaw (Y) на 360 градусов (без ограничения)
-        currentYaw += mouseX;
+            // Скрываем курсор и лочим его
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
 
-        // Поворот pitch (X) с ограничением: мышь вниз — до 45, вверх — до 90
-        float minPitch = 30f;    // Мин. (опустить мышь вниз)
-        float maxPitch = 90f;    // Макс. (поднять мышь вверх)
-        currentPitch -= mouseY;  // Инвертированный знак: мышь вниз — pitch уменьшается
-        currentPitch = Mathf.Clamp(currentPitch, minPitch, maxPitch);
+        if (Input.GetMouseButton(1))
+        {
+            float mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
+            float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;
 
-        transform.localRotation = Quaternion.Euler(currentPitch, currentYaw, 0f);
+            currentYaw += mouseX;
+            currentPitch -= mouseY;
+            currentPitch = Mathf.Clamp(currentPitch, 30f, 90f);
+
+            transform.rotation = Quaternion.Euler(currentPitch, currentYaw, 0f);
+        }
+
+        // === ПРАВАЯ КНОПКА ОТПУЩЕНА ===
+        if (Input.GetMouseButtonUp(1))
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            // Возвращаем курсор точно туда, где он был до поворота
+            Cursor.SetCursor(null, savedMousePosition, CursorMode.Auto);
+        }
     }
 
-    private void ClampPosition()
+    private void ClampHeight()
     {
         Vector3 pos = transform.position;
-
-        // Ограничения (hardcoded — измени здесь)
-        float minX = -21f;   // Мин. X
-        float maxX = -10.4f;    // Макс. X
-        float fixedY = 6f;   // Фиксировано y=2
-        float minZ = -8f;    // Мин. Z
-        float maxZ = 7.2f;    // Макс. Z
-
-        pos.y = fixedY;
-        pos.x = Mathf.Clamp(pos.x, minX, maxX);
-        pos.z = Mathf.Clamp(pos.z, minZ, maxZ);
-
+        pos.y = currentHeight;
         transform.position = pos;
     }
 
+    // Публичный метод, если нужно отключать управление
     public void SetControl(bool control)
     {
-        canControl = control;
-        Cursor.lockState = control && lockCursor ? CursorLockMode.Locked : CursorLockMode.None;
-        Cursor.visible = !control;
+        enabled = control;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
-
-    public Camera GetCamera() => GetComponent<Camera>();
 }

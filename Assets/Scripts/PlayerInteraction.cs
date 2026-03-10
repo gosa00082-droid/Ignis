@@ -2,39 +2,50 @@ using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
 {
-    [SerializeField] private float interactionDistance = Mathf.Infinity;  // Для top-down — бесконечно
+    [Header("Настройки")]
+    [SerializeField] private float interactionDistance = 100f;
     [SerializeField] private LayerMask interactableLayer;
-    [SerializeField] private ShopUI shopUI;
-    [SerializeField] private QuestBoardUI questBoardUI;
+
+    [Header("Ссылки на UI панели — ПЕРЕТАЩИ СЮДА ИЗ ИЕРАРХИИ!")]
+    [SerializeField] private GameObject furnacePanel;
+    [SerializeField] private GameObject anvilPanel;
+    [SerializeField] private GameObject shopPanel;
+    [SerializeField] private GameObject questBoardPanel;
 
     private Camera playerCamera;
-    private FurnaceUI furnaceUI;
-    private AnvilUI anvilUI;
 
     private void Awake()
     {
-        playerCamera = GetComponent<Camera>();  // Камера на этом объекте
-        furnaceUI = FindObjectOfType<FurnaceUI>();
-        anvilUI = FindObjectOfType<AnvilUI>();
-        shopUI = FindObjectOfType<ShopUI>();
+        playerCamera = GetComponent<Camera>();
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetMouseButtonDown(0))
         {
-            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactableLayer))
-            {
-                if (hit.collider.CompareTag("Furnace"))
-                    furnaceUI.ToggleFurnace();
-                else if (hit.collider.CompareTag("Anvil") && anvilUI != null)
-                    anvilUI.ToggleAnvil();
-                else if (hit.collider.CompareTag("ShopTable") && shopUI != null)
-                    shopUI.ToggleShop();
-                else if (hit.collider.CompareTag("QuestBoard") && questBoardUI != null)
-                    questBoardUI.ToggleQuestBoard();
-            }
+            TryOpenUI();
+        }
+    }
+
+    private void TryOpenUI()
+    {
+        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactableLayer))
+        {
+            string tag = hit.collider.tag;
+
+            if (tag == "Furnace" && furnacePanel != null)
+                UIManager.Instance.ToggleUI(furnacePanel);
+
+            else if (tag == "Anvil" && anvilPanel != null)
+                UIManager.Instance.ToggleUI(anvilPanel);
+
+            else if (tag == "ShopTable" && shopPanel != null)
+                UIManager.Instance.ToggleUI(shopPanel);
+
+            else if (tag == "QuestBoard" && questBoardPanel != null)
+                UIManager.Instance.ToggleUI(questBoardPanel);
         }
     }
 }

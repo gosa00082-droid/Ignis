@@ -2227,6 +2227,10 @@ PrefabInstance:
       value: AllObjects
       objectReference: {fileID: 0}
     - target: {fileID: 4089382580112506632, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4089382580112506632, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
       propertyPath: m_TagString
       value: QuestBoard
       objectReference: {fileID: 0}
@@ -2350,6 +2354,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: ca48e6ff4fd7bc44192ceabcddaa9374, type: 2}
+    - target: {fileID: 6846760951470207363, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7165500499843729839, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
       propertyPath: m_VolumetricDimmer
       value: 13.1
@@ -3781,6 +3789,8 @@ GameObject:
   - component: {fileID: 1267766218}
   - component: {fileID: 1267766220}
   - component: {fileID: 1267766221}
+  - component: {fileID: 1267766222}
+  - component: {fileID: 1267766223}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: Untagged
@@ -4013,9 +4023,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cde267b22299ed848b16868f249b3c18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MouseLook
-  moveSpeed: 5
-  lockCursor: 1
+  moveSpeed: 10
+  zoomSpeed: 2
+  minHeight: 3
+  maxHeight: 5.5
   rotationSpeed: 2.5
+  collisionRadius: 0.3
 --- !u!114 &1267766221
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4028,12 +4041,60 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1af1830fae893a547bca234dc6fa6576, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
-  interactionDistance: Infinity
+  interactionDistance: 100
   interactableLayer:
     serializedVersion: 2
+    m_Bits: 1
+  furnacePanel: {fileID: 2010678964}
+  anvilPanel: {fileID: 2010678966}
+  shopPanel: {fileID: 510146679}
+  questBoardPanel: {fileID: 2010678944}
+--- !u!65 &1267766222
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267766213}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
     m_Bits: 0
-  shopUI: {fileID: 0}
-  questBoardUI: {fileID: 0}
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1.168968, z: 1.2339112}
+  m_Center: {x: 0, y: -0.0046583456, z: 0.061450183}
+--- !u!143 &1267766223
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1267766213}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &1329721589 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7430235941478167183, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
@@ -4318,6 +4379,18 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a955801686ba69948aa60f0526d4faa9, type: 3}
   m_PrefabInstance: {fileID: 1670619493}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1450399428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1450399420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36699e1cab8a05547bdf0d940dbc8764, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Interactable
 --- !u!1 &1466653073
 GameObject:
   m_ObjectHideFlags: 0
@@ -4623,11 +4696,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5330393610239978001, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.202
+      value: 6.44
       objectReference: {fileID: 0}
     - target: {fileID: 5330393610239978001, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 7.417808
+      value: 7.42
       objectReference: {fileID: 0}
     - target: {fileID: 5330393610239978001, guid: 5d2afc0ae052ebf4dabfae35ca5a24bb, type: 3}
       propertyPath: m_LocalRotation.w
@@ -4866,7 +4939,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: a955801686ba69948aa60f0526d4faa9, type: 3}
       propertyPath: m_Layer
-      value: 8
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: a955801686ba69948aa60f0526d4faa9, type: 3}
       propertyPath: m_TagString
@@ -4879,6 +4952,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a955801686ba69948aa60f0526d4faa9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1450399424}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a955801686ba69948aa60f0526d4faa9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1450399428}
   m_SourcePrefab: {fileID: 100100000, guid: a955801686ba69948aa60f0526d4faa9, type: 3}
 --- !u!1 &1690802965
 GameObject:
@@ -6100,6 +6176,10 @@ PrefabInstance:
     - target: {fileID: 417166972776755362, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 417166972776755362, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+      propertyPath: m_TagString
+      value: ShopTable
       objectReference: {fileID: 0}
     - target: {fileID: 513758187768997497, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_IsActive
@@ -8529,6 +8609,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7778221946755658942, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+      propertyPath: m_TagString
+      value: Anvil
+      objectReference: {fileID: 0}
     - target: {fileID: 7822902182851444108, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_Type
       value: 1
@@ -8924,6 +9008,10 @@ PrefabInstance:
     - target: {fileID: 8853668344391760002, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8853668344391760002, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
+      propertyPath: m_TagString
+      value: QuestBoard
       objectReference: {fileID: 0}
     - target: {fileID: 8915390686141610573, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_Type
