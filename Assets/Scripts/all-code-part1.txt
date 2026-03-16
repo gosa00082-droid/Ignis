@@ -1,0 +1,993 @@
+﻿
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\WorkshopCameraModeManager.cs -----
+using UnityEngine;
+using Unity.Cinemachine;
+
+public class WorkshopCameraModeManager : MonoBehaviour
+{
+    [Header("�������� ������")]
+    [SerializeField] private CinemachineCamera workshopCamera;
+
+    [Header("���������� �������")]
+    [SerializeField] private MouseLook mouseLook;
+
+    private CinemachineCamera activeCamera;
+    private GameObject activeUI;
+
+    private bool objectMode = false;
+
+    public bool EnterObjectMode(CinemachineCamera targetCamera, GameObject targetUI)
+    {
+        if (objectMode) return false;
+
+        if (!UIManager.Instance.TryOpenUI(targetUI))
+            return false;
+
+        activeCamera = targetCamera;
+        activeUI = targetUI;
+
+        workshopCamera.Priority = 10;
+        activeCamera.Priority = 20;
+
+        if (mouseLook != null)
+            mouseLook.enabled = false;
+
+        objectMode = true;
+
+        return true;
+    }
+
+    public void ExitObjectMode()
+    {
+        if (!objectMode) return;
+
+        if (activeCamera != null)
+            activeCamera.Priority = 10;
+
+        workshopCamera.Priority = 20;
+
+        UIManager.Instance.CloseCurrent();
+
+        if (mouseLook != null)
+            mouseLook.enabled = true;
+
+        activeCamera = null;
+        activeUI = null;
+
+        objectMode = false;
+    }
+
+    private void Update()
+    {
+        if (objectMode && Input.GetKeyDown(KeyCode.Escape))
+        {
+            ExitObjectMode();
+        }
+    }
+}
+
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\gosha\CutsceneManager.cs -----
+using UnityEngine;
+using Unity.Cinemachine;
+using UnityEngine.Playables;
+
+public class CutsceneManager : MonoBehaviour
+{
+    [SerializeField] private GameObject player; // ������ �� ������ ������ (�������)
+    [SerializeField] private GameObject playerCameraObject; // GameObject � ������� ������� ������ (��� Cinemachine)
+    [SerializeField] private Camera cutsceneCamera; // ��� main camera � CinemachineBrain
+    [SerializeField] private PlayableDirector cutsceneDirector; // Playable Director � Timeline
+    [SerializeField] private CinemachineCamera[] cutsceneVCams; // ������ ���� vcam ��� ��������
+
+    void Start()
+    {
+        StartGameWithCutscene(); // ������������� ��������� �������� ��� �������� �����
+    }
+
+    public void StartGameWithCutscene()
+    {
+        Debug.Log("�������� ��������!");
+
+        // ������ ������ � ��������� ��� ����������
+        if (player != null)
+        {
+            Debug.Log("�������� ������� ������");
+            player.SetActive(false);
+            // ���� � ������ ���� ������ �����������: player.GetComponent<PlayerController>().enabled = false;
+        }
+
+        // ��������� ������ ������
+        if (playerCameraObject != null)
+        {
+            Debug.Log("��������� ������ ������");
+            playerCameraObject.SetActive(false);
+        }
+
+        // �������� ������ ��������
+        if (cutsceneCamera != null)
+        {
+            Debug.Log("�������� ������ ��������");
+            cutsceneCamera.gameObject.SetActive(true);
+        }
+
+        // ��������� Timeline (�� ���������� vcam)
+        if (cutsceneDirector != null)
+        {
+            cutsceneDirector.Play();
+        }
+
+        // ����������� �� ���������
+        cutsceneDirector.stopped += OnCutsceneFinished;
+    }
+
+    private void OnCutsceneFinished(PlayableDirector director)
+    {
+        Debug.Log("�������� ���������, ���������� ��");
+
+        // ������ ��������
+        if (TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.StartTutorial();
+        }
+
+        // ��������� ��� ���������� vcam
+        foreach (var vcam in cutsceneVCams)
+        {
+            if (vcam != null)
+            {
+                Debug.Log("��������� vcam: " + vcam.name);
+                vcam.Priority = 0; // ��� vcam.gameObject.SetActive(false);
+            }
+        }
+
+        // ��������� ������ ��������
+        if (cutsceneCamera != null)
+        {
+            Debug.Log("��������� ������ ����� ��������");
+            cutsceneCamera.gameObject.SetActive(false);
+        }
+
+        // �������� ������ ������
+        if (playerCameraObject != null)
+        {
+            Debug.Log("�������� ������ ������");
+            playerCameraObject.SetActive(true);
+        }
+
+        // �������� ������ � �������� ����������
+        if (player != null)
+        {
+            Debug.Log("���������� ������� ������");
+            player.SetActive(true);
+            // ���� � ������ ���� ������ �����������: player.GetComponent<PlayerController>().enabled = true;
+        }
+
+        // ����������
+        cutsceneDirector.stopped -= OnCutsceneFinished;
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Inventory\Inventory.cs -----
+// Assets/Scripts/Inventory/Inventory.cs
+using UnityEngine;
+using System.Collections.Generic;
+
+public class Inventory : MonoBehaviour
+{
+    // Отдельный словарь для каждой категории
+    private Dictionary<string, int> materials = new Dictionary<string, int>();   // id → количество
+    private Dictionary<string, int> weapons = new Dictionary<string, int>();
+    private Dictionary<string, int> tools = new Dictionary<string, int>();
+    private Dictionary<string, int> consumables = new Dictionary<string, int>();
+    private Dictionary<string, int> others = new Dictionary<string, int>();
+
+    [SerializeField] private ItemDatabase itemDatabase;  // ссылка на нашу базу
+
+    void Start()
+    {
+        // ... существующий код ...
+        AddItem("Iron_Ore", 10);
+        AddItem("Coal", 20);
+        AddItem("Gold_Money", 500);
+        AddItem("Wood", 5);
+    }
+
+    private void Awake()
+    {
+        if (itemDatabase == null)
+        {
+            itemDatabase = Resources.Load<ItemDatabase>("ItemDatabase"); // ← попробуй этот вариант
+                                                                         // или просто перетащи вручную в инспекторе — тогда эту строку можно убрать
+        }
+
+        if (itemDatabase == null)
+        {
+            Debug.LogError("База предметов НЕ НАЙДЕНА!");
+        }
+        else
+        {
+            Debug.Log($"База загружена. Всего предметов: {itemDatabase.TotalItems}");
+        }
+    }
+
+    // Добавить предмет в инвентарь
+    public void AddItem(string itemId, int amount = 1)
+    {
+        ItemData item = itemDatabase.GetItem(itemId);
+        if (item == null) return;
+
+        var targetDict = GetDictionaryByCategory(item.category);
+
+        if (targetDict.ContainsKey(itemId))
+        {
+            targetDict[itemId] += amount;
+        }
+        else
+        {
+            targetDict[itemId] = amount;
+        }
+
+        // Ограничение стека
+        if (targetDict[itemId] > item.maxStackSize)
+            targetDict[itemId] = item.maxStackSize;
+
+        Debug.Log($"Добавлено {amount} × {item.itemName}. Всего: {targetDict[itemId]}");
+
+        if (TutorialManager.Instance != null)
+        {
+            int currentCount = GetCount(itemId);
+            TutorialManager.Instance.CheckGoals(itemId, currentCount, GoalType.CollectItem);
+        }
+    }
+
+    // Убрать предмет из инвентаря
+    public bool RemoveItem(string itemId, int amount = 1)
+    {
+        ItemData item = itemDatabase.GetItem(itemId);
+        if (item == null) return false;
+
+        var dict = GetDictionaryByCategory(item.category);
+
+        if (!dict.ContainsKey(itemId) || dict[itemId] < amount)
+            return false;
+
+        dict[itemId] -= amount;
+        if (dict[itemId] <= 0)
+            dict.Remove(itemId);
+
+        Debug.Log($"Удалено {amount} × {item.itemName}");
+        return true;
+    }
+
+    // Сколько есть предмета
+    public int GetCount(string itemId)
+    {
+        ItemData item = itemDatabase.GetItem(itemId);
+        if (item == null) return 0;
+
+        var dict = GetDictionaryByCategory(item.category);
+        return dict.TryGetValue(itemId, out int count) ? count : 0;
+    }
+
+    // Вспомогательный метод — выбираем правильный словарь
+    private Dictionary<string, int> GetDictionaryByCategory(ItemCategory category)
+    {
+        switch (category)
+        {
+            case ItemCategory.Material: return materials;
+            case ItemCategory.Weapon: return weapons;
+            case ItemCategory.Tool: return tools;
+            case ItemCategory.Consumable: return consumables;
+            default: return others;
+        }
+    }
+
+    // Для теста — посмотреть содержимое (можно потом убрать)
+    public void DebugPrintInventory()
+    {
+        Debug.Log("=== Инвентарь ===");
+        PrintCategory("Материалы", materials);
+        PrintCategory("Оружие", weapons);
+        PrintCategory("Инструменты", tools);
+        PrintCategory("Расходники", consumables);
+        PrintCategory("Прочее", others);
+    }
+
+    private void PrintCategory(string name, Dictionary<string, int> dict)
+    {
+        if (dict.Count == 0) return;
+        Debug.Log($"-- {name} --");
+        foreach (var kvp in dict)
+        {
+            ItemData item = itemDatabase.GetItem(kvp.Key);
+            Debug.Log($"{item?.itemName ?? kvp.Key} × {kvp.Value}");
+        }
+    }
+
+    public Dictionary<string, int> GetMaterials()
+    {
+        return materials;   // возвращаем копию или напрямую
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Wooden_Handle", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Iron_Ore", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Silver", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.T)) AddItem("Long_Handler", 5);     // замени на свой id
+        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
+        if (Input.GetKeyDown(KeyCode.M)) AddItem("Gold_Money", 15);     // замени на свой id
+
+    }
+
+}
+
+
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Inventory\InventoryController.cs -----
+// Assets/Scripts/Inventory/InventoryController.cs
+using UnityEngine;
+
+public class InventoryController : MonoBehaviour
+{
+    [SerializeField] private GameObject inventoryPanel;     // перетащи InventoryPanel
+    [SerializeField] private PlayerMovement playerMovement; // твой скрипт движения игрока
+    [SerializeField] private MouseLook mouseLook;           // твой скрипт взгляда
+
+    private bool isOpen = false;
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            UIManager.Instance.ToggleUI(inventoryPanel);
+
+            if (inventoryPanel.activeSelf)
+            {
+                var inventoryUI = inventoryPanel.GetComponent<InventoryUI>();
+                if (inventoryUI != null) inventoryUI.Refresh();
+            }
+        }
+    }
+
+    private void ToggleInventory(bool open)
+    {
+        inventoryPanel.SetActive(open);
+
+        // Курсор
+        Cursor.visible = open;
+        Cursor.lockState = open ? CursorLockMode.None : CursorLockMode.Locked;
+
+        // Блокировка управления
+        if (playerMovement != null) playerMovement.enabled = !open;
+        if (mouseLook != null) mouseLook.enabled = !open;
+
+        // ← Добавляем обновление инвентаря при открытии
+        if (open)
+        {
+            var inventoryUI = inventoryPanel.GetComponent<InventoryUI>();
+            if (inventoryUI != null)
+            {
+                inventoryUI.Refresh();
+            }
+        }
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\AlloyDatabase.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "AlloyDatabase", menuName = "Ignis/Alloy Database")]
+public class AlloyDatabase : ScriptableObject
+{
+    [SerializeField] private List<AlloyRecipe> recipes = new List<AlloyRecipe>();
+
+    // Найти рецепт по списку ID руд (сортируем для совпадения)
+    public AlloyRecipe GetRecipe(List<string> oreIds)
+    {
+        oreIds.Sort();
+        string inputKey = string.Join(",", oreIds);
+
+        foreach (var recipe in recipes)
+        {
+            List<string> requiredSorted = new List<string>(recipe.requiredOres);
+            requiredSorted.Sort();
+            string recipeKey = string.Join(",", requiredSorted);
+
+            if (inputKey == recipeKey)
+                return recipe;
+        }
+
+        return null;  // Нет совпадения
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\AlloyRecipe.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "NewAlloyRecipe", menuName = "Ignis/Alloy Recipe")]
+public class AlloyRecipe : ScriptableObject
+{
+    public string alloyName;                // Название сплава
+    public ItemData resultItem;             // Слиток при успехе
+    public ItemData slagItem;               // Брак при неудаче (slag)
+    public List<string> requiredOres = new List<string>();  // ID руд
+    [TextArea(3, 6)]
+    public string description;              // Описание
+    public int coalRequired = 5;            // Константа угля на старте
+    public float minTemp = 1200f;           // Нижний край диапазона (°C)
+    public float maxTemp = 1600f;           // Верхний край
+    public float smeltDuration = 10f;       // Время мини-игры (сек)
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\DraggableItem.cs -----
+using UnityEngine;
+using UnityEngine.EventSystems;
+using System.Collections.Generic;
+
+public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+{
+    [HideInInspector] public Transform homeParent;   // мини-инвентарь Content — устанавливаем при создании слота
+    [HideInInspector] public string itemId;  // ← добавь это поле
+
+    private Canvas canvas;
+    private CanvasGroup canvasGroup;
+
+    private void Awake()
+    {
+        canvas = FindObjectOfType<Canvas>();
+        canvasGroup = GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+    }
+
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        canvasGroup.alpha = 0.6f;
+        canvasGroup.blocksRaycasts = false;
+
+        transform.SetParent(canvas.transform, true);  // поверх всего
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        transform.position = eventData.position;
+    }
+
+    public void OnEndDrag(PointerEventData eventData)
+    {
+        canvasGroup.alpha = 1f;
+        canvasGroup.blocksRaycasts = true;
+
+        // Raycast под курсором — ищем DropSlot
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = eventData.position
+        };
+
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        bool droppedOnSlot = false;
+        foreach (var result in results)
+        {
+            if (result.gameObject.GetComponent<DropSlot>() != null)
+            {
+                droppedOnSlot = true;
+                break;
+            }
+        }
+
+        if (!droppedOnSlot && homeParent != null)
+        {
+            // Возврат в мини-инвентарь (в конец списка)
+            transform.SetParent(homeParent);
+            transform.localPosition = Vector3.zero;
+
+            // ← добавь это
+            FurnaceUI furnaceUI = FindObjectOfType<FurnaceUI>();
+            if (furnaceUI != null) furnaceUI.UpdatePreview();
+        }
+        // Если попали в слот печи — DropSlot уже сделал SetParent + центрирование
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\DropSlot.cs -----
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+public class DropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+{
+    [SerializeField] private Color highlightColor = new Color(0.8f, 0.9f, 1f);
+
+    private Image backgroundImage;
+
+    private void Awake()
+    {
+        backgroundImage = GetComponent<Image>();
+
+        // Защита на случай, если Image на дочернем объекте (часто бывает)
+        if (backgroundImage == null)
+        {
+            backgroundImage = GetComponentInChildren<Image>();
+        }
+
+        if (backgroundImage == null)
+        {
+            Debug.LogWarning("DropSlot: Image-компонент не найден на слоте " + name);
+        }
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        if (eventData.pointerDrag != null)
+        {
+            eventData.pointerDrag.transform.SetParent(transform);
+            eventData.pointerDrag.transform.localPosition = Vector3.zero;
+            FindObjectOfType<FurnaceUI>().UpdatePreview();  // Вызов preview
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (eventData.pointerDrag != null && backgroundImage != null)
+        {
+            backgroundImage.color = highlightColor;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (backgroundImage != null)
+        {
+            backgroundImage.color = Color.white;
+        }
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\ItemCategory.cs -----
+// Assets/Scripts/Items/ItemCategory.cs
+public enum ItemCategory
+{
+    Material,     // железо, медь, уголь, бронза и т.д.
+    Weapon,       // готовые мечи, кинжалы, топоры
+    Tool,         // молот, клещи, точило (если будет)
+    Consumable,   // еда, зелья, уголь для печки и т.п.
+    Other         // всё, что не подошло в другие категории
+}
+
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\ItemData.cs -----
+// Assets/Scripts/Items/ItemData.cs
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "New Item", menuName = "Ignis/Item")]
+public class ItemData : ScriptableObject
+{
+    [Header("Основное")]
+    public string itemName = "Новый предмет";      // как будет отображаться игроку
+    public string id;                               // уникальный короткий идентификатор
+
+    [Header("Категория и внешний вид")]
+    public ItemCategory category;                   // категория предмета
+    public Sprite icon;                             // иконка для UI
+
+    [Header("Данные для игры")]
+    [Tooltip("Сколько штук считается одним стеком")]
+    public int maxStackSize = 99;                   // стек
+
+    [Tooltip("Базовая цена покупки")]
+    public int basePrice = 10;                      // базовая цена
+
+    [TextArea(3, 6)]
+    public string description = "Описание предмета..."; // описание
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\ItemDatabase.cs -----
+// Assets/Scripts/Items/ItemDatabase.cs
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+[CreateAssetMenu(fileName = "ItemDatabase", menuName = "Ignis/Item Database")]
+public class ItemDatabase : ScriptableObject
+{
+    [SerializeField]
+    private List<ItemData> items = new List<ItemData>();
+
+    // Быстрый поиск по id (будет использоваться очень часто)
+    private Dictionary<string, ItemData> itemDict;
+
+    private void OnEnable()
+    {
+        // Создаём словарь при загрузке ассета
+        itemDict = new Dictionary<string, ItemData>();
+
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.id))
+            {
+                Debug.LogWarning($"У предмета {item.name} нет id!");
+                continue;
+            }
+
+            if (itemDict.ContainsKey(item.id))
+            {
+                Debug.LogWarning($"Дубликат id: {item.id} у предмета {item.name}");
+                continue;
+            }
+
+            itemDict[item.id] = item;
+        }
+    }
+
+    // Получить предмет по уникальному id
+    public ItemData GetItem(string id)
+    {
+        if (itemDict == null || itemDict.Count == 0)
+        {
+            Debug.LogError("База предметов не инициализирована!");
+            return null;
+        }
+
+        if (itemDict.TryGetValue(id, out ItemData item))
+        {
+            return item;
+        }
+
+        Debug.LogWarning($"Предмет с id '{id}' не найден в базе");
+        return null;
+    }
+
+    public ItemData GetItemByName(string name)
+    {
+        return items.FirstOrDefault(i => i.itemName == name);
+    }
+
+    // Получить все предметы определённой категории (удобно для UI)
+    public List<ItemData> GetItemsByCategory(ItemCategory category)
+    {
+        return items.Where(i => i.category == category).ToList();
+    }
+
+    // Для отладки — посмотреть сколько всего предметов
+    public int TotalItems => items.Count;
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Crafting\CraftCategory.cs -----
+public enum CraftCategory
+{
+    Tools,      // �����������
+    Weapons,    // ������
+    Decorations // ���������
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Crafting\RecipeData.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "New Recipe", menuName = "Ignis/Recipe")]
+public class RecipeData : ScriptableObject
+{
+    public string recipeName;           // Имя рецепта (отображается в UI)
+    public CraftCategory category;      // Категория для вкладок
+    public List<RequiredItem> requiredItems; // Список компонентов
+    public ItemData resultItem;         // Что получается
+    public int resultAmount = 1;        // Количество результата
+
+    [System.Serializable]
+    public class RequiredItem
+    {
+        public ItemData item;
+        public int amount = 1;
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Crafting\RecipeDatabase.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+[CreateAssetMenu(fileName = "RecipeDatabase", menuName = "Ignis/Recipe Database")]
+public class RecipeDatabase : ScriptableObject
+{
+    [SerializeField] private List<RecipeData> recipes = new List<RecipeData>();
+
+    public List<RecipeData> GetRecipesByCategory(CraftCategory category)
+    {
+        return recipes.Where(r => r.category == category).ToList();
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\ActiveQuest.cs -----
+using UnityEngine;
+
+[System.Serializable]
+public class ActiveQuest
+{
+    public QuestData data;
+    public float remainingTimeSeconds;  // остаток времени в секундах (реал)
+
+    public ActiveQuest(QuestData questData)
+    {
+        data = questData;
+        // 1 сек реал = 1 мин игра, 60 мин/час → timeLimitHours * 60 сек реал
+        remainingTimeSeconds = questData.timeLimitHours * 60f;
+    }
+
+    public bool IsFailed() => remainingTimeSeconds <= 0;
+
+    // ИСПРАВЛЕНО: Метод для форматирования времени в MM:SS
+    public string GetFormattedTime()
+    {
+        int minutes = Mathf.FloorToInt(remainingTimeSeconds / 60f);
+        int seconds = Mathf.FloorToInt(remainingTimeSeconds % 60f);
+        return $"{minutes:00}:{seconds:00}";
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\FailMessage.cs -----
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+
+public class FailMessage : MonoBehaviour
+{
+    [SerializeField] private TMP_Text messageText;
+    [SerializeField] private CanvasGroup canvasGroup;
+
+    private void Awake()
+    {
+        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+        gameObject.SetActive(false);
+    }
+
+    public void Show(string message)
+    {
+        messageText.text = message;
+        StartCoroutine(ShowCoroutine());
+    }
+
+    private IEnumerator ShowCoroutine()
+    {
+        gameObject.SetActive(true);
+        canvasGroup.alpha = 0f;
+        yield return StartCoroutine(Fade(1f, 0.5f));  // fade in
+
+        yield return new WaitForSeconds(3f);
+
+        yield return StartCoroutine(Fade(0f, 0.5f));  // fade out
+        gameObject.SetActive(false);
+    }
+
+    private IEnumerator Fade(float targetAlpha, float duration)
+    {
+        float startAlpha = canvasGroup.alpha;
+        float time = 0;
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, time / duration);
+            yield return null;
+        }
+        canvasGroup.alpha = targetAlpha;
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\QuestData.cs -----
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "NewQuest", menuName = "Ignis/Quest")]
+public class QuestData : ScriptableObject
+{
+    public string questID;              // уникальный id
+    public string title;                // название
+    [TextArea(3, 6)]
+    public string description;          // описание
+    public string customerName;         // заказчик
+
+    public int rewardGold;              // награда
+    public float timeLimitHours;        // срок в игровых часах
+
+    [Header("Что нужно сдать")]
+    public string requiredItemID;       // id предмета
+    public int requiredAmount = 1;
+
+    [Header("Штраф")]
+    public float failPenaltyPercent = 30f;  // % от награды
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\QuestDatabase.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "QuestDatabase", menuName = "Ignis/Quest Database")]
+public class QuestDatabase : ScriptableObject
+{
+    [SerializeField] private List<QuestData> quests = new List<QuestData>();
+
+    private Dictionary<string, QuestData> questDict;
+
+    private void OnEnable()
+    {
+        questDict = new Dictionary<string, QuestData>();
+        foreach (var q in quests)
+        {
+            if (!string.IsNullOrEmpty(q.questID))
+                questDict[q.questID] = q;
+        }
+    }
+
+    public List<QuestData> GetAllQuests() => quests;
+
+    public QuestData GetQuestById(string id) =>
+        questDict.TryGetValue(id, out var q) ? q : null;
+
+    // ИСПРАВЛЕНО: Методы для динамического управления (вызывай из других скриптов, например QuestDatabase.AddQuest(myQuestData);)
+    public void AddQuest(QuestData newQuest)
+    {
+        if (newQuest == null || string.IsNullOrEmpty(newQuest.questID)) return;
+        if (questDict.ContainsKey(newQuest.questID)) return;  // не дублируем
+
+        quests.Add(newQuest);
+        questDict[newQuest.questID] = newQuest;
+    }
+
+    public void RemoveQuest(string questID)
+    {
+        if (questDict.TryGetValue(questID, out var q))
+        {
+            quests.Remove(q);
+            questDict.Remove(questID);
+        }
+    }
+
+    public void ClearQuests()
+    {
+        quests.Clear();
+        questDict.Clear();
+    }
+}
+
+----- File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\QuestManager.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+using TMPro;
+using System.Collections;
+
+public class QuestManager : MonoBehaviour
+{
+    public static QuestManager Instance { get; private set; }
+
+    [SerializeField] private Inventory playerInventory;  // перетащи Inventory
+    [SerializeField] private ItemDatabase itemDatabase;  // перетащи
+
+    // Добавь в начало класса, в [SerializeField]
+    [Header("HUD провала")]
+    [SerializeField] private GameObject failMessageCanvas;      // весь Canvas FailMessageCanvas
+    [SerializeField] private TMP_Text failMessageText;          // TextMeshProUGUI внутри
+    [SerializeField] private CanvasGroup failCanvasGroup;       // CanvasGroup на Canvas или Panel
+
+    private List<ActiveQuest> activeQuests = new List<ActiveQuest>();  // max 2
+
+    // ИСПРАВЛЕНО: Убрали completedQuestIDs — квесты теперь повторяемые
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
+        // Скрываем HUD при старте
+        if (failMessageCanvas != null)
+            failMessageCanvas.SetActive(false);
+    }
+
+    private void Update()
+    {
+        for (int i = activeQuests.Count - 1; i >= 0; i--)
+        {
+            activeQuests[i].remainingTimeSeconds -= Time.deltaTime; 
+            if (activeQuests[i].IsFailed())
+            {
+                FailQuest(i);
+            }
+        }
+    }
+
+    public bool HasFreeSlot() => activeQuests.Count < 2;
+
+    public void AcceptQuest(QuestData quest)
+    {
+        if (!HasFreeSlot()) return;  // ИСПРАВЛЕНО: Убрали проверку на completed
+
+        activeQuests.Add(new ActiveQuest(quest));
+        Debug.Log($"Принят заказ: {quest.title}");
+    }
+
+    public List<ActiveQuest> GetActiveQuests() => activeQuests;
+
+    public void SubmitQuest(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= activeQuests.Count) return;
+
+        ActiveQuest aq = activeQuests[slotIndex];
+        if (aq.IsFailed()) return;
+
+        // Проверяем наличие предмета
+        if (playerInventory.GetCount(aq.data.requiredItemID) >= aq.data.requiredAmount)
+        {
+            playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
+            playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
+            activeQuests.RemoveAt(slotIndex);
+
+            if (TutorialManager.Instance != null)
+            {
+                TutorialManager.Instance.CheckGoals(aq.data.questID, 1, GoalType.CompleteQuest);
+            }
+
+            Debug.Log($"Сдан заказ: {aq.data.title}. Награда: {aq.data.rewardGold}");
+        }
+        else
+        {
+            Debug.Log("Нет нужного предмета для сдачи!");
+        }
+    }
+
+    private void FailQuest(int slotIndex)
+    {
+        ActiveQuest aq = activeQuests[slotIndex];
+        int penalty = Mathf.RoundToInt(aq.data.rewardGold * (aq.data.failPenaltyPercent / 100f));
+
+        int actualPenalty = Mathf.Min(penalty, playerInventory.GetCount("Gold_Money"));
+        playerInventory.RemoveItem("Gold_Money", actualPenalty);
+
+        activeQuests.RemoveAt(slotIndex);
+
+        string msg = $"Провален заказ: {aq.data.title}\nШтраф: {actualPenalty} золота";
+        Debug.Log(msg);
+
+        // Показываем HUD прямо здесь
+        if (failMessageCanvas != null && failMessageText != null && failCanvasGroup != null)
+        {
+            failMessageText.text = msg;
+            failMessageCanvas.SetActive(true);
+            StartCoroutine(ShowFailMessageCoroutine());
+        }
+    }
+
+    private System.Collections.IEnumerator ShowFailMessageCoroutine()
+    {
+        failCanvasGroup.alpha = 0f;
+
+        // Fade in
+        float time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(0f, 1f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(3f);
+
+        // Fade out
+        time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(1f, 0f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 0f;
+
+        failMessageCanvas.SetActive(false);
+    }
+}
+
