@@ -1,39 +1,13 @@
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
 {
-    public float speed = 6.0f;
-    public float gravity = -9.81f;
-    public float jumpHeight = 3.0f;
-    private CharacterController controller;
-    private Vector3 velocity;
-    private bool isGrounded;
+    // В твоей игре игрок не перемещается,
+    // но другие системы проверяют этот скрипт
+    // поэтому он нужен как заглушка.
 
-    void Start()
+    private void Update()
     {
-        controller = GetComponent<CharacterController>();
-    }
-
-    void Update()
-    {
-        isGrounded = controller.isGrounded;
-        if (isGrounded && velocity.y < 0)
-        {
-            velocity.y = -2f;
-        }
-
-        float x = Input.GetAxis("Horizontal"); // A/D
-        float z = Input.GetAxis("Vertical");   // W/S
-        Vector3 move = transform.right * x + transform.forward * z;
-        controller.Move(move * speed * Time.deltaTime);
-
-        if (Input.GetButtonDown("Jump") && isGrounded)
-        {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-        }
-
-        velocity.y += gravity * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        // пусто
     }
 }
