@@ -2,12 +2,17 @@ using UnityEngine;
 
 public class PlayerInteraction : MonoBehaviour
 {
+    [Header("Ссылки")]
     [SerializeField] private Camera mainCamera;
     [SerializeField] private MouseLook mouseLook;
+
+    [Header("Настройки")]
     [SerializeField] private float maxDistance = 100f;
     [SerializeField] private float doubleClickTime = 0.3f;
+    [SerializeField] private LayerMask interactableLayer = ~0;
 
     private float lastClickTime = -1f;
+    private InteractableObject currentHover;
 
     private void Awake()
     {
@@ -19,6 +24,8 @@ public class PlayerInteraction : MonoBehaviour
     {
         if (mainCamera == null)
             return;
+
+        HandleHover();
 
         if (UIManager.Instance != null && UIManager.Instance.currentUI != null)
             return;
@@ -39,18 +46,38 @@ public class PlayerInteraction : MonoBehaviour
         }
     }
 
-    private void TryInteract()
+    private void HandleHover()
     {
         Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, maxDistance))
+        if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, interactableLayer))
         {
             InteractableObject interactable = hit.collider.GetComponentInParent<InteractableObject>();
 
-            if (interactable != null)
+            if (interactable != currentHover)
             {
-                interactable.Interact();
+                if (currentHover != null)
+                    currentHover.SetHighlight(false);
+
+                currentHover = interactable;
+
+                if (currentHover != null)
+                    currentHover.SetHighlight(true);
             }
         }
+        else
+        {
+            if (currentHover != null)
+            {
+                currentHover.SetHighlight(false);
+                currentHover = null;
+            }
+        }
+    }
+
+    private void TryInteract()
+    {
+        if (currentHover != null)
+            currentHover.Interact();
     }
 }
