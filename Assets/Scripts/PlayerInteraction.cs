@@ -5,6 +5,7 @@ public class PlayerInteraction : MonoBehaviour
     [Header("Ссылки")]
     [SerializeField] private Camera mainCamera;
     [SerializeField] private MouseLook mouseLook;
+    [SerializeField] private WorkshopCameraModeManager cameraModeManager;
 
     [Header("Настройки")]
     [SerializeField] private float maxDistance = 100f;
@@ -25,13 +26,25 @@ public class PlayerInteraction : MonoBehaviour
         if (mainCamera == null)
             return;
 
-        HandleHover();
+        if (cameraModeManager != null && cameraModeManager.IsInObjectMode)
+        {
+            ClearHover();
+            return;
+        }
 
         if (UIManager.Instance != null && UIManager.Instance.currentUI != null)
+        {
+            ClearHover();
             return;
+        }
 
         if (mouseLook != null && mouseLook.IsRotating)
+        {
+            ClearHover();
             return;
+        }
+
+        HandleHover();
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -67,17 +80,32 @@ public class PlayerInteraction : MonoBehaviour
         }
         else
         {
-            if (currentHover != null)
-            {
-                currentHover.SetHighlight(false);
-                currentHover = null;
-            }
+            ClearHover();
         }
     }
 
     private void TryInteract()
     {
+        if (currentHover == null)
+            return;
+
+        currentHover.SetHighlight(false);
+        currentHover.Interact();
+        currentHover = null;
+    }
+
+    private void ClearHover()
+    {
         if (currentHover != null)
-            currentHover.Interact();
+        {
+            currentHover.SetHighlight(false);
+            currentHover = null;
+        }
+    }
+
+    public void ForceClearHover()
+    {
+        ClearHover();
+        lastClickTime = -1f;
     }
 }

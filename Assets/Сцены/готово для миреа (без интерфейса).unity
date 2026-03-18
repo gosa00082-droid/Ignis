@@ -922,7 +922,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorkshopCameraModeManager
   workshopCamera: {fileID: 1595054077}
-  mouseLook: {fileID: 0}
+  mouseLook: {fileID: 1595054079}
+  playerInteraction: {fileID: 1595054080}
+  returnBlendLockTime: 1.5
 --- !u!114 &190758416 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7070378391635012709, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
@@ -4401,6 +4403,7 @@ MonoBehaviour:
   sensitivity: 2
   minVerticalAngle: -70
   maxVerticalAngle: 60
+  cameraModeManager: {fileID: 0}
 --- !u!114 &1595054080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4415,6 +4418,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInteraction
   mainCamera: {fileID: 1267766215}
   mouseLook: {fileID: 1595054079}
+  cameraModeManager: {fileID: 189790242}
   maxDistance: 200
   doubleClickTime: 0.3
   interactableLayer:
