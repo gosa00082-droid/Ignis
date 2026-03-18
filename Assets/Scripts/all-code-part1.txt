@@ -1,40 +1,333 @@
 ﻿
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\WorkshopCameraModeManager.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\InteractableObject.cs -----
+using UnityEngine;
+using Unity.Cinemachine;
+
+public class InteractableObject : MonoBehaviour
+{
+    [Header("�������� �������")]
+    [SerializeField] private string displayName = "������";
+
+    [Header("������")]
+    [SerializeField] private CinemachineCamera targetCamera;
+
+    [Header("UI")]
+    [SerializeField] private GameObject targetUI;
+
+    [Header("�������� ������")]
+    [SerializeField] private WorkshopCameraModeManager cameraModeManager;
+
+    [Header("�������")]
+    [SerializeField] private SimpleOutline outline;
+
+    public string DisplayName => displayName;
+
+    private void Awake()
+    {
+        if (outline == null)
+            outline = GetComponent<SimpleOutline>();
+
+        if (outline == null)
+            outline = GetComponentInChildren<SimpleOutline>(true);
+
+        if (outline != null)
+            outline.SetActive(false);
+    }
+
+    public void SetHighlight(bool state)
+    {
+        if (outline != null)
+            outline.SetActive(state);
+    }
+
+    public void Interact()
+    {
+        if (cameraModeManager == null)
+        {
+            Debug.LogWarning($"{name}: �� �������� CameraModeManager");
+            return;
+        }
+
+        if (targetCamera == null)
+        {
+            Debug.LogWarning($"{name}: �� ��������� targetCamera");
+            return;
+        }
+
+        if (targetUI == null)
+        {
+            Debug.LogWarning($"{name}: �� �������� targetUI");
+            return;
+        }
+
+        cameraModeManager.EnterObjectMode(targetCamera, targetUI);
+    }
+}
+
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\MouseLook.cs -----
+using UnityEngine;
+
+public class MouseLook : MonoBehaviour
+{
+    [SerializeField] private float sensitivity = 2f;
+    [SerializeField] private float minVerticalAngle = -70f;
+    [SerializeField] private float maxVerticalAngle = 60f;
+
+    private float yaw;
+    private float pitch;
+
+    public bool IsRotating { get; private set; }
+    public bool IsLocked { get; set; }
+
+    void Start()
+    {
+        yaw = transform.eulerAngles.y;
+        pitch = transform.eulerAngles.x;
+    }
+
+    void Update()
+    {
+        if (IsLocked)
+            return;
+
+        if (Input.GetMouseButtonDown(1))
+            StartRotation();
+
+        if (Input.GetMouseButtonUp(1))
+            StopRotation();
+
+        if (!IsRotating)
+            return;
+
+        float mouseX = Input.GetAxis("Mouse X") * sensitivity * 100f * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * sensitivity * 100f * Time.deltaTime;
+
+        yaw += mouseX;
+        pitch -= mouseY;
+
+        pitch = Mathf.Clamp(pitch, minVerticalAngle, maxVerticalAngle);
+
+        transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
+    }
+
+    void StartRotation()
+    {
+        if (IsLocked) return;
+
+        IsRotating = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    void StopRotation()
+    {
+        IsRotating = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void LockLook()
+    {
+        IsLocked = true;
+        IsRotating = false;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void UnlockLook()
+    {
+        IsLocked = false;
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\ObjectRotator.cs -----
+using UnityEngine;
+
+public class ObjectRotator : MonoBehaviour
+{
+    public Transform targetObject;
+    public float rotationSpeed = 100f;
+    public float distance = 5f;
+    public float minYAngle = -80f;
+    public float maxYAngle = 80f;
+
+    private float currentX = 0f;
+    private float currentY = 0f;
+
+    void Start()
+    {
+        if (targetObject == null)
+        {
+            Debug.LogError("Target Object �� ��������! ���������� ������ � ����������.");
+            return;
+        }
+
+        // ������������� ��������� ������� ������
+        transform.position = targetObject.position + new Vector3(0, 0, -distance);
+        currentX = 0f;
+        currentY = 0f;
+    }
+
+    void LateUpdate()
+    {
+        if (targetObject == null) return;
+
+        if (Input.GetMouseButton(0))
+        {
+            currentX += Input.GetAxis("Mouse X") * rotationSpeed * 0.01f;
+            currentY -= Input.GetAxis("Mouse Y") * rotationSpeed * 0.01f;
+
+            // ������������ ������������ ����
+            currentY = Mathf.Clamp(currentY, minYAngle, maxYAngle);
+        }
+
+        // ������� ��������
+        Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
+
+        // ������������� ������ ������ �������
+        Vector3 offset = new Vector3(0, 0, -distance);
+        transform.position = targetObject.position + rotation * offset;
+
+        // ������ ������� �� ������
+        transform.LookAt(targetObject.position);
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\PlayerInteraction.cs -----
+using UnityEngine;
+
+public class PlayerInteraction : MonoBehaviour
+{
+    [Header("������")]
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private MouseLook mouseLook;
+
+    [Header("���������")]
+    [SerializeField] private float maxDistance = 100f;
+    [SerializeField] private float doubleClickTime = 0.3f;
+    [SerializeField] private LayerMask interactableLayer = ~0;
+
+    private float lastClickTime = -1f;
+    private InteractableObject currentHover;
+
+    private void Awake()
+    {
+        if (mainCamera == null)
+            mainCamera = Camera.main;
+    }
+
+    private void Update()
+    {
+        if (mainCamera == null)
+            return;
+
+        HandleHover();
+
+        if (UIManager.Instance != null && UIManager.Instance.currentUI != null)
+            return;
+
+        if (mouseLook != null && mouseLook.IsRotating)
+            return;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            float delta = Time.time - lastClickTime;
+
+            if (delta <= doubleClickTime)
+            {
+                TryInteract();
+            }
+
+            lastClickTime = Time.time;
+        }
+    }
+
+    private void HandleHover()
+    {
+        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, maxDistance, interactableLayer))
+        {
+            InteractableObject interactable = hit.collider.GetComponentInParent<InteractableObject>();
+
+            if (interactable != currentHover)
+            {
+                if (currentHover != null)
+                    currentHover.SetHighlight(false);
+
+                currentHover = interactable;
+
+                if (currentHover != null)
+                    currentHover.SetHighlight(true);
+            }
+        }
+        else
+        {
+            if (currentHover != null)
+            {
+                currentHover.SetHighlight(false);
+                currentHover = null;
+            }
+        }
+    }
+
+    private void TryInteract()
+    {
+        if (currentHover != null)
+            currentHover.Interact();
+    }
+}
+
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\PlayerMovement.cs -----
+using UnityEngine;
+
+public class PlayerMovement : MonoBehaviour
+{
+    // � ����� ���� ����� �� ������������,
+    // �� ������ ������� ��������� ���� ������
+    // ������� �� ����� ��� ��������.
+
+    private void Update()
+    {
+        // �����
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\WorkshopCameraModeManager.cs -----
 using UnityEngine;
 using Unity.Cinemachine;
 
 public class WorkshopCameraModeManager : MonoBehaviour
 {
-    [Header("�������� ������")]
     [SerializeField] private CinemachineCamera workshopCamera;
-
-    [Header("���������� �������")]
     [SerializeField] private MouseLook mouseLook;
 
     private CinemachineCamera activeCamera;
     private GameObject activeUI;
 
-    private bool objectMode = false;
+    private bool objectMode;
 
-    public bool EnterObjectMode(CinemachineCamera targetCamera, GameObject targetUI)
+    public void EnterObjectMode(CinemachineCamera targetCamera, GameObject targetUI)
     {
-        if (objectMode) return false;
+        if (objectMode) return;
+        if (UIManager.Instance == null) return;
 
         if (!UIManager.Instance.TryOpenUI(targetUI))
-            return false;
+            return;
+
+        objectMode = true;
 
         activeCamera = targetCamera;
         activeUI = targetUI;
 
+        if (mouseLook != null)
+            mouseLook.LockLook();
+
         workshopCamera.Priority = 10;
         activeCamera.Priority = 20;
-
-        if (mouseLook != null)
-            mouseLook.enabled = false;
-
-        objectMode = true;
-
-        return true;
     }
 
     public void ExitObjectMode()
@@ -46,18 +339,18 @@ public class WorkshopCameraModeManager : MonoBehaviour
 
         workshopCamera.Priority = 20;
 
-        UIManager.Instance.CloseCurrent();
+        if (UIManager.Instance != null)
+            UIManager.Instance.CloseCurrent();
 
         if (mouseLook != null)
-            mouseLook.enabled = true;
+            mouseLook.UnlockLook();
 
         activeCamera = null;
         activeUI = null;
-
         objectMode = false;
     }
 
-    private void Update()
+    void Update()
     {
         if (objectMode && Input.GetKeyDown(KeyCode.Escape))
         {
@@ -67,7 +360,7 @@ public class WorkshopCameraModeManager : MonoBehaviour
 }
 
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\gosha\CutsceneManager.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\gosha\CutsceneManager.cs -----
 using UnityEngine;
 using Unity.Cinemachine;
 using UnityEngine.Playables;
@@ -168,7 +461,7 @@ public class CutsceneManager : MonoBehaviour
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Inventory\Inventory.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Inventory\Inventory.cs -----
 // Assets/Scripts/Inventory/Inventory.cs
 using UnityEngine;
 using System.Collections.Generic;
@@ -328,7 +621,7 @@ public class Inventory : MonoBehaviour
 
 
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Inventory\InventoryController.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Inventory\InventoryController.cs -----
 // Assets/Scripts/Inventory/InventoryController.cs
 using UnityEngine;
 
@@ -378,7 +671,7 @@ public class InventoryController : MonoBehaviour
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\AlloyDatabase.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\AlloyDatabase.cs -----
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -407,7 +700,7 @@ public class AlloyDatabase : ScriptableObject
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\AlloyRecipe.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\AlloyRecipe.cs -----
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -426,7 +719,7 @@ public class AlloyRecipe : ScriptableObject
     public float smeltDuration = 10f;       // Время мини-игры (сек)
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\DraggableItem.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\DraggableItem.cs -----
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
@@ -496,7 +789,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\DropSlot.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\DropSlot.cs -----
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -550,7 +843,7 @@ public class DropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\ItemCategory.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemCategory.cs -----
 // Assets/Scripts/Items/ItemCategory.cs
 public enum ItemCategory
 {
@@ -562,7 +855,7 @@ public enum ItemCategory
 }
 
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\ItemData.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemData.cs -----
 // Assets/Scripts/Items/ItemData.cs
 using UnityEngine;
 
@@ -588,7 +881,7 @@ public class ItemData : ScriptableObject
     public string description = "Описание предмета..."; // описание
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\ItemDatabase.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemDatabase.cs -----
 // Assets/Scripts/Items/ItemDatabase.cs
 using UnityEngine;
 using System.Collections.Generic;
@@ -659,7 +952,7 @@ public class ItemDatabase : ScriptableObject
     public int TotalItems => items.Count;
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Crafting\CraftCategory.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\CraftCategory.cs -----
 public enum CraftCategory
 {
     Tools,      // �����������
@@ -667,7 +960,7 @@ public enum CraftCategory
     Decorations // ���������
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Crafting\RecipeData.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\RecipeData.cs -----
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -688,7 +981,7 @@ public class RecipeData : ScriptableObject
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Crafting\RecipeDatabase.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\RecipeDatabase.cs -----
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -701,293 +994,6 @@ public class RecipeDatabase : ScriptableObject
     public List<RecipeData> GetRecipesByCategory(CraftCategory category)
     {
         return recipes.Where(r => r.category == category).ToList();
-    }
-}
-
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\ActiveQuest.cs -----
-using UnityEngine;
-
-[System.Serializable]
-public class ActiveQuest
-{
-    public QuestData data;
-    public float remainingTimeSeconds;  // остаток времени в секундах (реал)
-
-    public ActiveQuest(QuestData questData)
-    {
-        data = questData;
-        // 1 сек реал = 1 мин игра, 60 мин/час → timeLimitHours * 60 сек реал
-        remainingTimeSeconds = questData.timeLimitHours * 60f;
-    }
-
-    public bool IsFailed() => remainingTimeSeconds <= 0;
-
-    // ИСПРАВЛЕНО: Метод для форматирования времени в MM:SS
-    public string GetFormattedTime()
-    {
-        int minutes = Mathf.FloorToInt(remainingTimeSeconds / 60f);
-        int seconds = Mathf.FloorToInt(remainingTimeSeconds % 60f);
-        return $"{minutes:00}:{seconds:00}";
-    }
-}
-
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\FailMessage.cs -----
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections;
-
-public class FailMessage : MonoBehaviour
-{
-    [SerializeField] private TMP_Text messageText;
-    [SerializeField] private CanvasGroup canvasGroup;
-
-    private void Awake()
-    {
-        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
-        gameObject.SetActive(false);
-    }
-
-    public void Show(string message)
-    {
-        messageText.text = message;
-        StartCoroutine(ShowCoroutine());
-    }
-
-    private IEnumerator ShowCoroutine()
-    {
-        gameObject.SetActive(true);
-        canvasGroup.alpha = 0f;
-        yield return StartCoroutine(Fade(1f, 0.5f));  // fade in
-
-        yield return new WaitForSeconds(3f);
-
-        yield return StartCoroutine(Fade(0f, 0.5f));  // fade out
-        gameObject.SetActive(false);
-    }
-
-    private IEnumerator Fade(float targetAlpha, float duration)
-    {
-        float startAlpha = canvasGroup.alpha;
-        float time = 0;
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, time / duration);
-            yield return null;
-        }
-        canvasGroup.alpha = targetAlpha;
-    }
-}
-
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\QuestData.cs -----
-using UnityEngine;
-
-[CreateAssetMenu(fileName = "NewQuest", menuName = "Ignis/Quest")]
-public class QuestData : ScriptableObject
-{
-    public string questID;              // уникальный id
-    public string title;                // название
-    [TextArea(3, 6)]
-    public string description;          // описание
-    public string customerName;         // заказчик
-
-    public int rewardGold;              // награда
-    public float timeLimitHours;        // срок в игровых часах
-
-    [Header("Что нужно сдать")]
-    public string requiredItemID;       // id предмета
-    public int requiredAmount = 1;
-
-    [Header("Штраф")]
-    public float failPenaltyPercent = 30f;  // % от награды
-}
-
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\QuestDatabase.cs -----
-using UnityEngine;
-using System.Collections.Generic;
-
-[CreateAssetMenu(fileName = "QuestDatabase", menuName = "Ignis/Quest Database")]
-public class QuestDatabase : ScriptableObject
-{
-    [SerializeField] private List<QuestData> quests = new List<QuestData>();
-
-    private Dictionary<string, QuestData> questDict;
-
-    private void OnEnable()
-    {
-        questDict = new Dictionary<string, QuestData>();
-        foreach (var q in quests)
-        {
-            if (!string.IsNullOrEmpty(q.questID))
-                questDict[q.questID] = q;
-        }
-    }
-
-    public List<QuestData> GetAllQuests() => quests;
-
-    public QuestData GetQuestById(string id) =>
-        questDict.TryGetValue(id, out var q) ? q : null;
-
-    // ИСПРАВЛЕНО: Методы для динамического управления (вызывай из других скриптов, например QuestDatabase.AddQuest(myQuestData);)
-    public void AddQuest(QuestData newQuest)
-    {
-        if (newQuest == null || string.IsNullOrEmpty(newQuest.questID)) return;
-        if (questDict.ContainsKey(newQuest.questID)) return;  // не дублируем
-
-        quests.Add(newQuest);
-        questDict[newQuest.questID] = newQuest;
-    }
-
-    public void RemoveQuest(string questID)
-    {
-        if (questDict.TryGetValue(questID, out var q))
-        {
-            quests.Remove(q);
-            questDict.Remove(questID);
-        }
-    }
-
-    public void ClearQuests()
-    {
-        quests.Clear();
-        questDict.Clear();
-    }
-}
-
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Items\Orders\QuestManager.cs -----
-using UnityEngine;
-using System.Collections.Generic;
-using TMPro;
-using System.Collections;
-
-public class QuestManager : MonoBehaviour
-{
-    public static QuestManager Instance { get; private set; }
-
-    [SerializeField] private Inventory playerInventory;  // перетащи Inventory
-    [SerializeField] private ItemDatabase itemDatabase;  // перетащи
-
-    // Добавь в начало класса, в [SerializeField]
-    [Header("HUD провала")]
-    [SerializeField] private GameObject failMessageCanvas;      // весь Canvas FailMessageCanvas
-    [SerializeField] private TMP_Text failMessageText;          // TextMeshProUGUI внутри
-    [SerializeField] private CanvasGroup failCanvasGroup;       // CanvasGroup на Canvas или Panel
-
-    private List<ActiveQuest> activeQuests = new List<ActiveQuest>();  // max 2
-
-    // ИСПРАВЛЕНО: Убрали completedQuestIDs — квесты теперь повторяемые
-
-    private void Awake()
-    {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
-
-        // Скрываем HUD при старте
-        if (failMessageCanvas != null)
-            failMessageCanvas.SetActive(false);
-    }
-
-    private void Update()
-    {
-        for (int i = activeQuests.Count - 1; i >= 0; i--)
-        {
-            activeQuests[i].remainingTimeSeconds -= Time.deltaTime; 
-            if (activeQuests[i].IsFailed())
-            {
-                FailQuest(i);
-            }
-        }
-    }
-
-    public bool HasFreeSlot() => activeQuests.Count < 2;
-
-    public void AcceptQuest(QuestData quest)
-    {
-        if (!HasFreeSlot()) return;  // ИСПРАВЛЕНО: Убрали проверку на completed
-
-        activeQuests.Add(new ActiveQuest(quest));
-        Debug.Log($"Принят заказ: {quest.title}");
-    }
-
-    public List<ActiveQuest> GetActiveQuests() => activeQuests;
-
-    public void SubmitQuest(int slotIndex)
-    {
-        if (slotIndex < 0 || slotIndex >= activeQuests.Count) return;
-
-        ActiveQuest aq = activeQuests[slotIndex];
-        if (aq.IsFailed()) return;
-
-        // Проверяем наличие предмета
-        if (playerInventory.GetCount(aq.data.requiredItemID) >= aq.data.requiredAmount)
-        {
-            playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
-            playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
-            activeQuests.RemoveAt(slotIndex);
-
-            if (TutorialManager.Instance != null)
-            {
-                TutorialManager.Instance.CheckGoals(aq.data.questID, 1, GoalType.CompleteQuest);
-            }
-
-            Debug.Log($"Сдан заказ: {aq.data.title}. Награда: {aq.data.rewardGold}");
-        }
-        else
-        {
-            Debug.Log("Нет нужного предмета для сдачи!");
-        }
-    }
-
-    private void FailQuest(int slotIndex)
-    {
-        ActiveQuest aq = activeQuests[slotIndex];
-        int penalty = Mathf.RoundToInt(aq.data.rewardGold * (aq.data.failPenaltyPercent / 100f));
-
-        int actualPenalty = Mathf.Min(penalty, playerInventory.GetCount("Gold_Money"));
-        playerInventory.RemoveItem("Gold_Money", actualPenalty);
-
-        activeQuests.RemoveAt(slotIndex);
-
-        string msg = $"Провален заказ: {aq.data.title}\nШтраф: {actualPenalty} золота";
-        Debug.Log(msg);
-
-        // Показываем HUD прямо здесь
-        if (failMessageCanvas != null && failMessageText != null && failCanvasGroup != null)
-        {
-            failMessageText.text = msg;
-            failMessageCanvas.SetActive(true);
-            StartCoroutine(ShowFailMessageCoroutine());
-        }
-    }
-
-    private System.Collections.IEnumerator ShowFailMessageCoroutine()
-    {
-        failCanvasGroup.alpha = 0f;
-
-        // Fade in
-        float time = 0f;
-        while (time < 0.5f)
-        {
-            time += Time.deltaTime;
-            failCanvasGroup.alpha = Mathf.Lerp(0f, 1f, time / 0.5f);
-            yield return null;
-        }
-        failCanvasGroup.alpha = 1f;
-
-        yield return new WaitForSeconds(3f);
-
-        // Fade out
-        time = 0f;
-        while (time < 0.5f)
-        {
-            time += Time.deltaTime;
-            failCanvasGroup.alpha = Mathf.Lerp(1f, 0f, time / 0.5f);
-            yield return null;
-        }
-        failCanvasGroup.alpha = 0f;
-
-        failMessageCanvas.SetActive(false);
     }
 }
 

@@ -1,5 +1,292 @@
 ﻿
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Managers\ReferenceManager.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\ActiveQuest.cs -----
+using UnityEngine;
+
+[System.Serializable]
+public class ActiveQuest
+{
+    public QuestData data;
+    public float remainingTimeSeconds;  // остаток времени в секундах (реал)
+
+    public ActiveQuest(QuestData questData)
+    {
+        data = questData;
+        // 1 сек реал = 1 мин игра, 60 мин/час → timeLimitHours * 60 сек реал
+        remainingTimeSeconds = questData.timeLimitHours * 60f;
+    }
+
+    public bool IsFailed() => remainingTimeSeconds <= 0;
+
+    // ИСПРАВЛЕНО: Метод для форматирования времени в MM:SS
+    public string GetFormattedTime()
+    {
+        int minutes = Mathf.FloorToInt(remainingTimeSeconds / 60f);
+        int seconds = Mathf.FloorToInt(remainingTimeSeconds % 60f);
+        return $"{minutes:00}:{seconds:00}";
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\FailMessage.cs -----
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+using System.Collections;
+
+public class FailMessage : MonoBehaviour
+{
+    [SerializeField] private TMP_Text messageText;
+    [SerializeField] private CanvasGroup canvasGroup;
+
+    private void Awake()
+    {
+        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+        gameObject.SetActive(false);
+    }
+
+    public void Show(string message)
+    {
+        messageText.text = message;
+        StartCoroutine(ShowCoroutine());
+    }
+
+    private IEnumerator ShowCoroutine()
+    {
+        gameObject.SetActive(true);
+        canvasGroup.alpha = 0f;
+        yield return StartCoroutine(Fade(1f, 0.5f));  // fade in
+
+        yield return new WaitForSeconds(3f);
+
+        yield return StartCoroutine(Fade(0f, 0.5f));  // fade out
+        gameObject.SetActive(false);
+    }
+
+    private IEnumerator Fade(float targetAlpha, float duration)
+    {
+        float startAlpha = canvasGroup.alpha;
+        float time = 0;
+        while (time < duration)
+        {
+            time += Time.deltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, time / duration);
+            yield return null;
+        }
+        canvasGroup.alpha = targetAlpha;
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\QuestData.cs -----
+using UnityEngine;
+
+[CreateAssetMenu(fileName = "NewQuest", menuName = "Ignis/Quest")]
+public class QuestData : ScriptableObject
+{
+    public string questID;              // уникальный id
+    public string title;                // название
+    [TextArea(3, 6)]
+    public string description;          // описание
+    public string customerName;         // заказчик
+
+    public int rewardGold;              // награда
+    public float timeLimitHours;        // срок в игровых часах
+
+    [Header("Что нужно сдать")]
+    public string requiredItemID;       // id предмета
+    public int requiredAmount = 1;
+
+    [Header("Штраф")]
+    public float failPenaltyPercent = 30f;  // % от награды
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\QuestDatabase.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "QuestDatabase", menuName = "Ignis/Quest Database")]
+public class QuestDatabase : ScriptableObject
+{
+    [SerializeField] private List<QuestData> quests = new List<QuestData>();
+
+    private Dictionary<string, QuestData> questDict;
+
+    private void OnEnable()
+    {
+        questDict = new Dictionary<string, QuestData>();
+        foreach (var q in quests)
+        {
+            if (!string.IsNullOrEmpty(q.questID))
+                questDict[q.questID] = q;
+        }
+    }
+
+    public List<QuestData> GetAllQuests() => quests;
+
+    public QuestData GetQuestById(string id) =>
+        questDict.TryGetValue(id, out var q) ? q : null;
+
+    // ИСПРАВЛЕНО: Методы для динамического управления (вызывай из других скриптов, например QuestDatabase.AddQuest(myQuestData);)
+    public void AddQuest(QuestData newQuest)
+    {
+        if (newQuest == null || string.IsNullOrEmpty(newQuest.questID)) return;
+        if (questDict.ContainsKey(newQuest.questID)) return;  // не дублируем
+
+        quests.Add(newQuest);
+        questDict[newQuest.questID] = newQuest;
+    }
+
+    public void RemoveQuest(string questID)
+    {
+        if (questDict.TryGetValue(questID, out var q))
+        {
+            quests.Remove(q);
+            questDict.Remove(questID);
+        }
+    }
+
+    public void ClearQuests()
+    {
+        quests.Clear();
+        questDict.Clear();
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Orders\QuestManager.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+using TMPro;
+using System.Collections;
+
+public class QuestManager : MonoBehaviour
+{
+    public static QuestManager Instance { get; private set; }
+
+    [SerializeField] private Inventory playerInventory;  // перетащи Inventory
+    [SerializeField] private ItemDatabase itemDatabase;  // перетащи
+
+    // Добавь в начало класса, в [SerializeField]
+    [Header("HUD провала")]
+    [SerializeField] private GameObject failMessageCanvas;      // весь Canvas FailMessageCanvas
+    [SerializeField] private TMP_Text failMessageText;          // TextMeshProUGUI внутри
+    [SerializeField] private CanvasGroup failCanvasGroup;       // CanvasGroup на Canvas или Panel
+
+    private List<ActiveQuest> activeQuests = new List<ActiveQuest>();  // max 2
+
+    // ИСПРАВЛЕНО: Убрали completedQuestIDs — квесты теперь повторяемые
+
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
+        // Скрываем HUD при старте
+        if (failMessageCanvas != null)
+            failMessageCanvas.SetActive(false);
+    }
+
+    private void Update()
+    {
+        for (int i = activeQuests.Count - 1; i >= 0; i--)
+        {
+            activeQuests[i].remainingTimeSeconds -= Time.deltaTime; 
+            if (activeQuests[i].IsFailed())
+            {
+                FailQuest(i);
+            }
+        }
+    }
+
+    public bool HasFreeSlot() => activeQuests.Count < 2;
+
+    public void AcceptQuest(QuestData quest)
+    {
+        if (!HasFreeSlot()) return;  // ИСПРАВЛЕНО: Убрали проверку на completed
+
+        activeQuests.Add(new ActiveQuest(quest));
+        Debug.Log($"Принят заказ: {quest.title}");
+    }
+
+    public List<ActiveQuest> GetActiveQuests() => activeQuests;
+
+    public void SubmitQuest(int slotIndex)
+    {
+        if (slotIndex < 0 || slotIndex >= activeQuests.Count) return;
+
+        ActiveQuest aq = activeQuests[slotIndex];
+        if (aq.IsFailed()) return;
+
+        // Проверяем наличие предмета
+        if (playerInventory.GetCount(aq.data.requiredItemID) >= aq.data.requiredAmount)
+        {
+            playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
+            playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
+            activeQuests.RemoveAt(slotIndex);
+
+            if (TutorialManager.Instance != null)
+            {
+                TutorialManager.Instance.CheckGoals(aq.data.questID, 1, GoalType.CompleteQuest);
+            }
+
+            Debug.Log($"Сдан заказ: {aq.data.title}. Награда: {aq.data.rewardGold}");
+        }
+        else
+        {
+            Debug.Log("Нет нужного предмета для сдачи!");
+        }
+    }
+
+    private void FailQuest(int slotIndex)
+    {
+        ActiveQuest aq = activeQuests[slotIndex];
+        int penalty = Mathf.RoundToInt(aq.data.rewardGold * (aq.data.failPenaltyPercent / 100f));
+
+        int actualPenalty = Mathf.Min(penalty, playerInventory.GetCount("Gold_Money"));
+        playerInventory.RemoveItem("Gold_Money", actualPenalty);
+
+        activeQuests.RemoveAt(slotIndex);
+
+        string msg = $"Провален заказ: {aq.data.title}\nШтраф: {actualPenalty} золота";
+        Debug.Log(msg);
+
+        // Показываем HUD прямо здесь
+        if (failMessageCanvas != null && failMessageText != null && failCanvasGroup != null)
+        {
+            failMessageText.text = msg;
+            failMessageCanvas.SetActive(true);
+            StartCoroutine(ShowFailMessageCoroutine());
+        }
+    }
+
+    private System.Collections.IEnumerator ShowFailMessageCoroutine()
+    {
+        failCanvasGroup.alpha = 0f;
+
+        // Fade in
+        float time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(0f, 1f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 1f;
+
+        yield return new WaitForSeconds(3f);
+
+        // Fade out
+        time = 0f;
+        while (time < 0.5f)
+        {
+            time += Time.deltaTime;
+            failCanvasGroup.alpha = Mathf.Lerp(1f, 0f, time / 0.5f);
+            yield return null;
+        }
+        failCanvasGroup.alpha = 0f;
+
+        failMessageCanvas.SetActive(false);
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Managers\ReferenceManager.cs -----
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -83,7 +370,7 @@ public class ReferenceManager : MonoBehaviour
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Managers\UIManager.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Managers\UIManager.cs -----
 // Assets/Scripts/Managers/UIManager.cs
 using UnityEngine;
 
@@ -168,68 +455,78 @@ public class UIManager : MonoBehaviour
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Player\PlayerInteraction.cs -----
-// Assets/Scripts/Player/PlayerInteraction.cs
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Outline\SimpleOutline.cs -----
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
-public class PlayerInteraction : MonoBehaviour
+public class SimpleOutline : MonoBehaviour
 {
-    [SerializeField] private float interactionDistance = 3f;
-    [SerializeField] private LayerMask interactableLayer;   // слой Interactable
-    [SerializeField] private ShopUI shopUI;  // Перетащи ShopUI из сцены
-    [SerializeField] private QuestBoardUI questBoardUI;
+    [SerializeField] private Material outlineMaterial;
+    [SerializeField] private bool showOnStartForDebug = false;
 
-    private Camera playerCamera;
-
-    // Ссылки на UI-менеджеры
-    private FurnaceUI furnaceUI;
-    private AnvilUI anvilUI;
-
-    // Флаги открытых интерфейсов
-    private bool isFurnaceOpen = false;
-    private bool isAnvilOpen = false;
-    private bool isShopOpen = false;
-    private bool isQuestBoardOpen = false;
+    private readonly List<GameObject> outlineObjects = new List<GameObject>();
 
     private void Awake()
     {
-        playerCamera = GetComponentInChildren<Camera>();
-
-        // Находим нужные скрипты (лучше перетащить в инспекторе, но FindObjectOfType — запасной вариант)
-        furnaceUI = FindObjectOfType<FurnaceUI>();
-        anvilUI = FindObjectOfType<AnvilUI>();
-        shopUI = FindObjectOfType<ShopUI>();
-
-        if (shopUI == null) Debug.LogError("ShopUI не найден!");
-        if (furnaceUI == null) Debug.LogError("FurnaceUI не найден в сцене!");
-        if (anvilUI == null) Debug.LogWarning("AnvilUI не найден — интерфейс наковальни работать не будет.");
+        CreateOutlineMeshes();
+        SetActive(showOnStartForDebug);
     }
 
-    private void Update()
+    private void CreateOutlineMeshes()
     {
-        if (Input.GetKeyDown(KeyCode.E))
+        if (outlineMaterial == null)
         {
-            RaycastHit hit;
-            if (Physics.Raycast(playerCamera.transform.position, playerCamera.transform.forward,
-                               out hit, interactionDistance, interactableLayer))
-            {
-                if (hit.collider.CompareTag("Furnace"))
-                    furnaceUI.ToggleFurnace();
+            Debug.LogWarning($"{name}: � SimpleOutline �� �������� outlineMaterial");
+            return;
+        }
 
-                else if (hit.collider.CompareTag("Anvil") && anvilUI != null)
-                    anvilUI.ToggleAnvil();
+        MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>(true);
+        Debug.Log($"{name}: ������� MeshFilter = {meshFilters.Length}");
 
-                else if (hit.collider.CompareTag("ShopTable") && shopUI != null)
-                    shopUI.ToggleShop();
+        foreach (MeshFilter mf in meshFilters)
+        {
+            if (mf.sharedMesh == null)
+                continue;
 
-                else if (hit.collider.CompareTag("QuestBoard") && questBoardUI != null)
-                    questBoardUI.ToggleQuestBoard();
-            }
+            MeshRenderer sourceRenderer = mf.GetComponent<MeshRenderer>();
+            if (sourceRenderer == null)
+                continue;
+
+            GameObject outlineObj = new GameObject("Outline_" + mf.name);
+            outlineObj.transform.SetParent(mf.transform, false);
+            outlineObj.transform.localPosition = Vector3.zero;
+            outlineObj.transform.localRotation = Quaternion.identity;
+            outlineObj.transform.localScale = Vector3.one;
+
+            MeshFilter outlineMF = outlineObj.AddComponent<MeshFilter>();
+            outlineMF.sharedMesh = mf.sharedMesh;
+
+            MeshRenderer outlineMR = outlineObj.AddComponent<MeshRenderer>();
+            outlineMR.sharedMaterial = outlineMaterial;
+            outlineMR.shadowCastingMode = ShadowCastingMode.Off;
+            outlineMR.receiveShadows = false;
+            outlineMR.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
+            outlineMR.lightProbeUsage = LightProbeUsage.Off;
+            outlineMR.reflectionProbeUsage = ReflectionProbeUsage.Off;
+
+            outlineObjects.Add(outlineObj);
+        }
+
+        Debug.Log($"{name}: ������� outline-�������� = {outlineObjects.Count}");
+    }
+
+    public void SetActive(bool state)
+    {
+        for (int i = 0; i < outlineObjects.Count; i++)
+        {
+            if (outlineObjects[i] != null)
+                outlineObjects[i].SetActive(state);
         }
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Tutorial\TutorialData.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Tutorial\TutorialData.cs -----
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -279,7 +576,7 @@ public class TutorialStep : ScriptableObject
     }
 }
 
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\Tutorial\TutorialManager.cs -----
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Tutorial\TutorialManager.cs -----
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -572,337 +869,6 @@ public class TutorialManager : MonoBehaviour
         if (mouseLook != null) mouseLook.enabled = !isLocked;
         Cursor.visible = isLocked;
         Cursor.lockState = isLocked ? CursorLockMode.None : CursorLockMode.Locked;
-    }
-}
-
------ File: \Users\gggri\Documents\Unity_Repozitori\Ignis\Assets\Scripts\UI\AnvilUI.cs -----
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
-using System.Collections.Generic;
-
-public class AnvilUI : MonoBehaviour
-{
-    [Header("Ссылки")]
-    [SerializeField] private Inventory playerInventory;
-    [SerializeField] private ItemDatabase itemDatabase;
-    [SerializeField] private RecipeDatabase recipeDatabase;
-    [SerializeField] private GameObject anvilCanvasRoot;
-    [SerializeField] private Transform recipeListContent;
-    [SerializeField] private GameObject recipeSlotPrefab;
-    [SerializeField] private Transform craftSlotsParent;
-    [SerializeField] private GameObject craftSlotPrefab;
-    [SerializeField] private Button toolsButton, weaponsButton, decorationsButton;
-
-    [Header("Крафт")]
-    [SerializeField] private Button craftButton;
-    [SerializeField] private TMP_Text successText;
-    [SerializeField] private TMP_Text errorText;
-    [SerializeField] private TMP_Text recipeNameText;
-    [SerializeField] private TMP_Text resultInventoryCountText;
-
-    private RecipeData selectedRecipe = null;
-    private int craftCount = 0;
-
-    [Header("Цвета слотов")]
-    [SerializeField] private Color availableColor = new Color(1f, 1f, 0.5f, 0.5f);
-    [SerializeField] private Color missingColor = new Color(1f, 0.2f, 0.2f, 0.5f);
-
-    private CraftCategory currentCategory = CraftCategory.Tools;
-    private List<GameObject> spawnedRecipeSlots = new List<GameObject>();
-    private List<GameObject> spawnedCraftSlots = new List<GameObject>();
-    private bool isCrafting = false;
-
-    private void Start()
-    {
-        if (recipeDatabase == null)
-        {
-            Debug.LogError("AnvilUI: RecipeDatabase НЕ НАЗНАЧЕН в инспекторе!");
-            return;
-        }
-
-        if (recipeNameText != null) recipeNameText.text = "Выберите рецепт";
-        if (resultInventoryCountText != null) resultInventoryCountText.text = "";
-
-        toolsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Tools));
-        weaponsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Weapons));
-        decorationsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Decorations));
-
-        ShowCategory(CraftCategory.Weapons);
-
-        if (craftButton != null)
-        {
-            craftButton.onClick.AddListener(TryCraft);
-            craftButton.interactable = false;
-        }
-
-        if (successText != null) successText.text = "";
-        if (errorText != null) errorText.text = "";
-    }
-
-    public void ToggleAnvil()
-    {
-        if (UIManager.Instance.TryOpenUI(anvilCanvasRoot))
-        {
-            ShowCategory(currentCategory);
-            ClearCraftSlots();
-            UpdateCraftSlotAmounts();
-            ClearFeedbackTexts();
-            ResetCraftCount();
-        }
-    }
-
-    private void OnDisable()
-    {
-        ClearRecipeList();
-        ClearCraftSlots();
-        selectedRecipe = null;
-        ClearFeedbackTexts();
-        ResetCraftCount();
-    }
-
-    private void ClearFeedbackTexts()
-    {
-        if (successText != null) successText.text = "";
-        if (errorText != null) errorText.text = "";
-    }
-
-    private void ResetCraftCount()
-    {
-        craftCount = 0;
-        if (successText != null) successText.text = "";
-        if (recipeNameText != null) recipeNameText.text = "Выберите рецепт";
-        UpdateResultInventoryCount();
-    }
-
-    private void ShowCategory(CraftCategory category)
-    {
-        currentCategory = category;
-        ClearRecipeList();
-        ClearCraftSlots();
-        ClearFeedbackTexts();
-        ResetCraftCount();
-        selectedRecipe = null;
-
-        if (craftButton != null) craftButton.interactable = false;
-
-        var recipes = recipeDatabase.GetRecipesByCategory(category);
-        foreach (var recipe in recipes)
-        {
-            GameObject slot = Instantiate(recipeSlotPrefab, recipeListContent);
-            TMP_Text nameText = slot.GetComponentInChildren<TMP_Text>();
-            if (nameText) nameText.text = recipe.recipeName;
-
-            Button btn = slot.GetComponent<Button>();
-            if (btn != null)
-            {
-                btn.onClick.AddListener(() => ShowCraftSlots(recipe));
-            }
-            else
-            {
-                Debug.LogError($"В префабе рецепта {recipe.recipeName} нет компонента Button!", slot);
-            }
-
-            spawnedRecipeSlots.Add(slot);
-        }
-    }
-
-    private void ShowCraftSlots(RecipeData recipe)
-    {
-        selectedRecipe = recipe;
-        ClearCraftSlots();
-        ClearFeedbackTexts();
-        ResetCraftCount();
-
-        if (recipeNameText != null)
-        {
-            recipeNameText.text = recipe.recipeName;
-            Debug.Log($"Установлено название рецепта: {recipe.recipeName}");
-        }
-
-        UpdateResultInventoryCount();
-        Debug.Log($"Показываем рецепт: {recipe.recipeName}. Компонентов: {recipe.requiredItems.Count}");
-
-        bool canCraft = true;
-
-        foreach (var req in recipe.requiredItems)
-        {
-            if (req.item == null)
-            {
-                Debug.LogError($"В рецепте {recipe.recipeName} один из requiredItems имеет item = null!");
-                canCraft = false;
-                continue;
-            }
-
-            Debug.Log($"Создаю слот для: {req.item.itemName} x {req.amount}");
-
-            GameObject slot = Instantiate(craftSlotPrefab, craftSlotsParent);
-
-            Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
-            if (icon != null && req.item.icon != null)
-                icon.sprite = req.item.icon;
-
-            TMP_Text nameText = slot.transform.Find("Name")?.GetComponent<TMP_Text>();
-            if (nameText != null)
-                nameText.text = req.item.itemName;
-
-            TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
-            int have = playerInventory.GetCount(req.item.id);
-            if (amountText != null)
-                amountText.text = $"{have}/{req.amount}";
-
-            Image bg = slot.GetComponent<Image>();
-            if (bg != null)
-                bg.color = (have >= req.amount) ? availableColor : missingColor;
-
-            if (have < req.amount)
-                canCraft = false;
-
-            spawnedCraftSlots.Add(slot);
-        }
-
-        if (craftButton != null)
-        {
-            craftButton.interactable = canCraft;
-            Debug.Log($"Кнопка крафта активна: {canCraft}");
-        }
-
-        if (!canCraft && errorText != null)
-        {
-            errorText.text = "Недостаточно материалов для этого рецепта";
-        }
-    }
-
-    public void TryCraft()
-    {
-        Debug.Log("=== TryCraft вызван ===");
-        if (isCrafting)
-        {
-            Debug.Log("TryCraft вызван повторно — игнорируем");
-            return;
-        }
-
-        isCrafting = true;
-        Debug.Log("=== TryCraft начат ===");
-
-        if (selectedRecipe == null) return;
-
-        bool canCraft = true;
-        foreach (var req in selectedRecipe.requiredItems)
-        {
-            int currentCount = playerInventory.GetCount(req.item.id);
-            if (currentCount < req.amount)
-            {
-                canCraft = false;
-                break;
-            }
-        }
-
-        if (!canCraft)
-        {
-            if (errorText != null)
-                errorText.text = "Недостаточно материалов!";
-            if (successText != null)
-                successText.text = "";
-            return;
-        }
-
-        foreach (var req in selectedRecipe.requiredItems)
-        {
-            playerInventory.RemoveItem(req.item.id, req.amount);
-        }
-
-        playerInventory.AddItem(selectedRecipe.resultItem.id, selectedRecipe.resultAmount);
-        UpdateResultInventoryCount();
-
-        if (TutorialManager.Instance != null)
-        {
-            // Передаем ID созданного предмета
-            TutorialManager.Instance.CheckGoals(selectedRecipe.resultItem.id, 1, GoalType.CraftItem);
-        }
-
-        craftCount += selectedRecipe.resultAmount;
-        if (successText != null)
-        {
-            successText.text = $"Создано: {selectedRecipe.resultItem.itemName} × {craftCount}";
-        }
-
-        if (errorText != null)
-            errorText.text = "";
-
-        UpdateCraftSlotAmounts();
-
-        bool stillCanCraft = true;
-        foreach (var req in selectedRecipe.requiredItems)
-        {
-            if (playerInventory.GetCount(req.item.id) < req.amount)
-            {
-                stillCanCraft = false;
-                break;
-            }
-        }
-
-        craftButton.interactable = stillCanCraft;
-        if (!stillCanCraft && errorText != null)
-            errorText.text = "Недостаточно для повторного крафта";
-
-        isCrafting = false;
-    }
-
-    private void UpdateCraftSlotAmounts()
-    {
-        if (selectedRecipe == null) return;
-
-        for (int i = 0; i < spawnedCraftSlots.Count; i++)
-        {
-            GameObject slot = spawnedCraftSlots[i];
-            if (slot == null) continue;
-
-            var req = selectedRecipe.requiredItems[i];
-            int have = playerInventory.GetCount(req.item.id);
-
-            TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
-            if (amountText != null)
-            {
-                amountText.text = $"{have}/{req.amount}";
-            }
-
-            Image bg = slot.GetComponent<Image>();
-            if (bg != null)
-            {
-                bg.color = (have >= req.amount) ? availableColor : missingColor;
-            }
-        }
-
-        UpdateResultInventoryCount();
-    }
-
-    private void ClearRecipeList()
-    {
-        foreach (var slot in spawnedRecipeSlots) Destroy(slot);
-        spawnedRecipeSlots.Clear();
-    }
-
-    private void ClearCraftSlots()
-    {
-        foreach (var slot in spawnedCraftSlots) Destroy(slot);
-        spawnedCraftSlots.Clear();
-
-        if (craftButton != null) craftButton.interactable = false;
-        ClearFeedbackTexts();
-    }
-
-    private void UpdateResultInventoryCount()
-    {
-        if (resultInventoryCountText == null) return;
-        if (selectedRecipe == null || selectedRecipe.resultItem == null)
-        {
-            resultInventoryCountText.text = "";
-            return;
-        }
-
-        int count = playerInventory.GetCount(selectedRecipe.resultItem.id);
-        resultInventoryCountText.text = $"В инвентаре: {count}";
     }
 }
 
