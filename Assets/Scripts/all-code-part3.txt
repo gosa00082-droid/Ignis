@@ -419,6 +419,7 @@ public class FurnaceUI : MonoBehaviour
     [SerializeField] private Transform[] oreSlots = new Transform[4];
     [SerializeField] private InteractableObject anvilInteractable;
     [SerializeField] private AnvilUI anvilUI;
+    [SerializeField] private WorkshopCameraModeManager cameraModeManager;
 
     public ChoiceUI choiceUI;
     private List<GameObject> spawnedSlots = new List<GameObject>();
@@ -620,6 +621,7 @@ public class FurnaceUI : MonoBehaviour
     private void Update()
     {
         if (!miniGameActive) return;
+        if (currentRecipe == null) return;
 
         timer += Time.deltaTime;
         if (timer >= decayInterval)
@@ -677,7 +679,7 @@ public class FurnaceUI : MonoBehaviour
         {
             choiceUI.OnNowAction = () =>
             {
-                anvilInteractable.Interact();
+                StartCoroutine(SwitchFromFurnaceToAnvil());
             };
 
             choiceUI.OnLaterAction = () =>
@@ -688,6 +690,15 @@ public class FurnaceUI : MonoBehaviour
 
             choiceUI.Show();
         }
+    }
+
+    private IEnumerator SwitchFromFurnaceToAnvil()
+    {
+        cameraModeManager.ExitObjectMode();
+        yield return null;
+        anvilInteractable.Interact();
+        yield return null;
+        anvilUI.OpenKritsaCategory();
     }
 
     private void FinishWithSlag()

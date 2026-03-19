@@ -242,8 +242,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 870, y: -25}
-  m_SizeDelta: {x: 332, y: 30}
+  m_AnchoredPosition: {x: 912.75, y: -25}
+  m_SizeDelta: {x: 246.5, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &24218622
 GameObject:
@@ -2263,7 +2263,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 425944970010870626, guid: 0b8f4eb3f395ac5468dda115dbb1daec, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 10000
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 425944970010870626, guid: 0b8f4eb3f395ac5468dda115dbb1daec, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -4568,6 +4568,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Inventory
   itemDatabase: {fileID: 11400000, guid: d63cb22134216fb43af68c40e2fa23cb, type: 2}
+--- !u!224 &1287349525 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 1334312039204177501, guid: 0b8f4eb3f395ac5468dda115dbb1daec, type: 3}
+  m_PrefabInstance: {fileID: 536983526}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1310567500
 GameObject:
   m_ObjectHideFlags: 0
@@ -6520,7 +6525,7 @@ PrefabInstance:
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: craftSlotsParent
       value: 
-      objectReference: {fileID: 6343767}
+      objectReference: {fileID: 1287349525}
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: decorationsButton
       value: 
@@ -7600,7 +7605,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2034038268075040003, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 246.5
       objectReference: {fileID: 0}
     - target: {fileID: 2034038268075040003, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_LocalScale.x
@@ -7616,7 +7621,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2034038268075040003, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 656.25
       objectReference: {fileID: 0}
     - target: {fileID: 2034038268075040003, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -7824,7 +7829,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2546693356797237877, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 246.5
       objectReference: {fileID: 0}
     - target: {fileID: 2546693356797237877, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_LocalScale.x
@@ -7840,7 +7845,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2546693356797237877, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 143.25
       objectReference: {fileID: 0}
     - target: {fileID: 2546693356797237877, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -8668,7 +8673,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5365492175558279759, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 246.5
       objectReference: {fileID: 0}
     - target: {fileID: 5365492175558279759, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_LocalScale.x
@@ -8684,7 +8689,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5365492175558279759, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 399.75
       objectReference: {fileID: 0}
     - target: {fileID: 5365492175558279759, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchoredPosition.y
