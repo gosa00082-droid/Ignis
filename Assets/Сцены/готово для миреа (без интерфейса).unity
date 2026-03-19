@@ -1118,6 +1118,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b5e1853aac816bc4fb3b3565f5c6478c, type: 2}
   - {fileID: 11400000, guid: 1627404cb30552f42b257d6e7a85b738, type: 2}
   - {fileID: 11400000, guid: 309afda6120225943b82e00a833de427, type: 2}
+  - {fileID: 11400000, guid: 11a6b3f819fe75549a61cbef1c25a76c, type: 2}
+  - {fileID: 11400000, guid: c68cdec1f4fc30941ae5e7cc436ce258, type: 2}
+  - {fileID: 11400000, guid: 9a82b41803f016e479be4e237a93aa5b, type: 2}
   tutorialCanvas: {fileID: 304678902}
   dialogueText: {fileID: 460177080}
   taskPanel: {fileID: 841057271}
@@ -7238,7 +7241,7 @@ PrefabInstance:
     - target: {fileID: 905640114318191149, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: playerInventory
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 1267766222}
     - target: {fileID: 1052660851857482056, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0

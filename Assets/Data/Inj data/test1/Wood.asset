@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f5c2d36cc93735498175b50ebe39d41, type: 3}
   m_Name: Wood
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: "\u0414\u0435\u0440\u0435\u0432\u043E"
+  itemName: "\u0411\u0440\u0443\u0441\u043E\u043A"
   id: Wood
   category: 0
   icon: {fileID: 21300000, guid: 15601d988b953404babdfe9c5f67c1b6, type: 3}
