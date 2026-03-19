@@ -46,10 +46,15 @@ public class QuestManager : MonoBehaviour
 
     public void AcceptQuest(QuestData quest)
     {
-        if (!HasFreeSlot()) return;  // ИСПРАВЛЕНО: Убрали проверку на completed
+        if (!HasFreeSlot()) return;
 
         activeQuests.Add(new ActiveQuest(quest));
         Debug.Log($"Принят заказ: {quest.title}");
+
+        if (TutorialManager.Instance != null)
+        {
+            TutorialManager.Instance.CheckGoals(quest.questID, 1, GoalType.StartQuest);
+        }
     }
 
     public List<ActiveQuest> GetActiveQuests() => activeQuests;

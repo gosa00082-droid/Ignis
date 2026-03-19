@@ -19,8 +19,8 @@ MonoBehaviour:
     \u0447\u0442\u043E\u0431\u044B \u0432\u044B\u0431\u0440\u0430\u0442\u044C \u0441\u0432\u043E\u0435
     \u043F\u0435\u0440\u0432\u043E\u0435 \u0437\u0430\u0434\u0430\u043D\u0438\u0435!"
   goals:
-  - type: 4
-    targetID: kr_iron1
+  - type: 3
+    targetID: Quest_Hoe_1
     requiredAmount: 1
     description: 
     isCompleted: 0
