@@ -16,7 +16,7 @@ public class Inventory : MonoBehaviour
     void Start()
     {
         // ... существующий код ...
-        AddItem("kr_iron1", 10);
+        AddItem("r_iron", 10);
         AddItem("Coal", 20);
         AddItem("Gold_Money", 500);
 

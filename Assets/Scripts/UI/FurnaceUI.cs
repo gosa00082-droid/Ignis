@@ -71,7 +71,7 @@ public class FurnaceUI : MonoBehaviour
             smeltableItemIds = new List<string>
         {
             // Руды
-            "Iron_Ore", "Copper_Ore", "Tin_Ore", "Silver_Ore", "Gold_Ore", "kr_iron1",
+            "Iron_Ore", "Copper_Ore", "Tin_Ore", "Silver_Ore", "Gold_Ore", "r_iron",
             // Слитки (для переработки в сталь/дамаск)
             "Iron_Ingot", "Steel_Ingot"
         };
