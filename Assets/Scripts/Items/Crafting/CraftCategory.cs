@@ -1,6 +1,7 @@
 public enum CraftCategory
 {
-    Tools,      // Инструменты
-    Weapons,    // Оружия
-    Decorations // Украшения
+    Tools,
+    Weapons,
+    Decorations,
+    Kritsa
 }

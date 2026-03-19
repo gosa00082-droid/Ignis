@@ -32,6 +32,8 @@ public class AnvilUI : MonoBehaviour
     [SerializeField] private Color availableColor = new Color(1f, 1f, 0.5f, 0.5f);
     [SerializeField] private Color missingColor = new Color(1f, 0.2f, 0.2f, 0.5f);
 
+    [SerializeField] private Button kritsaButton;
+
     private CraftCategory currentCategory = CraftCategory.Tools;
     private List<GameObject> spawnedRecipeSlots = new List<GameObject>();
     private List<GameObject> spawnedCraftSlots = new List<GameObject>();
@@ -51,6 +53,9 @@ public class AnvilUI : MonoBehaviour
         toolsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Tools));
         weaponsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Weapons));
         decorationsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Decorations));
+        kritsaButton.onClick.AddListener(() => ShowCategory(CraftCategory.Kritsa));
+
+
 
         ShowCategory(CraftCategory.Weapons);
 
@@ -62,6 +67,11 @@ public class AnvilUI : MonoBehaviour
 
         if (successText != null) successText.text = "";
         if (errorText != null) errorText.text = "";
+    }
+
+    public void OpenKritsaCategory()
+    {
+        ShowCategory(CraftCategory.Kritsa);
     }
 
     public void ToggleAnvil()
@@ -330,6 +340,42 @@ public class AnvilUI : MonoBehaviour
     }
 }
 
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\UI\ChoiceUI.cs -----
+using UnityEngine;
+using System;
+
+public class ChoiceUI : MonoBehaviour
+{
+    public GameObject panel;
+
+    public Action OnNowAction;
+    public Action OnLaterAction;
+
+    public void Show()
+    {
+        panel.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void HideOnly()
+    {
+        panel.SetActive(false);
+    }
+
+    public void OnNow()
+    {
+        HideOnly();
+        OnNowAction?.Invoke();
+    }
+
+    public void OnLater()
+    {
+        HideOnly();
+        OnLaterAction?.Invoke();
+    }
+}
+
 ----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\UI\FurnaceUI.cs -----
 using System.Collections.Generic;
 using UnityEngine;
@@ -337,6 +383,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Linq;
 using System;
+using System.Collections;
 
 public class FurnaceUI : MonoBehaviour
 {
@@ -370,7 +417,10 @@ public class FurnaceUI : MonoBehaviour
     [SerializeField] private TMP_Text noCoalWarning;
     [SerializeField] private Image previewIcon;
     [SerializeField] private Transform[] oreSlots = new Transform[4];
+    [SerializeField] private InteractableObject anvilInteractable;
+    [SerializeField] private AnvilUI anvilUI;
 
+    public ChoiceUI choiceUI;
     private List<GameObject> spawnedSlots = new List<GameObject>();
     private bool isSmelting = false;
     private bool miniGameActive = false;
@@ -380,6 +430,7 @@ public class FurnaceUI : MonoBehaviour
     private AlloyRecipe currentRecipe = null;
     private float timer = 0f;
     private const float decayInterval = 0.2f;
+
 
     private void Start()
     {
@@ -408,6 +459,13 @@ public class FurnaceUI : MonoBehaviour
 
     private void OnEnable()
     {
+        StartCoroutine(RefreshAfterOpen());
+    }
+
+    private IEnumerator RefreshAfterOpen()
+    {
+        yield return null;
+
         RefreshMiniInventory();
         UpdatePreview();
         UpdateCoalText();
@@ -603,9 +661,33 @@ public class FurnaceUI : MonoBehaviour
     {
         miniGameActive = false;
         isSmelting = false;
+        bellowsButton.gameObject.SetActive(false);
+        cancelButton.gameObject.SetActive(false);
+        igniteButton.gameObject.SetActive(true);
+
+        bool shouldOfferRefiningChoice =
+            currentRecipe != null &&
+            currentRecipe.postSmeltAction == PostSmeltAction.OfferRefiningChoice;
+
         playerInventory.AddItem(currentRecipe.resultItem.id, 1);
-        previewDescription.text = "Готово: " + currentRecipe.alloyName;
+
         ResetFurnace();
+
+        if (shouldOfferRefiningChoice)
+        {
+            choiceUI.OnNowAction = () =>
+            {
+                anvilInteractable.Interact();
+            };
+
+            choiceUI.OnLaterAction = () =>
+            {
+                // Ничего не делаем.
+                // Панель уже скрыта через HideOnly(), игрок остается в печи.
+            };
+
+            choiceUI.Show();
+        }
     }
 
     private void FinishWithSlag()

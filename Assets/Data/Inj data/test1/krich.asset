@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2f0bf113f5bd09f4588669f3ac4a7c27, type: 3}
-  m_Name: "\u0416\u0435\u043B\u0435\u0437\u043D\u044B\u0439 \u0441\u043B\u0438\u0442\u043E\u043A"
+  m_Name: krich
   m_EditorClassIdentifier: Assembly-CSharp::AlloyRecipe
   alloyName: "\u041A\u0440\u0438\u0447\u043D\u043E\u0435 \u0436\u0435\u043B\u0435\u0437\u043E"
   resultItem: {fileID: 11400000, guid: 21326a908804be14789ac2c61a110915, type: 2}
@@ -23,3 +23,4 @@ MonoBehaviour:
   minTemp: 1200
   maxTemp: 1500
   smeltDuration: 8
+  postSmeltAction: 1

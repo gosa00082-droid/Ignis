@@ -30,6 +30,8 @@ public class AnvilUI : MonoBehaviour
     [SerializeField] private Color availableColor = new Color(1f, 1f, 0.5f, 0.5f);
     [SerializeField] private Color missingColor = new Color(1f, 0.2f, 0.2f, 0.5f);
 
+    [SerializeField] private Button kritsaButton;
+
     private CraftCategory currentCategory = CraftCategory.Tools;
     private List<GameObject> spawnedRecipeSlots = new List<GameObject>();
     private List<GameObject> spawnedCraftSlots = new List<GameObject>();
@@ -49,6 +51,9 @@ public class AnvilUI : MonoBehaviour
         toolsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Tools));
         weaponsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Weapons));
         decorationsButton.onClick.AddListener(() => ShowCategory(CraftCategory.Decorations));
+        kritsaButton.onClick.AddListener(() => ShowCategory(CraftCategory.Kritsa));
+
+
 
         ShowCategory(CraftCategory.Weapons);
 
@@ -60,6 +65,11 @@ public class AnvilUI : MonoBehaviour
 
         if (successText != null) successText.text = "";
         if (errorText != null) errorText.text = "";
+    }
+
+    public void OpenKritsaCategory()
+    {
+        ShowCategory(CraftCategory.Kritsa);
     }
 
     public void ToggleAnvil()

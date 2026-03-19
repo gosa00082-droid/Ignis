@@ -38,7 +38,11 @@ public class FurnaceUI : MonoBehaviour
     [SerializeField] private TMP_Text noCoalWarning;
     [SerializeField] private Image previewIcon;
     [SerializeField] private Transform[] oreSlots = new Transform[4];
+    [SerializeField] private InteractableObject anvilInteractable;
+    [SerializeField] private AnvilUI anvilUI;
+    [SerializeField] private WorkshopCameraModeManager cameraModeManager;
 
+    public ChoiceUI choiceUI;
     private List<GameObject> spawnedSlots = new List<GameObject>();
     private bool isSmelting = false;
     private bool miniGameActive = false;
@@ -48,6 +52,7 @@ public class FurnaceUI : MonoBehaviour
     private AlloyRecipe currentRecipe = null;
     private float timer = 0f;
     private const float decayInterval = 0.2f;
+
 
     private void Start()
     {
@@ -237,6 +242,7 @@ public class FurnaceUI : MonoBehaviour
     private void Update()
     {
         if (!miniGameActive) return;
+        if (currentRecipe == null) return;
 
         timer += Time.deltaTime;
         if (timer >= decayInterval)
@@ -278,9 +284,42 @@ public class FurnaceUI : MonoBehaviour
     {
         miniGameActive = false;
         isSmelting = false;
+        bellowsButton.gameObject.SetActive(false);
+        cancelButton.gameObject.SetActive(false);
+        igniteButton.gameObject.SetActive(true);
+
+        bool shouldOfferRefiningChoice =
+            currentRecipe != null &&
+            currentRecipe.postSmeltAction == PostSmeltAction.OfferRefiningChoice;
+
         playerInventory.AddItem(currentRecipe.resultItem.id, 1);
-        previewDescription.text = "Готово: " + currentRecipe.alloyName;
+
         ResetFurnace();
+
+        if (shouldOfferRefiningChoice)
+        {
+            choiceUI.OnNowAction = () =>
+            {
+                StartCoroutine(SwitchFromFurnaceToAnvil());
+            };
+
+            choiceUI.OnLaterAction = () =>
+            {
+                // Ничего не делаем.
+                // Панель уже скрыта через HideOnly(), игрок остается в печи.
+            };
+
+            choiceUI.Show();
+        }
+    }
+
+    private IEnumerator SwitchFromFurnaceToAnvil()
+    {
+        cameraModeManager.ExitObjectMode();
+        yield return null;
+        anvilInteractable.Interact();
+        yield return null;
+        anvilUI.OpenKritsaCategory();
     }
 
     private void FinishWithSlag()

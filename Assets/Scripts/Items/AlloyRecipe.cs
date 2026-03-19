@@ -1,17 +1,34 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+public enum PostSmeltAction
+{
+    None,
+    OfferRefiningChoice
+}
+
 [CreateAssetMenu(fileName = "NewAlloyRecipe", menuName = "Ignis/Alloy Recipe")]
 public class AlloyRecipe : ScriptableObject
 {
-    public string alloyName;                // Название сплава
-    public ItemData resultItem;             // Слиток при успехе
-    public ItemData slagItem;               // Брак при неудаче (slag)
-    public List<string> requiredOres = new List<string>();  // ID руд
+    [Header("Основное")]
+    public string alloyName;
+
+    [Header("Результат")]
+    public ItemData resultItem;
+    public ItemData slagItem;
+
+    [Header("Требования")]
+    public List<string> requiredOres = new List<string>();
+
     [TextArea(3, 6)]
-    public string description;              // Описание
-    public int coalRequired = 5;            // Константа угля на старте
-    public float minTemp = 1200f;           // Нижний край диапазона (°C)
-    public float maxTemp = 1600f;           // Верхний край
-    public float smeltDuration = 10f;       // Время мини-игры (сек)
+    public string description;
+
+    [Header("Параметры плавки")]
+    public int coalRequired = 5;
+    public float minTemp = 1200f;
+    public float maxTemp = 1600f;
+    public float smeltDuration = 10f;
+
+    [Header("Действие после плавки")]
+    public PostSmeltAction postSmeltAction = PostSmeltAction.None;
 }
