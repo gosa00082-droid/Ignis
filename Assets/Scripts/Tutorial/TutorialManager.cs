@@ -29,6 +29,14 @@ public class TutorialManager : MonoBehaviour
     private bool isWaitingForGoals = false; // Ждем ли выполнения целей (панель скрыта)
     private const string SaveKey = "TutorialComplete";
 
+    private void Start()
+    {
+        if (PlayerPrefs.GetInt(SaveKey, 0) == 1)
+            return;
+
+        StartTutorial();
+    }
+
     private void Awake()
     {
         if (Instance == null) Instance = this;
