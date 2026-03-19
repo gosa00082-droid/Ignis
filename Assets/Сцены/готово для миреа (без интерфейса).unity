@@ -6552,7 +6552,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: 'smeltableItemIds.Array.data[0]'
-      value: kr_iron1
+      value: r_iron
       objectReference: {fileID: 0}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: 'smeltableItemIds.Array.data[8]'

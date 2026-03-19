@@ -195,6 +195,12 @@ public class TutorialManager : MonoBehaviour
     // Проверка целей (вызывается из Inventory/Anvil/Quest)
     public void CheckGoals(string itemID, int amount, GoalType type)
     {
+        Debug.Log($"CheckGoals вызван: type={type}, itemID={itemID}, amount={amount}, step={currentStepIndex}, isActive={isActive}");
+        foreach (var goal in steps[currentStepIndex].goals)
+        {
+            Debug.Log($"Goal: type={goal.type}, targetID={goal.targetID}, required={goal.requiredAmount}, completed={goal.isCompleted}");
+        }
+
         if (!isActive) return;
 
         TutorialStep step = steps[currentStepIndex];
