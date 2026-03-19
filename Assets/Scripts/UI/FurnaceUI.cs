@@ -300,7 +300,8 @@ public class FurnaceUI : MonoBehaviour
         {
             choiceUI.OnNowAction = () =>
             {
-                StartCoroutine(SwitchFromFurnaceToAnvil());
+                cameraModeManager.SwitchObjectMode(anvilInteractable.TargetCamera, anvilInteractable.TargetUI);
+                StartCoroutine(OpenKritsaTabNextFrame());
             };
 
             choiceUI.OnLaterAction = () =>
@@ -313,12 +314,13 @@ public class FurnaceUI : MonoBehaviour
         }
     }
 
-    private IEnumerator SwitchFromFurnaceToAnvil()
+    private IEnumerator OpenKritsaTabNextFrame()
     {
-        cameraModeManager.ExitObjectMode();
         yield return null;
-        anvilInteractable.Interact();
-        yield return null;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
         anvilUI.OpenKritsaCategory();
     }
 

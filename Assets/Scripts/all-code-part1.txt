@@ -73,21 +73,30 @@ public class MouseLook : MonoBehaviour
     [SerializeField] private float sensitivity = 2f;
     [SerializeField] private float minVerticalAngle = -70f;
     [SerializeField] private float maxVerticalAngle = 60f;
+    [SerializeField] private WorkshopCameraModeManager cameraModeManager;
 
     private float yaw;
     private float pitch;
 
     public bool IsRotating { get; private set; }
-    public bool IsLocked { get; set; }
+    public bool IsLocked { get; private set; }
 
-    void Start()
+    private void Start()
     {
-        yaw = transform.eulerAngles.y;
-        pitch = transform.eulerAngles.x;
+        Vector3 euler = transform.eulerAngles;
+        yaw = euler.y;
+        pitch = euler.x;
     }
 
-    void Update()
+    private void Update()
     {
+        // ���� ������� ����� ������� � ������� ������ ��������� ��������
+        if (cameraModeManager != null && cameraModeManager.IsInObjectMode)
+        {
+            ForceResetState();
+            return;
+        }
+
         if (IsLocked)
             return;
 
@@ -105,33 +114,39 @@ public class MouseLook : MonoBehaviour
 
         yaw += mouseX;
         pitch -= mouseY;
-
         pitch = Mathf.Clamp(pitch, minVerticalAngle, maxVerticalAngle);
 
         transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
     }
 
-    void StartRotation()
+    private void StartRotation()
     {
-        if (IsLocked) return;
+        if (IsLocked)
+            return;
+
+        if (cameraModeManager != null && cameraModeManager.IsInObjectMode)
+            return;
 
         IsRotating = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    void StopRotation()
+    private void StopRotation()
     {
         IsRotating = false;
-        Cursor.lockState = CursorLockMode.None;
-        Cursor.visible = true;
+
+        if (!IsLocked)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
     }
 
     public void LockLook()
     {
         IsLocked = true;
         IsRotating = false;
-
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -139,6 +154,26 @@ public class MouseLook : MonoBehaviour
     public void UnlockLook()
     {
         IsLocked = false;
+        IsRotating = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    public void ForceResetState()
+    {
+        IsRotating = false;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    private void OnDisable()
+    {
+        ForceResetState();
+    }
+
+    private void OnEnable()
+    {
+        ForceResetState();
     }
 }
 
@@ -203,6 +238,7 @@ public class PlayerInteraction : MonoBehaviour
     [Header("������")]
     [SerializeField] private Camera mainCamera;
     [SerializeField] private MouseLook mouseLook;
+    [SerializeField] private WorkshopCameraModeManager cameraModeManager;
 
     [Header("���������")]
     [SerializeField] private float maxDistance = 100f;
@@ -223,13 +259,25 @@ public class PlayerInteraction : MonoBehaviour
         if (mainCamera == null)
             return;
 
-        HandleHover();
+        if (cameraModeManager != null && cameraModeManager.IsInObjectMode)
+        {
+            ClearHover();
+            return;
+        }
 
         if (UIManager.Instance != null && UIManager.Instance.currentUI != null)
+        {
+            ClearHover();
             return;
+        }
 
         if (mouseLook != null && mouseLook.IsRotating)
+        {
+            ClearHover();
             return;
+        }
+
+        HandleHover();
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -265,18 +313,33 @@ public class PlayerInteraction : MonoBehaviour
         }
         else
         {
-            if (currentHover != null)
-            {
-                currentHover.SetHighlight(false);
-                currentHover = null;
-            }
+            ClearHover();
         }
     }
 
     private void TryInteract()
     {
+        if (currentHover == null)
+            return;
+
+        currentHover.SetHighlight(false);
+        currentHover.Interact();
+        currentHover = null;
+    }
+
+    private void ClearHover()
+    {
         if (currentHover != null)
-            currentHover.Interact();
+        {
+            currentHover.SetHighlight(false);
+            currentHover = null;
+        }
+    }
+
+    public void ForceClearHover()
+    {
+        ClearHover();
+        lastClickTime = -1f;
     }
 }
 
@@ -297,62 +360,99 @@ public class PlayerMovement : MonoBehaviour
 }
 
 ----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\WorkshopCameraModeManager.cs -----
+using System.Collections;
 using UnityEngine;
 using Unity.Cinemachine;
 
 public class WorkshopCameraModeManager : MonoBehaviour
 {
+    [Header("������")]
     [SerializeField] private CinemachineCamera workshopCamera;
     [SerializeField] private MouseLook mouseLook;
+    [SerializeField] private PlayerInteraction playerInteraction;
+
+    [Header("������������ ���������� �� ��������")]
+    [SerializeField] private float returnBlendLockTime = 1.0f;
 
     private CinemachineCamera activeCamera;
     private GameObject activeUI;
 
     private bool objectMode;
+    private bool isReturning;
+
+    public bool IsInObjectMode => objectMode || isReturning;
 
     public void EnterObjectMode(CinemachineCamera targetCamera, GameObject targetUI)
     {
-        if (objectMode) return;
+        if (objectMode || isReturning) return;
         if (UIManager.Instance == null) return;
+        if (targetCamera == null || targetUI == null) return;
 
         if (!UIManager.Instance.TryOpenUI(targetUI))
             return;
 
         objectMode = true;
-
         activeCamera = targetCamera;
         activeUI = targetUI;
+
+        if (playerInteraction != null)
+            playerInteraction.ForceClearHover();
 
         if (mouseLook != null)
             mouseLook.LockLook();
 
-        workshopCamera.Priority = 10;
+        if (workshopCamera != null)
+            workshopCamera.Priority = 10;
+
         activeCamera.Priority = 20;
     }
 
     public void ExitObjectMode()
     {
-        if (!objectMode) return;
+        if (!objectMode || isReturning) return;
+
+        StartCoroutine(ReturnToWorkshopRoutine());
+    }
+
+    private IEnumerator ReturnToWorkshopRoutine()
+    {
+        isReturning = true;
 
         if (activeCamera != null)
             activeCamera.Priority = 10;
 
-        workshopCamera.Priority = 20;
+        if (workshopCamera != null)
+            workshopCamera.Priority = 20;
 
         if (UIManager.Instance != null)
             UIManager.Instance.CloseCurrent();
 
+        if (playerInteraction != null)
+            playerInteraction.ForceClearHover();
+
         if (mouseLook != null)
-            mouseLook.UnlockLook();
+            mouseLook.LockLook();
+
+        yield return new WaitForSeconds(returnBlendLockTime);
 
         activeCamera = null;
         activeUI = null;
         objectMode = false;
+        isReturning = false;
+
+        if (mouseLook != null)
+        {
+            mouseLook.UnlockLook();
+            mouseLook.ForceResetState();
+        }
+
+        if (playerInteraction != null)
+            playerInteraction.ForceClearHover();
     }
 
-    void Update()
+    private void Update()
     {
-        if (objectMode && Input.GetKeyDown(KeyCode.Escape))
+        if (objectMode && !isReturning && Input.GetKeyDown(KeyCode.Escape))
         {
             ExitObjectMode();
         }
@@ -887,106 +987,5 @@ public class ItemData : ScriptableObject
 
     [TextArea(3, 6)]
     public string description = "Описание предмета..."; // описание
-}
-
------ File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemDatabase.cs -----
-// Assets/Scripts/Items/ItemDatabase.cs
-using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
-
-[CreateAssetMenu(fileName = "ItemDatabase", menuName = "Ignis/Item Database")]
-public class ItemDatabase : ScriptableObject
-{
-    [SerializeField]
-    private List<ItemData> items = new List<ItemData>();
-
-    // Быстрый поиск по id (будет использоваться очень часто)
-    private Dictionary<string, ItemData> itemDict;
-
-    private void OnEnable()
-    {
-        // Создаём словарь при загрузке ассета
-        itemDict = new Dictionary<string, ItemData>();
-
-        foreach (var item in items)
-        {
-            if (string.IsNullOrEmpty(item.id))
-            {
-                Debug.LogWarning($"У предмета {item.name} нет id!");
-                continue;
-            }
-
-            if (itemDict.ContainsKey(item.id))
-            {
-                Debug.LogWarning($"Дубликат id: {item.id} у предмета {item.name}");
-                continue;
-            }
-
-            itemDict[item.id] = item;
-        }
-    }
-
-    // Получить предмет по уникальному id
-    public ItemData GetItem(string id)
-    {
-        if (itemDict == null || itemDict.Count == 0)
-        {
-            Debug.LogError("База предметов не инициализирована!");
-            return null;
-        }
-
-        if (itemDict.TryGetValue(id, out ItemData item))
-        {
-            return item;
-        }
-
-        Debug.LogWarning($"Предмет с id '{id}' не найден в базе");
-        return null;
-    }
-
-    public ItemData GetItemByName(string name)
-    {
-        return items.FirstOrDefault(i => i.itemName == name);
-    }
-
-    // Получить все предметы определённой категории (удобно для UI)
-    public List<ItemData> GetItemsByCategory(ItemCategory category)
-    {
-        return items.Where(i => i.category == category).ToList();
-    }
-
-    // Для отладки — посмотреть сколько всего предметов
-    public int TotalItems => items.Count;
-}
-
------ File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\CraftCategory.cs -----
-public enum CraftCategory
-{
-    Tools,
-    Weapons,
-    Decorations,
-    Kritsa
-}
-
------ File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\RecipeData.cs -----
-using UnityEngine;
-using System.Collections.Generic;
-
-[CreateAssetMenu(fileName = "New Recipe", menuName = "Ignis/Recipe")]
-public class RecipeData : ScriptableObject
-{
-    public string recipeName;           // Имя рецепта (отображается в UI)
-    public CraftCategory category;      // Категория для вкладок
-    public List<RequiredItem> requiredItems; // Список компонентов
-    public ItemData resultItem;         // Что получается
-    public int resultAmount = 1;        // Количество результата
-
-    [System.Serializable]
-    public class RequiredItem
-    {
-        public ItemData item;
-        public int amount = 1;
-    }
 }
 

@@ -1,4 +1,105 @@
 ﻿
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemDatabase.cs -----
+// Assets/Scripts/Items/ItemDatabase.cs
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+
+[CreateAssetMenu(fileName = "ItemDatabase", menuName = "Ignis/Item Database")]
+public class ItemDatabase : ScriptableObject
+{
+    [SerializeField]
+    private List<ItemData> items = new List<ItemData>();
+
+    // Быстрый поиск по id (будет использоваться очень часто)
+    private Dictionary<string, ItemData> itemDict;
+
+    private void OnEnable()
+    {
+        // Создаём словарь при загрузке ассета
+        itemDict = new Dictionary<string, ItemData>();
+
+        foreach (var item in items)
+        {
+            if (string.IsNullOrEmpty(item.id))
+            {
+                Debug.LogWarning($"У предмета {item.name} нет id!");
+                continue;
+            }
+
+            if (itemDict.ContainsKey(item.id))
+            {
+                Debug.LogWarning($"Дубликат id: {item.id} у предмета {item.name}");
+                continue;
+            }
+
+            itemDict[item.id] = item;
+        }
+    }
+
+    // Получить предмет по уникальному id
+    public ItemData GetItem(string id)
+    {
+        if (itemDict == null || itemDict.Count == 0)
+        {
+            Debug.LogError("База предметов не инициализирована!");
+            return null;
+        }
+
+        if (itemDict.TryGetValue(id, out ItemData item))
+        {
+            return item;
+        }
+
+        Debug.LogWarning($"Предмет с id '{id}' не найден в базе");
+        return null;
+    }
+
+    public ItemData GetItemByName(string name)
+    {
+        return items.FirstOrDefault(i => i.itemName == name);
+    }
+
+    // Получить все предметы определённой категории (удобно для UI)
+    public List<ItemData> GetItemsByCategory(ItemCategory category)
+    {
+        return items.Where(i => i.category == category).ToList();
+    }
+
+    // Для отладки — посмотреть сколько всего предметов
+    public int TotalItems => items.Count;
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\CraftCategory.cs -----
+public enum CraftCategory
+{
+    Tools,
+    Weapons,
+    Decorations,
+    Kritsa
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\RecipeData.cs -----
+using UnityEngine;
+using System.Collections.Generic;
+
+[CreateAssetMenu(fileName = "New Recipe", menuName = "Ignis/Recipe")]
+public class RecipeData : ScriptableObject
+{
+    public string recipeName;           // Имя рецепта (отображается в UI)
+    public CraftCategory category;      // Категория для вкладок
+    public List<RequiredItem> requiredItems; // Список компонентов
+    public ItemData resultItem;         // Что получается
+    public int resultAmount = 1;        // Количество результата
+
+    [System.Serializable]
+    public class RequiredItem
+    {
+        public ItemData item;
+        public int amount = 1;
+    }
+}
+
 ----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\RecipeDatabase.cs -----
 using UnityEngine;
 using System.Collections.Generic;

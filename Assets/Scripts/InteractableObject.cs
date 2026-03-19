@@ -18,6 +18,9 @@ public class InteractableObject : MonoBehaviour
     [Header("Обводка")]
     [SerializeField] private SimpleOutline outline;
 
+
+    public CinemachineCamera TargetCamera => targetCamera;
+    public GameObject TargetUI => targetUI;
     public string DisplayName => displayName;
 
     private void Awake()

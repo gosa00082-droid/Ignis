@@ -88,6 +88,37 @@ public class WorkshopCameraModeManager : MonoBehaviour
             playerInteraction.ForceClearHover();
     }
 
+    public void SwitchObjectMode(CinemachineCamera targetCamera, GameObject targetUI)
+    {
+        if (UIManager.Instance == null) return;
+        if (targetCamera == null || targetUI == null) return;
+
+        if (playerInteraction != null)
+            playerInteraction.ForceClearHover();
+
+        if (mouseLook != null)
+            mouseLook.LockLook();
+
+        if (activeCamera != null)
+            activeCamera.Priority = 10;
+
+        if (activeUI != null && UIManager.Instance.currentUI == activeUI)
+            UIManager.Instance.CloseCurrent();
+
+        if (!UIManager.Instance.TryOpenUI(targetUI))
+            return;
+
+        objectMode = true;
+        isReturning = false;
+        activeCamera = targetCamera;
+        activeUI = targetUI;
+
+        if (workshopCamera != null)
+            workshopCamera.Priority = 10;
+
+        activeCamera.Priority = 20;
+    }
+
     private void Update()
     {
         if (objectMode && !isReturning && Input.GetKeyDown(KeyCode.Escape))
