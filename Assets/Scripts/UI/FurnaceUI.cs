@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Linq;
 using System;
+using System.Collections;
 
 public class FurnaceUI : MonoBehaviour
 {
@@ -50,6 +51,8 @@ public class FurnaceUI : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("FurnaceUI Start вызван");
+
         igniteButton.onClick.AddListener(OnIgniteButtonPressed);
         bellowsButton.onClick.AddListener(OnBellowsPressed);
         cancelButton.onClick.AddListener(CancelSmelting);
@@ -63,7 +66,7 @@ public class FurnaceUI : MonoBehaviour
             smeltableItemIds = new List<string>
         {
             // Руды
-            "Iron_Ore", "Copper_Ore", "Tin_Ore", "Silver_Ore", "Gold_Ore",
+            "Iron_Ore", "Copper_Ore", "Tin_Ore", "Silver_Ore", "Gold_Ore", "kr_iron1",
             // Слитки (для переработки в сталь/дамаск)
             "Iron_Ingot", "Steel_Ingot"
         };
@@ -71,10 +74,30 @@ public class FurnaceUI : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        StartCoroutine(RefreshAfterOpen());
+    }
+
+    private IEnumerator RefreshAfterOpen()
+    {
+        yield return null;
+
+        RefreshMiniInventory();
+        UpdatePreview();
+        UpdateCoalText();
+    }
+
     public void ToggleFurnace()
     {
-        if (UIManager.Instance.TryOpenUI(furnaceCanvasRoot))
+        Debug.Log("ToggleFurnace вызван");
+
+        bool opened = UIManager.Instance.TryOpenUI(furnaceCanvasRoot);
+        Debug.Log("TryOpenUI результат: " + opened);
+
+        if (opened)
         {
+            Debug.Log("Заходим в RefreshMiniInventory");
             RefreshMiniInventory();
             UpdatePreview();
             UpdateCoalText();
@@ -96,22 +119,32 @@ public class FurnaceUI : MonoBehaviour
 
         foreach (var kvp in materialsDict)
         {
-            if (kvp.Value <= 0) continue;
-            if (!smeltableItemIds.Any(id => string.Equals(id, kvp.Key, StringComparison.OrdinalIgnoreCase))) continue;
+            if (kvp.Value <= 0)
+                continue;
+
+            if (!smeltableItemIds.Any(id => string.Equals(id, kvp.Key, StringComparison.OrdinalIgnoreCase)))
+                continue;
 
             ItemData item = itemDatabase.GetItem(kvp.Key);
-            if (item == null) continue;
+            if (item == null)
+            {
+                Debug.LogError("ItemDatabase не нашел предмет с id: " + kvp.Key);
+                continue;
+            }
 
             GameObject slot = Instantiate(slotPrefab, miniInventoryContent);
 
             Image iconImage = slot.transform.Find("Icon")?.GetComponent<Image>();
-            if (iconImage != null && item.icon != null) iconImage.sprite = item.icon;
+            if (iconImage != null && item.icon != null)
+                iconImage.sprite = item.icon;
 
             TMP_Text nameText = slot.transform.Find("Name")?.GetComponent<TMP_Text>();
-            if (nameText != null) nameText.text = item.itemName;
+            if (nameText != null)
+                nameText.text = item.itemName;
 
             TMP_Text amountText = slot.transform.Find("Amount")?.GetComponent<TMP_Text>();
-            if (amountText != null) amountText.text = kvp.Value.ToString();
+            if (amountText != null)
+                amountText.text = kvp.Value.ToString();
 
             DraggableItem draggable = slot.GetComponent<DraggableItem>() ?? slot.AddComponent<DraggableItem>();
             draggable.homeParent = miniInventoryContent;

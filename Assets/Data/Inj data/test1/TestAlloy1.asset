@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: TestAlloy1
   m_EditorClassIdentifier: Assembly-CSharp::AlloyDatabase
   recipes:
-  - {fileID: 11400000, guid: 1cc5d5bb11f9a7043bd4cb910d0e972a, type: 2}
+  - {fileID: 11400000, guid: 114c4cd416bf9104a8eac83a3c6d0f91, type: 2}

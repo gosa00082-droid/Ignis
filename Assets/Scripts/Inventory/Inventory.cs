@@ -16,10 +16,10 @@ public class Inventory : MonoBehaviour
     void Start()
     {
         // ... существующий код ...
-        AddItem("Iron_Ore", 10);
+        AddItem("kr_iron1", 10);
         AddItem("Coal", 20);
         AddItem("Gold_Money", 500);
-        AddItem("Wood", 5);
+
     }
 
     private void Awake()
@@ -141,16 +141,7 @@ public class Inventory : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.T)) AddItem("Wooden_Handle", 5);     // замени на свой id
-        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
-        if (Input.GetKeyDown(KeyCode.T)) AddItem("Iron_Ore", 5);     // замени на свой id
-        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
-        if (Input.GetKeyDown(KeyCode.T)) AddItem("Silver", 5);     // замени на свой id
-        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
-        if (Input.GetKeyDown(KeyCode.T)) AddItem("Long_Handler", 5);     // замени на свой id
-        if (Input.GetKeyDown(KeyCode.I)) DebugPrintInventory();
-        if (Input.GetKeyDown(KeyCode.M)) AddItem("Gold_Money", 15);     // замени на свой id
-
+        if (Input.GetKeyDown(KeyCode.M)) AddItem("Gold_Money", 15);     
     }
 
 }
