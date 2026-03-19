@@ -122,8 +122,14 @@ public class AnvilUI : MonoBehaviour
         foreach (var recipe in recipes)
         {
             GameObject slot = Instantiate(recipeSlotPrefab, recipeListContent);
+
             TMP_Text nameText = slot.GetComponentInChildren<TMP_Text>();
-            if (nameText) nameText.text = recipe.recipeName;
+            if (nameText != null)
+                nameText.text = recipe.recipeName;
+
+            Image icon = slot.transform.Find("Icon")?.GetComponent<Image>();
+            if (icon != null && recipe.resultItem != null && recipe.resultItem.icon != null)
+                icon.sprite = recipe.resultItem.icon;
 
             Button btn = slot.GetComponent<Button>();
             if (btn != null)

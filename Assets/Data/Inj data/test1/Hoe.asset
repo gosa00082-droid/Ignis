@@ -15,7 +15,7 @@ MonoBehaviour:
   itemName: "\u041C\u043E\u0442\u044B\u0433\u0430"
   id: Hoe
   category: 2
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 9f7706ec17ffb264eb58cc4da631553c, type: 3}
   maxStackSize: 10
   basePrice: 55
   description: "\u041C\u043E\u0442\u044B\u0433\u0430"
