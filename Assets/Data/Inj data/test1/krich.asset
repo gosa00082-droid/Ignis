@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: krich
   m_EditorClassIdentifier: Assembly-CSharp::AlloyRecipe
   alloyName: "\u041A\u0440\u0438\u0446\u0430"
-  resultItem: {fileID: 11400000, guid: 21326a908804be14789ac2c61a110915, type: 2}
+  resultItem: {fileID: 11400000, guid: a130dc12407e0a843a98cd344fdd9c92, type: 2}
   slagItem: {fileID: 11400000, guid: f3b2adb71590eee45b951ecd63295d31, type: 2}
   requiredOres:
   - r_iron
