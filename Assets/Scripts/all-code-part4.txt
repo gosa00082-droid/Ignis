@@ -791,16 +791,14 @@ public class QuestBoardUI : MonoBehaviour
         selectedQuest = null;
     }
 
-    public void AcceptQuest(QuestData quest)
+    private void AcceptSelectedQuest()
     {
-        if (!HasFreeSlot()) return;
-
-        activeQuests.Add(new ActiveQuest(quest));
-        Debug.Log($"Принят заказ: {quest.title}");
-
-        if (TutorialManager.Instance != null)
+        if (selectedQuest != null)
         {
-            TutorialManager.Instance.CheckGoals(quest.questID, 1, GoalType.StartQuest);
+            QuestManager.Instance.AcceptQuest(selectedQuest);
+            ShowAvailableList();
+            RefreshAvailableQuests();
+            ShowTab(false);
         }
     }
 }

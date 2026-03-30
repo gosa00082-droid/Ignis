@@ -22,12 +22,40 @@ public class WorkshopCameraModeManager : MonoBehaviour
 
     public void EnterObjectMode(CinemachineCamera targetCamera, GameObject targetUI)
     {
-        if (objectMode || isReturning) return;
-        if (UIManager.Instance == null) return;
-        if (targetCamera == null || targetUI == null) return;
+        Debug.Log($"[CameraMode] EnterObjectMode вызван. camera={(targetCamera != null ? targetCamera.name : "NULL")}, ui={(targetUI != null ? targetUI.name : "NULL")}");
 
-        if (!UIManager.Instance.TryOpenUI(targetUI))
+        if (objectMode || isReturning)
+        {
+            Debug.Log("[CameraMode] Уже в object mode или идет возврат");
             return;
+        }
+
+        if (targetCamera == null)
+        {
+            Debug.LogWarning("[CameraMode] targetCamera == null");
+            return;
+        }
+
+        if (targetUI != null)
+        {
+            if (UIManager.Instance == null)
+            {
+                Debug.LogWarning("[CameraMode] UIManager.Instance == null, UI открыть нельзя");
+                return;
+            }
+
+            if (!UIManager.Instance.TryOpenUI(targetUI))
+            {
+                Debug.LogWarning($"[CameraMode] Не удалось открыть UI {targetUI.name}");
+                return;
+            }
+
+            Debug.Log($"[CameraMode] UI {targetUI.name} открыт");
+        }
+        else
+        {
+            Debug.Log("[CameraMode] Работаем без UI, это нормально");
+        }
 
         objectMode = true;
         activeCamera = targetCamera;
@@ -43,6 +71,8 @@ public class WorkshopCameraModeManager : MonoBehaviour
             workshopCamera.Priority = 10;
 
         activeCamera.Priority = 20;
+
+        Debug.Log($"[CameraMode] Object mode включен. Активная камера: {activeCamera.name}");
     }
 
     public void ExitObjectMode()
@@ -62,8 +92,15 @@ public class WorkshopCameraModeManager : MonoBehaviour
         if (workshopCamera != null)
             workshopCamera.Priority = 20;
 
-        if (UIManager.Instance != null)
+        if (activeUI != null && UIManager.Instance != null)
+        {
+            Debug.Log($"[CameraMode] Закрываю UI {activeUI.name}");
             UIManager.Instance.CloseCurrent();
+        }
+        else
+        {
+            Debug.Log("[CameraMode] UI закрывать не нужно");
+        }
 
         if (playerInteraction != null)
             playerInteraction.ForceClearHover();

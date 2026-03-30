@@ -43,24 +43,21 @@ public class InteractableObject : MonoBehaviour
 
     public void Interact()
     {
+        Debug.Log($"[InteractableObject] Клик по объекту: {name}", this);
+
         if (cameraModeManager == null)
         {
-            Debug.LogWarning($"{name}: не назначен CameraModeManager");
+            Debug.LogWarning($"[InteractableObject] {name}: не назначен CameraModeManager", this);
             return;
         }
 
         if (targetCamera == null)
         {
-            Debug.LogWarning($"{name}: не назначена targetCamera");
+            Debug.LogWarning($"[InteractableObject] {name}: не назначена targetCamera", this);
             return;
         }
 
-        if (targetUI == null)
-        {
-            Debug.LogWarning($"{name}: не назначен targetUI");
-            return;
-        }
-
+        Debug.Log($"[InteractableObject] {name}: вызываю EnterObjectMode. targetUI={(targetUI != null ? targetUI.name : "NULL")}", this);
         cameraModeManager.EnterObjectMode(targetCamera, targetUI);
     }
 }
