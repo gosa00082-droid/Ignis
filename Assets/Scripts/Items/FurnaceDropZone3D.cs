@@ -1,8 +1,16 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class FurnaceDropZone3D : MonoBehaviour
 {
     [SerializeField] private bool debugLogs = true;
+
+    private Collider zoneCollider;
+
+    private void Awake()
+    {
+        zoneCollider = GetComponent<Collider>();
+    }
 
     private void Log(string message)
     {
@@ -12,9 +20,18 @@ public class FurnaceDropZone3D : MonoBehaviour
 
     public bool CanAccept(WorldDraggableItem item)
     {
-        bool result = item != null;
-        Log($"CanAccept({(item != null ? item.name : "NULL")}) = {result}");
+        bool result = item != null && zoneCollider != null && zoneCollider.enabled;
+        Log($"CanAccept: {(item != null ? item.name : "NULL")} => {result}");
         return result;
+    }
+
+    public void SetZoneEnabled(bool enabledState)
+    {
+        if (zoneCollider != null)
+        {
+            zoneCollider.enabled = enabledState;
+            Log($"Zone collider enabled = {enabledState}");
+        }
     }
 
     private void OnTriggerEnter(Collider other)

@@ -1,31 +1,48 @@
+using System.Collections;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class WorldDraggableItem : MonoBehaviour
 {
     [Header("Ссылки")]
     [SerializeField] private Camera workCamera;
     [SerializeField] private WorkshopCameraModeManager cameraModeManager;
-
-    [Header("Точки")]
-    [SerializeField] private Transform shelfPoint;
     [SerializeField] private Transform furnacePoint;
+    [SerializeField] private Collider furnaceDragSurfaceCollider;
+    [SerializeField] private Collider furnaceDropZoneCollider;
 
     [Header("Перетаскивание")]
-    [SerializeField] private float dragPlaneY = 1.0f;
-    [SerializeField] private float dragLiftY = 0.15f;   // насколько приподнимаем объект над плоскостью
-    [SerializeField] private float moveSpeed = 10f;
-    [SerializeField] private float returnSpeed = 6f;
+    [SerializeField] private LayerMask dragSurfaceMask;
+    [SerializeField] private float dragLiftY = 0.05f;
+    [SerializeField] private float moveSpeed = 12f;
+    [SerializeField] private float rayDistance = 100f;
+
+    [Header("Плавная доводка в печь")]
+    [SerializeField] private float snapMoveSpeed = 2.5f;
+    [SerializeField] private float snapRotateSpeed = 360f;
 
     [Header("Debug")]
     [SerializeField] private bool debugLogs = true;
 
-    private bool isDragging = false;
+    [SerializeField] private float returnSpeed = 4f;
+
     private bool isReturning = false;
+
+    private bool isDragging = false;
     private bool isInFurnace = false;
+    private bool isSnappingToPoint = false;
 
     private FurnaceDropZone3D currentZone;
-    private Plane dragPlane;
+
     private Vector3 targetPosition;
+    private Vector3 dragOffsetXZ;
+
+    private Vector3 homePosition;
+    private Quaternion homeRotation;
+
+    private Rigidbody rb;
+    private Collider cachedCollider;
+    private Coroutine snapCoroutine;
 
     private void Log(string message)
     {
@@ -33,25 +50,36 @@ public class WorldDraggableItem : MonoBehaviour
             Debug.Log($"[WorldDraggableItem:{name}] {message}", this);
     }
 
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        cachedCollider = GetComponent<Collider>();
+    }
+
     private void Start()
     {
         if (workCamera == null)
             workCamera = Camera.main;
 
-        if (workCamera == null)
-            Log("ВНИМАНИЕ: workCamera не найдена");
-
-        if (shelfPoint != null)
-        {
-            transform.position = shelfPoint.position;
-            Log($"Стартовая позиция = shelfPoint {shelfPoint.position}");
-        }
-        else
-        {
-            Log("ВНИМАНИЕ: shelfPoint не назначен");
-        }
-
+        homePosition = transform.position;
+        homeRotation = transform.rotation;
         targetPosition = transform.position;
+
+        Log($"Start. homePosition = {homePosition}");
+    }
+
+    private void SetFurnaceHelpersEnabled(bool state)
+    {
+        if (furnaceDragSurfaceCollider != null)
+            furnaceDragSurfaceCollider.enabled = state;
+
+        if (furnaceDropZoneCollider != null)
+            furnaceDropZoneCollider.enabled = state;
+
+        if (!state)
+            currentZone = null;
+
+        Log($"Furnace helpers enabled = {state}");
     }
 
     private void Update()
@@ -60,28 +88,34 @@ public class WorldDraggableItem : MonoBehaviour
         {
             DragUpdate();
         }
-        else if (isReturning && shelfPoint != null)
+        else if (isReturning)
         {
-            Vector3 returnTarget = shelfPoint.position + Vector3.up * dragLiftY;
-
-            transform.position = Vector3.Lerp(
+            transform.position = Vector3.MoveTowards(
                 transform.position,
-                returnTarget,
+                homePosition,
                 returnSpeed * Time.deltaTime
             );
 
-            if (Vector3.Distance(transform.position, returnTarget) < 0.02f)
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                homeRotation,
+                snapRotateSpeed * Time.deltaTime
+            );
+
+            if (Vector3.Distance(transform.position, homePosition) < 0.01f)
             {
-                transform.position = shelfPoint.position;
+                transform.position = homePosition;
+                transform.rotation = homeRotation;
                 isReturning = false;
-                Log("Объект вернулся на полку");
+
+                Log($"Вернулись в стартовую позицию: {homePosition}");
             }
         }
     }
 
     private void OnMouseDown()
     {
-        Log("OnMouseDown сработал");
+        Log("OnMouseDown");
 
         if (cameraModeManager == null)
         {
@@ -91,13 +125,13 @@ public class WorldDraggableItem : MonoBehaviour
 
         if (!cameraModeManager.IsInObjectMode)
         {
-            Log("Не в object mode, перетаскивание запрещено");
+            Log("Не в object mode");
             return;
         }
 
-        if (isInFurnace)
+        if (isSnappingToPoint)
         {
-            Log("Объект уже в печи, повторно брать нельзя");
+            Log("Сейчас идёт плавная доводка, drag запрещён");
             return;
         }
 
@@ -106,93 +140,141 @@ public class WorldDraggableItem : MonoBehaviour
             workCamera = Camera.main;
             if (workCamera == null)
             {
-                Log("Не найдена камера для drag");
+                Log("workCamera == null");
                 return;
             }
         }
 
+        if (isInFurnace)
+        {
+            SetFurnaceHelpersEnabled(true);
+            isInFurnace = false;
+            Log("Начали вытаскивать объект из печи");
+        }
+
+        if (TryGetSurfacePoint(out Vector3 hitPoint))
+        {
+            Vector3 desired = hitPoint + Vector3.up * dragLiftY;
+            dragOffsetXZ = transform.position - desired;
+            dragOffsetXZ.y = 0f;
+        }
+        else
+        {
+            dragOffsetXZ = Vector3.zero;
+            Log("Не нашли поверхность под курсором при начале drag");
+        }
+
         isDragging = true;
-        isReturning = false;
+    }
 
-        dragPlane = new Plane(Vector3.up, new Vector3(0f, dragPlaneY, 0f));
-
-        Log($"Начали перетаскивание. dragPlaneY={dragPlaneY}, dragLiftY={dragLiftY}");
+    private void ReturnHome()
+    {
+        isInFurnace = false;
+        isReturning = true;
     }
 
     private void OnMouseUp()
     {
-        Log("OnMouseUp сработал");
+        Log("OnMouseUp");
 
         if (!isDragging)
-        {
-            Log("Но isDragging == false, выходим");
             return;
-        }
 
         isDragging = false;
 
         if (currentZone != null && currentZone.CanAccept(this))
         {
-            Log($"Отпустили над зоной {currentZone.name}, кладем в печь");
-            PutIntoFurnace();
+            Log($"Отпустили над зоной {currentZone.name}, плавно ведем в furnacePoint");
+            StartSnapToFurnace();
         }
         else
         {
-            Log("Отпустили мимо зоны, возвращаем на полку");
-            ReturnToShelf();
+            Log("Отпустили мимо зоны, возвращаем в стартовую позицию");
+            ReturnHome();
         }
     }
 
     private void DragUpdate()
     {
-        if (workCamera == null)
-        {
-            Log("DragUpdate: workCamera == null");
+        if (!TryGetSurfacePoint(out Vector3 hitPoint))
             return;
-        }
+
+        Vector3 desired = hitPoint + Vector3.up * dragLiftY;
+        desired += new Vector3(dragOffsetXZ.x, 0f, dragOffsetXZ.z);
+
+        targetPosition = desired;
+
+        transform.position = Vector3.Lerp(
+            transform.position,
+            targetPosition,
+            moveSpeed * Time.deltaTime
+        );
+    }
+
+    private bool TryGetSurfacePoint(out Vector3 point)
+    {
+        point = Vector3.zero;
+
+        if (workCamera == null)
+            return false;
 
         Ray ray = workCamera.ScreenPointToRay(Input.mousePosition);
 
-        if (dragPlane.Raycast(ray, out float enter))
+        if (Physics.Raycast(ray, out RaycastHit hit, rayDistance, dragSurfaceMask))
         {
-            Vector3 hitPoint = ray.GetPoint(enter);
+            point = hit.point;
+            return true;
+        }
 
-            targetPosition = new Vector3(
-                hitPoint.x,
-                dragPlaneY + dragLiftY,
-                hitPoint.z
-            );
+        return false;
+    }
 
-            transform.position = Vector3.Lerp(
+    private void StartSnapToFurnace()
+    {
+        if (furnacePoint == null)
+        {
+            Log("furnacePoint == null");
+            return;
+        }
+
+        if (snapCoroutine != null)
+            StopCoroutine(snapCoroutine);
+
+        snapCoroutine = StartCoroutine(SnapToPointRoutine(furnacePoint.position, furnacePoint.rotation));
+    }
+
+    private IEnumerator SnapToPointRoutine(Vector3 targetPos, Quaternion targetRot)
+    {
+        isSnappingToPoint = true;
+
+        while (Vector3.Distance(transform.position, targetPos) > 0.01f ||
+               Quaternion.Angle(transform.rotation, targetRot) > 1f)
+        {
+            transform.position = Vector3.MoveTowards(
                 transform.position,
-                targetPosition,
-                moveSpeed * Time.deltaTime
+                targetPos,
+                snapMoveSpeed * Time.deltaTime
             );
-        }
-    }
 
-    private void PutIntoFurnace()
-    {
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRot,
+                snapRotateSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        transform.position = targetPos;
+        transform.rotation = targetRot;
+
         isInFurnace = true;
-        isReturning = false;
+        isSnappingToPoint = false;
+        snapCoroutine = null;
 
-        if (furnacePoint != null)
-        {
-            transform.position = furnacePoint.position;
-            transform.rotation = furnacePoint.rotation;
-            Log($"Объект поставлен в furnacePoint: {furnacePoint.position}");
-        }
-        else
-        {
-            Log("ВНИМАНИЕ: furnacePoint не назначен");
-        }
-    }
+        SetFurnaceHelpersEnabled(false);
 
-    private void ReturnToShelf()
-    {
-        isInFurnace = false;
-        isReturning = true;
-        Log("Запущен возврат на полку");
+        Log($"Предмет плавно установлен в furnacePoint = {targetPos}");
     }
 
     public void SetCurrentZone(FurnaceDropZone3D zone)

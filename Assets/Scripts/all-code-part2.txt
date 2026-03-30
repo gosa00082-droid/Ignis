@@ -1,4 +1,111 @@
 ﻿
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\DropSlot.cs -----
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
+
+public class DropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
+{
+    [SerializeField] private Color highlightColor = new Color(0.8f, 0.9f, 1f);
+
+    private Image backgroundImage;
+
+    private void Awake()
+    {
+        backgroundImage = GetComponent<Image>();
+
+        // Защита на случай, если Image на дочернем объекте (часто бывает)
+        if (backgroundImage == null)
+        {
+            backgroundImage = GetComponentInChildren<Image>();
+        }
+
+        if (backgroundImage == null)
+        {
+            Debug.LogWarning("DropSlot: Image-компонент не найден на слоте " + name);
+        }
+    }
+
+    public void OnDrop(PointerEventData eventData)
+    {
+        if (eventData.pointerDrag != null)
+        {
+            eventData.pointerDrag.transform.SetParent(transform);
+            eventData.pointerDrag.transform.localPosition = Vector3.zero;
+            FindObjectOfType<FurnaceUI>().UpdatePreview();  // Вызов preview
+        }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (eventData.pointerDrag != null && backgroundImage != null)
+        {
+            backgroundImage.color = highlightColor;
+        }
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (backgroundImage != null)
+        {
+            backgroundImage.color = Color.white;
+        }
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\FurnaceDropZone3D.cs -----
+using UnityEngine;
+
+public class FurnaceDropZone3D : MonoBehaviour
+{
+    [SerializeField] private bool debugLogs = true;
+
+    private void Log(string message)
+    {
+        if (debugLogs)
+            Debug.Log($"[FurnaceDropZone3D:{name}] {message}", this);
+    }
+
+    public bool CanAccept(WorldDraggableItem item)
+    {
+        bool result = item != null;
+        Log($"CanAccept: {(item != null ? item.name : "NULL")} => {result}");
+        return result;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        WorldDraggableItem item = other.GetComponent<WorldDraggableItem>();
+        if (item != null)
+        {
+            Log($"OnTriggerEnter: {item.name}");
+            item.SetCurrentZone(this);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        WorldDraggableItem item = other.GetComponent<WorldDraggableItem>();
+        if (item != null)
+        {
+            Log($"OnTriggerExit: {item.name}");
+            item.ClearCurrentZone(this);
+        }
+    }
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemCategory.cs -----
+// Assets/Scripts/Items/ItemCategory.cs
+public enum ItemCategory
+{
+    Material,     // железо, медь, уголь, бронза и т.д.
+    Weapon,       // готовые мечи, кинжалы, топоры
+    Tool,         // молот, клещи, точило (если будет)
+    Consumable,   // еда, зелья, уголь для печки и т.п.
+    Other         // всё, что не подошло в другие категории
+}
+
+
 ----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemData.cs -----
 // Assets/Scripts/Items/ItemData.cs
 using UnityEngine;
@@ -94,6 +201,250 @@ public class ItemDatabase : ScriptableObject
 
     // Для отладки — посмотреть сколько всего предметов
     public int TotalItems => items.Count;
+}
+
+----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\WorldDraggableItem.cs -----
+using System.Collections;
+using UnityEngine;
+
+[RequireComponent(typeof(Collider))]
+public class WorldDraggableItem : MonoBehaviour
+{
+    [Header("������")]
+    [SerializeField] private Camera workCamera;
+    [SerializeField] private WorkshopCameraModeManager cameraModeManager;
+    [SerializeField] private Transform furnacePoint;
+
+    [Header("��������������")]
+    [SerializeField] private LayerMask dragSurfaceMask;
+    [SerializeField] private float dragLiftY = 0.05f;
+    [SerializeField] private float moveSpeed = 12f;
+    [SerializeField] private float rayDistance = 100f;
+
+    [Header("������� ������� � ����")]
+    [SerializeField] private float snapMoveSpeed = 2.5f;
+    [SerializeField] private float snapRotateSpeed = 360f;
+
+    [Header("Debug")]
+    [SerializeField] private bool debugLogs = true;
+
+    private bool isDragging = false;
+    private bool isInFurnace = false;
+    private bool isSnappingToPoint = false;
+
+    private FurnaceDropZone3D currentZone;
+
+    private Vector3 targetPosition;
+    private Vector3 dragOffsetXZ;
+
+    private Vector3 homePosition;
+    private Quaternion homeRotation;
+
+    private Rigidbody rb;
+    private Collider cachedCollider;
+    private Coroutine snapCoroutine;
+
+    private void Log(string message)
+    {
+        if (debugLogs)
+            Debug.Log($"[WorldDraggableItem:{name}] {message}", this);
+    }
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+        cachedCollider = GetComponent<Collider>();
+    }
+
+    private void Start()
+    {
+        if (workCamera == null)
+            workCamera = Camera.main;
+
+        homePosition = transform.position;
+        homeRotation = transform.rotation;
+        targetPosition = transform.position;
+
+        Log($"Start. homePosition = {homePosition}");
+    }
+
+    private void Update()
+    {
+        if (isDragging)
+            DragUpdate();
+    }
+
+    private void OnMouseDown()
+    {
+        Log("OnMouseDown");
+
+        if (cameraModeManager == null)
+        {
+            Log("cameraModeManager == null");
+            return;
+        }
+
+        if (!cameraModeManager.IsInObjectMode)
+        {
+            Log("�� � object mode");
+            return;
+        }
+
+        if (isSnappingToPoint)
+        {
+            Log("������ ��� ������� �������, drag ��������");
+            return;
+        }
+
+        if (workCamera == null)
+        {
+            workCamera = Camera.main;
+            if (workCamera == null)
+            {
+                Log("workCamera == null");
+                return;
+            }
+        }
+
+        if (TryGetSurfacePoint(out Vector3 hitPoint))
+        {
+            Vector3 desired = hitPoint + Vector3.up * dragLiftY;
+            dragOffsetXZ = transform.position - desired;
+            dragOffsetXZ.y = 0f;
+        }
+        else
+        {
+            dragOffsetXZ = Vector3.zero;
+            Log("�� ����� ����������� ��� �������� ��� ������ drag");
+        }
+
+        if (isInFurnace)
+        {
+            isInFurnace = false;
+            Log("������ ����������� ������ �� ����");
+        }
+
+        isDragging = true;
+    }
+
+    private void OnMouseUp()
+    {
+        Log("OnMouseUp");
+
+        if (!isDragging)
+            return;
+
+        isDragging = false;
+
+        if (currentZone != null && currentZone.CanAccept(this))
+        {
+            Log($"��������� ��� ����� {currentZone.name}, ������ ����� � furnacePoint");
+            StartSnapToFurnace();
+        }
+        else
+        {
+            Log("��������� ��� ���� ����, ��������� ������� �� ������� �����");
+
+            homePosition = transform.position;
+            homeRotation = transform.rotation;
+        }
+    }
+
+    private void DragUpdate()
+    {
+        if (!TryGetSurfacePoint(out Vector3 hitPoint))
+            return;
+
+        Vector3 desired = hitPoint + Vector3.up * dragLiftY;
+        desired += new Vector3(dragOffsetXZ.x, 0f, dragOffsetXZ.z);
+
+        targetPosition = desired;
+
+        transform.position = Vector3.Lerp(
+            transform.position,
+            targetPosition,
+            moveSpeed * Time.deltaTime
+        );
+    }
+
+    private bool TryGetSurfacePoint(out Vector3 point)
+    {
+        point = Vector3.zero;
+
+        if (workCamera == null)
+            return false;
+
+        Ray ray = workCamera.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, rayDistance, dragSurfaceMask))
+        {
+            point = hit.point;
+            return true;
+        }
+
+        return false;
+    }
+
+    private void StartSnapToFurnace()
+    {
+        if (furnacePoint == null)
+        {
+            Log("furnacePoint == null");
+            return;
+        }
+
+        if (snapCoroutine != null)
+            StopCoroutine(snapCoroutine);
+
+        snapCoroutine = StartCoroutine(SnapToPointRoutine(furnacePoint.position, furnacePoint.rotation));
+    }
+
+    private IEnumerator SnapToPointRoutine(Vector3 targetPos, Quaternion targetRot)
+    {
+        isSnappingToPoint = true;
+
+        while (Vector3.Distance(transform.position, targetPos) > 0.01f ||
+               Quaternion.Angle(transform.rotation, targetRot) > 1f)
+        {
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                targetPos,
+                snapMoveSpeed * Time.deltaTime
+            );
+
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRot,
+                snapRotateSpeed * Time.deltaTime
+            );
+
+            yield return null;
+        }
+
+        transform.position = targetPos;
+        transform.rotation = targetRot;
+
+        isInFurnace = true;
+        isSnappingToPoint = false;
+        snapCoroutine = null;
+
+        Log($"������� ������ ���������� � furnacePoint = {targetPos}");
+    }
+
+    public void SetCurrentZone(FurnaceDropZone3D zone)
+    {
+        currentZone = zone;
+        Log($"����� � drop zone: {zone.name}");
+    }
+
+    public void ClearCurrentZone(FurnaceDropZone3D zone)
+    {
+        if (currentZone == zone)
+        {
+            currentZone = null;
+            Log($"����� �� drop zone: {zone.name}");
+        }
+    }
 }
 
 ----- File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\Crafting\CraftCategory.cs -----
@@ -600,128 +951,6 @@ public class UIManager : MonoBehaviour
 
         if (playerMovement != null) playerMovement.enabled = !uiOpen;
         if (mouseLook != null) mouseLook.enabled = !uiOpen;
-    }
-}
-
------ File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Outline\SimpleOutline.cs -----
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.Rendering;
-
-public class SimpleOutline : MonoBehaviour
-{
-    [SerializeField] private Material outlineMaterial;
-    [SerializeField] private bool showOnStartForDebug = false;
-
-    private readonly List<GameObject> outlineObjects = new List<GameObject>();
-
-    private void Awake()
-    {
-        CreateOutlineMeshes();
-        SetActive(showOnStartForDebug);
-    }
-
-    private void CreateOutlineMeshes()
-    {
-        if (outlineMaterial == null)
-        {
-            Debug.LogWarning($"{name}: � SimpleOutline �� �������� outlineMaterial");
-            return;
-        }
-
-        MeshFilter[] meshFilters = GetComponentsInChildren<MeshFilter>(true);
-        Debug.Log($"{name}: ������� MeshFilter = {meshFilters.Length}");
-
-        foreach (MeshFilter mf in meshFilters)
-        {
-            if (mf.sharedMesh == null)
-                continue;
-
-            MeshRenderer sourceRenderer = mf.GetComponent<MeshRenderer>();
-            if (sourceRenderer == null)
-                continue;
-
-            GameObject outlineObj = new GameObject("Outline_" + mf.name);
-            outlineObj.transform.SetParent(mf.transform, false);
-            outlineObj.transform.localPosition = Vector3.zero;
-            outlineObj.transform.localRotation = Quaternion.identity;
-            outlineObj.transform.localScale = Vector3.one;
-
-            MeshFilter outlineMF = outlineObj.AddComponent<MeshFilter>();
-            outlineMF.sharedMesh = mf.sharedMesh;
-
-            MeshRenderer outlineMR = outlineObj.AddComponent<MeshRenderer>();
-            outlineMR.sharedMaterial = outlineMaterial;
-            outlineMR.shadowCastingMode = ShadowCastingMode.Off;
-            outlineMR.receiveShadows = false;
-            outlineMR.motionVectorGenerationMode = MotionVectorGenerationMode.ForceNoMotion;
-            outlineMR.lightProbeUsage = LightProbeUsage.Off;
-            outlineMR.reflectionProbeUsage = ReflectionProbeUsage.Off;
-
-            outlineObjects.Add(outlineObj);
-        }
-
-        Debug.Log($"{name}: ������� outline-�������� = {outlineObjects.Count}");
-    }
-
-    public void SetActive(bool state)
-    {
-        for (int i = 0; i < outlineObjects.Count; i++)
-        {
-            if (outlineObjects[i] != null)
-                outlineObjects[i].SetActive(state);
-        }
-    }
-}
-
------ File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Tutorial\TutorialData.cs -----
-using UnityEngine;
-using System.Collections.Generic;
-
-// ���� �����
-public enum GoalType
-{
-    None,
-    CollectItem,
-    CraftItem,
-    StartQuest,
-    CompleteQuest,
-    Interact
-}
-
-[System.Serializable]
-public class TutorialGoal
-{
-    public GoalType type;
-    public string targetID;
-    public int requiredAmount = 1;
-    [TextArea] public string description;
-    [HideInInspector] public bool isCompleted = false;
-}
-
-[CreateAssetMenu(fileName = "New Tutorial Step", menuName = "Ignis/Tutorial Step")]
-public class TutorialStep : ScriptableObject
-{
-    [Header("��������� ����")]
-    public bool isFinalStep = false; // �������: ��������� �� ��� ���?
-
-    [Header("������ (������ ��������)")]
-    // ���� ����� ������. ������ ������� = ���-�� �������.
-    [TextArea(3, 10)] public List<string> slides = new List<string>();
-
-    [Header("���� (����������� ��� ���������� ����)")]
-    public List<TutorialGoal> goals = new List<TutorialGoal>();
-
-    // �������� ���������� ���� �����
-    public bool IsGoalsComplete()
-    {
-        if (goals.Count == 0) return true; // ���� ����� ��� � ������� ����������� �����
-
-        foreach (var goal in goals)
-        {
-            if (!goal.isCompleted) return false;
-        }
-        return true;
     }
 }
 

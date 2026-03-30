@@ -45,24 +45,21 @@ public class InteractableObject : MonoBehaviour
 
     public void Interact()
     {
+        Debug.Log($"[InteractableObject] ���� �� �������: {name}", this);
+
         if (cameraModeManager == null)
         {
-            Debug.LogWarning($"{name}: �� �������� CameraModeManager");
+            Debug.LogWarning($"[InteractableObject] {name}: �� �������� CameraModeManager", this);
             return;
         }
 
         if (targetCamera == null)
         {
-            Debug.LogWarning($"{name}: �� ��������� targetCamera");
+            Debug.LogWarning($"[InteractableObject] {name}: �� ��������� targetCamera", this);
             return;
         }
 
-        if (targetUI == null)
-        {
-            Debug.LogWarning($"{name}: �� �������� targetUI");
-            return;
-        }
-
+        Debug.Log($"[InteractableObject] {name}: ������� EnterObjectMode. targetUI={(targetUI != null ? targetUI.name : "NULL")}", this);
         cameraModeManager.EnterObjectMode(targetCamera, targetUI);
     }
 }
@@ -387,12 +384,40 @@ public class WorkshopCameraModeManager : MonoBehaviour
 
     public void EnterObjectMode(CinemachineCamera targetCamera, GameObject targetUI)
     {
-        if (objectMode || isReturning) return;
-        if (UIManager.Instance == null) return;
-        if (targetCamera == null || targetUI == null) return;
+        Debug.Log($"[CameraMode] EnterObjectMode ������. camera={(targetCamera != null ? targetCamera.name : "NULL")}, ui={(targetUI != null ? targetUI.name : "NULL")}");
 
-        if (!UIManager.Instance.TryOpenUI(targetUI))
+        if (objectMode || isReturning)
+        {
+            Debug.Log("[CameraMode] ��� � object mode ��� ���� �������");
             return;
+        }
+
+        if (targetCamera == null)
+        {
+            Debug.LogWarning("[CameraMode] targetCamera == null");
+            return;
+        }
+
+        if (targetUI != null)
+        {
+            if (UIManager.Instance == null)
+            {
+                Debug.LogWarning("[CameraMode] UIManager.Instance == null, UI ������� ������");
+                return;
+            }
+
+            if (!UIManager.Instance.TryOpenUI(targetUI))
+            {
+                Debug.LogWarning($"[CameraMode] �� ������� ������� UI {targetUI.name}");
+                return;
+            }
+
+            Debug.Log($"[CameraMode] UI {targetUI.name} ������");
+        }
+        else
+        {
+            Debug.Log("[CameraMode] �������� ��� UI, ��� ���������");
+        }
 
         objectMode = true;
         activeCamera = targetCamera;
@@ -408,6 +433,8 @@ public class WorkshopCameraModeManager : MonoBehaviour
             workshopCamera.Priority = 10;
 
         activeCamera.Priority = 20;
+
+        Debug.Log($"[CameraMode] Object mode �������. �������� ������: {activeCamera.name}");
     }
 
     public void ExitObjectMode()
@@ -427,8 +454,15 @@ public class WorkshopCameraModeManager : MonoBehaviour
         if (workshopCamera != null)
             workshopCamera.Priority = 20;
 
-        if (UIManager.Instance != null)
+        if (activeUI != null && UIManager.Instance != null)
+        {
+            Debug.Log($"[CameraMode] �������� UI {activeUI.name}");
             UIManager.Instance.CloseCurrent();
+        }
+        else
+        {
+            Debug.Log("[CameraMode] UI ��������� �� �����");
+        }
 
         if (playerInteraction != null)
             playerInteraction.ForceClearHover();
@@ -930,70 +964,4 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         // Если попали в слот печи — DropSlot уже сделал SetParent + центрирование
     }
 }
-
------ File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\DropSlot.cs -----
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-
-public class DropSlot : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPointerExitHandler
-{
-    [SerializeField] private Color highlightColor = new Color(0.8f, 0.9f, 1f);
-
-    private Image backgroundImage;
-
-    private void Awake()
-    {
-        backgroundImage = GetComponent<Image>();
-
-        // Защита на случай, если Image на дочернем объекте (часто бывает)
-        if (backgroundImage == null)
-        {
-            backgroundImage = GetComponentInChildren<Image>();
-        }
-
-        if (backgroundImage == null)
-        {
-            Debug.LogWarning("DropSlot: Image-компонент не найден на слоте " + name);
-        }
-    }
-
-    public void OnDrop(PointerEventData eventData)
-    {
-        if (eventData.pointerDrag != null)
-        {
-            eventData.pointerDrag.transform.SetParent(transform);
-            eventData.pointerDrag.transform.localPosition = Vector3.zero;
-            FindObjectOfType<FurnaceUI>().UpdatePreview();  // Вызов preview
-        }
-    }
-
-    public void OnPointerEnter(PointerEventData eventData)
-    {
-        if (eventData.pointerDrag != null && backgroundImage != null)
-        {
-            backgroundImage.color = highlightColor;
-        }
-    }
-
-    public void OnPointerExit(PointerEventData eventData)
-    {
-        if (backgroundImage != null)
-        {
-            backgroundImage.color = Color.white;
-        }
-    }
-}
-
------ File: \SerLemi\ignis\mirea 2.0\Ignis\Assets\Scripts\Items\ItemCategory.cs -----
-// Assets/Scripts/Items/ItemCategory.cs
-public enum ItemCategory
-{
-    Material,     // железо, медь, уголь, бронза и т.д.
-    Weapon,       // готовые мечи, кинжалы, топоры
-    Tool,         // молот, клещи, точило (если будет)
-    Consumable,   // еда, зелья, уголь для печки и т.п.
-    Other         // всё, что не подошло в другие категории
-}
-
 
