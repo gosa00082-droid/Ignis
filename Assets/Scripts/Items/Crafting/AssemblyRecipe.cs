@@ -2,10 +2,17 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum RecipeAssemblyMode
+{
+    Ordered,
+    Unordered
+}
+
 [CreateAssetMenu(menuName = "Workbench/Assembly Recipe", fileName = "NewAssemblyRecipe")]
 public class AssemblyRecipe : ScriptableObject
 {
     public string recipeId;
+    public RecipeAssemblyMode assemblyMode = RecipeAssemblyMode.Ordered;
     public List<AssemblyRecipeStep> steps = new();
 }
 

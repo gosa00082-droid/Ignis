@@ -175,7 +175,7 @@ Transform:
   m_GameObject: {fileID: 44790529}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 1, w: 0}
-  m_LocalPosition: {x: 0, y: -1.075, z: 0}
+  m_LocalPosition: {x: 0, y: -1.157, z: 0}
   m_LocalScale: {x: 1, y: 0, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -206,7 +206,7 @@ Transform:
   m_GameObject: {fileID: 210903761}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.57, z: 0}
+  m_LocalPosition: {x: 0, y: -0.633, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -762,7 +762,7 @@ GameObject:
   - component: {fileID: 849753205}
   - component: {fileID: 849753204}
   - component: {fileID: 849753203}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -785,6 +785,7 @@ MonoBehaviour:
   plugPoint: {fileID: 2055320505}
   isAttached: 0
   isFullyInserted: 0
+  firstInsertDoubleClickWindow: 0.3
 --- !u!114 &849753204
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -797,6 +798,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb2865e9f7469b94ca1324072d988051, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragHandle
+  pullOutSpeed: 0.9
 --- !u!114 &849753205
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -814,6 +816,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   surfacePadding: 0.001
+  collisionStepDistance: 0.03
 --- !u!114 &849753206
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -916,7 +919,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 849753202}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -2.73, y: 0.77, z: -4.70187}
   m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 1
@@ -968,7 +971,7 @@ GameObject:
   - component: {fileID: 1222208008}
   - component: {fileID: 1222208007}
   - component: {fileID: 1222208006}
-  m_Layer: 11
+  m_Layer: 0
   m_Name: WorkbenchSurface
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1066,10 +1069,7 @@ Transform:
   m_LocalPosition: {x: 1.21, y: -0, z: -8.65645}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1790037655}
-  - {fileID: 1416436905}
-  - {fileID: 1984347517}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1333582623
@@ -1136,7 +1136,7 @@ Transform:
   m_GameObject: {fileID: 1416436904}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: -0.5, z: 0.5, w: 0.5}
-  m_LocalPosition: {x: -1.74, y: 0.59, z: 2.23}
+  m_LocalPosition: {x: -0.53, y: 0.59, z: -6.4264503}
   m_LocalScale: {x: 0.4, y: 1.1, z: 0.4}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1144,7 +1144,7 @@ Transform:
   - {fileID: 2029564539}
   - {fileID: 2093085135}
   - {fileID: 2042684169}
-  m_Father: {fileID: 1222208009}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: -90, z: 0}
 --- !u!114 &1416436907
 MonoBehaviour:
@@ -1267,6 +1267,7 @@ MonoBehaviour:
   plugPoint: {fileID: 2042684169}
   isAttached: 0
   isFullyInserted: 0
+  firstInsertDoubleClickWindow: 0.3
 --- !u!114 &1416436912
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1284,6 +1285,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   surfacePadding: 0.001
+  collisionStepDistance: 0.03
 --- !u!114 &1416436913
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1296,6 +1298,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb2865e9f7469b94ca1324072d988051, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragHandle
+  pullOutSpeed: 0.9
 --- !u!114 &1416436914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1368,7 +1371,7 @@ Transform:
   m_GameObject: {fileID: 1622516764}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.12, z: 0}
+  m_LocalPosition: {x: 0, y: 1.37, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1406,16 +1409,16 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1790037654}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 1.73, y: 0.59, z: 0}
-  m_LocalScale: {x: 0.5, y: 1, z: 0.5}
+  m_LocalRotation: {x: 0.7071068, y: -0, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 2.94, y: 0.59, z: -8.65645}
+  m_LocalScale: {x: 0.5, y: 1, z: 0.5000001}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1466424675}
   - {fileID: 1040284315}
   - {fileID: 1333582624}
   - {fileID: 539665483}
-  m_Father: {fileID: 1222208009}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!114 &1790037656
 MonoBehaviour:
@@ -1433,6 +1436,7 @@ MonoBehaviour:
   plugPoint: {fileID: 1466424675}
   isAttached: 0
   isFullyInserted: 0
+  firstInsertDoubleClickWindow: 0.3
 --- !u!136 &1790037658
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1530,6 +1534,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   surfacePadding: 0.001
+  collisionStepDistance: 0.03
 --- !u!114 &1790037662
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1542,6 +1547,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb2865e9f7469b94ca1324072d988051, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragHandle
+  pullOutSpeed: 0.9
 --- !u!114 &1790037663
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1600,7 +1606,7 @@ GameObject:
   - component: {fileID: 1984347520}
   - component: {fileID: 1984347519}
   - component: {fileID: 1984347518}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Blade
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1616,14 +1622,14 @@ Transform:
   m_GameObject: {fileID: 1984347516}
   serializedVersion: 2
   m_LocalRotation: {x: 0.5, y: 0.5, z: -0.5, w: 0.5}
-  m_LocalPosition: {x: 1.69, y: 1.74, z: 2.14}
+  m_LocalPosition: {x: 2.9, y: 1.74, z: -6.51645}
   m_LocalScale: {x: 0.4, y: 2, z: 0.3}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 28164739}
   - {fileID: 44790530}
   - {fileID: 402846054}
-  m_Father: {fileID: 1222208009}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 90, y: 90, z: 0}
 --- !u!114 &1984347518
 MonoBehaviour:
@@ -1657,7 +1663,7 @@ MonoBehaviour:
   entryPoint: {fileID: 44790530}
   seatPoint: {fileID: 402846054}
   snapDistance: 0.6
-  clicksToInsert: 2
+  clicksToInsert: 5
   moveSpeed: 1
   rotationSpeedDeg: 360
   entryRotationOffsetEuler: {x: 0, y: 0, z: -90}
@@ -1677,6 +1683,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bb2865e9f7469b94ca1324072d988051, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DragHandle
+  pullOutSpeed: 0.9
 --- !u!114 &1984347521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1694,6 +1701,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   surfacePadding: 0.001
+  collisionStepDistance: 0.03
 --- !u!114 &1984347522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1920,5 +1928,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 467518085}
   - {fileID: 661197467}
-  - {fileID: 1222208009}
+  - {fileID: 1790037655}
+  - {fileID: 1416436905}
+  - {fileID: 1984347517}
   - {fileID: 849753210}
+  - {fileID: 1222208009}

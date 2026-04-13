@@ -21,7 +21,11 @@ public class AttachableObject : MonoBehaviour
     [SerializeField] private bool isAttached;
     [SerializeField] private bool isFullyInserted;
 
+    [Header("Первый толчок")]
+    [SerializeField] private float firstInsertDoubleClickWindow = 0.3f;
+
     private AttachmentSocket currentSocket;
+    private float lastEntryClickTime = -999f;
 
     public AttachmentType AttachableType => attachableType;
     public Transform PlugPoint => plugPoint;
@@ -31,8 +35,30 @@ public class AttachableObject : MonoBehaviour
 
     private void OnMouseDown()
     {
-        // ЛКМ по уже прикрепленному объекту = "вбиваем" дальше
-        if (isAttached && !isFullyInserted && currentSocket != null)
+        if (!isAttached || currentSocket == null)
+            return;
+
+        float progress = currentSocket.TargetProgress;
+
+        // Пока объект только защелкнулся на EntryPoint,
+        // первый толчок делаем только двойным кликом
+        if (progress <= 0.001f)
+        {
+            if (Time.time - lastEntryClickTime <= firstInsertDoubleClickWindow)
+            {
+                currentSocket.AdvanceInsertion();
+                lastEntryClickTime = -999f;
+            }
+            else
+            {
+                lastEntryClickTime = Time.time;
+            }
+
+            return;
+        }
+
+        // После первого толчка все остальные уже обычными кликами
+        if (progress < 1f)
         {
             currentSocket.AdvanceInsertion();
         }
@@ -108,13 +134,9 @@ public class AttachableObject : MonoBehaviour
         if (plugPoint == null)
             return;
 
-        // Локальная позиция PlugPoint относительно корня объекта
         Vector3 plugLocalPosition = transform.InverseTransformPoint(plugPoint.position);
-
-        // Локальный поворот PlugPoint относительно корня объекта
         Quaternion plugLocalRotation = Quaternion.Inverse(transform.rotation) * plugPoint.rotation;
 
-        // Как должен стоять корневой объект, чтобы PlugPoint совпал с целью
         Quaternion desiredRootRotation = targetPlugRotation * Quaternion.Inverse(plugLocalRotation);
         Vector3 desiredRootPosition = targetPlugPosition - desiredRootRotation * plugLocalPosition;
 

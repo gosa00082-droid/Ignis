@@ -30,27 +30,31 @@ public class AttachmentSocket : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float targetProgress;
 
     private bool completionRaised;
+    private bool isPullingOut;
 
+    public AttachableObject AttachedObject => attachedObject;
     public string SocketId => socketId;
     public Transform EntryPoint => entryPoint;
     public float SnapDistance => snapDistance;
     public bool HasAttachedObject => attachedObject != null;
+    public float TargetProgress => targetProgress;
+    public bool IsOnlySnappedAtEntry => attachedObject != null && targetProgress <= 0.001f;
 
     private void Update()
     {
         if (attachedObject == null || entryPoint == null || seatPoint == null)
             return;
 
-        Vector3 desiredPlugPosition = Vector3.Lerp(
-            entryPoint.position,
-            seatPoint.position,
-            targetProgress);
-
         Quaternion entryRotation =
             entryPoint.rotation * Quaternion.Euler(entryRotationOffsetEuler);
 
         Quaternion seatRotation =
             seatPoint.rotation * Quaternion.Euler(seatRotationOffsetEuler);
+
+        Vector3 desiredPlugPosition = Vector3.Lerp(
+            entryPoint.position,
+            seatPoint.position,
+            targetProgress);
 
         Quaternion desiredPlugRotation = Quaternion.Slerp(
             entryRotation,
@@ -73,6 +77,13 @@ public class AttachmentSocket : MonoBehaviour
                 completionRaised = true;
                 AssemblyEvents.RaiseAttachmentCompleted(this, attachedObject);
             }
+        }
+
+        if (isPullingOut &&
+            targetProgress <= 0f &&
+            attachedObject.IsCloseToPlugPose(entryPoint.position, entryRotation))
+        {
+            ReleaseAttachedObject();
         }
     }
 
@@ -106,6 +117,7 @@ public class AttachmentSocket : MonoBehaviour
         clicksDone = 0;
         targetProgress = 0f;
         completionRaised = false;
+        isPullingOut = false;
 
         attachedObject.AttachToSocket(this);
         attachedObject.SetParent(transform);
@@ -124,10 +136,74 @@ public class AttachmentSocket : MonoBehaviour
             return;
 
         clicksDone++;
+        isPullingOut = false;
 
         int safeClicks = Mathf.Max(1, clicksToInsert);
         targetProgress = clicksDone / (float)safeClicks;
         targetProgress = Mathf.Clamp01(targetProgress);
+    }
+
+    public void PullOutStep(float normalizedDelta)
+    {
+        if (attachedObject == null)
+            return;
+
+        isPullingOut = true;
+        targetProgress -= Mathf.Abs(normalizedDelta);
+        targetProgress = Mathf.Clamp01(targetProgress);
+
+        int safeClicks = Mathf.Max(1, clicksToInsert);
+        clicksDone = Mathf.RoundToInt(targetProgress * safeClicks);
+    }
+
+    public void DetachImmediatelyIfOnlySnapped()
+    {
+        if (attachedObject == null)
+            return;
+
+        if (targetProgress > 0.001f)
+            return;
+
+        ReleaseAttachedObject();
+    }
+
+    private void ReleaseAttachedObject()
+    {
+        if (attachedObject == null)
+            return;
+
+        AttachableObject detached = attachedObject;
+        attachedObject = null;
+
+        clicksDone = 0;
+        targetProgress = 0f;
+        completionRaised = false;
+        isPullingOut = false;
+
+        detached.ClearAttachment();
+        detached.transform.SetParent(null, true);
+
+        EnsureAssemblyRootOnDetached(detached.transform);
+
+        AssemblyEvents.RaiseAssemblyStateChanged();
+    }
+
+    private void EnsureAssemblyRootOnDetached(Transform detachedRootTransform)
+    {
+        if (detachedRootTransform == null)
+            return;
+
+        AssemblyRoot existingRoot = detachedRootTransform.GetComponent<AssemblyRoot>();
+        if (existingRoot == null)
+        {
+            existingRoot = detachedRootTransform.gameObject.AddComponent<AssemblyRoot>();
+        }
+
+        AssemblyRoot parentRoot = GetComponentInParent<AssemblyRoot>();
+        if (parentRoot != null)
+        {
+            existingRoot.CopySettingsFrom(parentRoot);
+        }
     }
 
     private void MergeAssemblyRoots(AttachableObject childObj)

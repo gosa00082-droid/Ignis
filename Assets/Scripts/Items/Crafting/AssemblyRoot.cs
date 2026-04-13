@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class AssemblyRoot : MonoBehaviour
@@ -12,13 +11,32 @@ public class AssemblyRoot : MonoBehaviour
     [Header("Маленький отступ от стола")]
     [SerializeField] private float surfacePadding = 0.001f;
 
+    [Header("Шаг проверки коллизии")]
+    [SerializeField] private float collisionStepDistance = 0.03f;
+
     private Camera mainCamera;
     private bool isDragging;
     private Vector3 horizontalOffset;
 
+    public Transform DragPlaneReference => dragPlaneReference;
+    public LayerMask BlockingMask => blockingMask;
+    public float SurfacePadding => surfacePadding;
+    public float CollisionStepDistance => collisionStepDistance;
+
     private void Awake()
     {
         mainCamera = Camera.main;
+    }
+
+    public void CopySettingsFrom(AssemblyRoot other)
+    {
+        if (other == null)
+            return;
+
+        dragPlaneReference = other.dragPlaneReference;
+        blockingMask = other.blockingMask;
+        surfacePadding = other.surfacePadding;
+        collisionStepDistance = other.collisionStepDistance;
     }
 
     public void BeginDrag()
@@ -63,17 +81,36 @@ public class AssemblyRoot : MonoBehaviour
             targetY,
             planePoint.z + horizontalOffset.z);
 
-        Vector3 delta = targetPosition - transform.position;
-
-        if (!WouldCollideAt(delta))
-        {
-            transform.position = targetPosition;
-        }
+        MoveWithCollision(targetPosition);
     }
 
     public void EndDrag()
     {
         isDragging = false;
+    }
+
+    private void MoveWithCollision(Vector3 targetPosition)
+    {
+        Vector3 start = transform.position;
+        Vector3 delta = targetPosition - start;
+
+        float safeStep = Mathf.Max(0.001f, collisionStepDistance);
+        int steps = Mathf.Max(1, Mathf.CeilToInt(delta.magnitude / safeStep));
+
+        Vector3 lastSafePosition = start;
+
+        for (int i = 1; i <= steps; i++)
+        {
+            Vector3 candidate = Vector3.Lerp(start, targetPosition, i / (float)steps);
+            Vector3 testDelta = candidate - start;
+
+            if (WouldCollideAt(testDelta))
+                break;
+
+            lastSafePosition = candidate;
+        }
+
+        transform.position = lastSafePosition;
     }
 
     private float CalculateTargetY()
@@ -203,7 +240,6 @@ public class AssemblyRoot : MonoBehaviour
             if (hit == null)
                 continue;
 
-            // Свои коллайдеры игнорируем
             if (hit.transform.IsChildOf(transform))
                 continue;
 
@@ -216,9 +252,7 @@ public class AssemblyRoot : MonoBehaviour
     private void GetCapsuleWorldData(CapsuleCollider capsule, Vector3 delta, out Vector3 p0, out Vector3 p1, out float radius)
     {
         Transform t = capsule.transform;
-
         Vector3 center = t.TransformPoint(capsule.center) + delta;
-
         Vector3 lossy = Abs(t.lossyScale);
 
         Vector3 axis;

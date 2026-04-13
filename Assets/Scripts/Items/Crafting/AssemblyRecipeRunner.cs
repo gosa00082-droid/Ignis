@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class AssemblyRecipeRunner : MonoBehaviour
@@ -8,16 +9,21 @@ public class AssemblyRecipeRunner : MonoBehaviour
     [SerializeField] private int currentStepIndex;
     [SerializeField] private bool isCompleted;
 
+    private readonly List<int> completedStepIndices = new();
+
     public bool IsCompleted => isCompleted;
 
     private void OnEnable()
     {
         AssemblyEvents.AttachmentCompleted += OnAttachmentCompleted;
+        AssemblyEvents.AssemblyStateChanged += RebuildState;
+        RebuildState();
     }
 
     private void OnDisable()
     {
         AssemblyEvents.AttachmentCompleted -= OnAttachmentCompleted;
+        AssemblyEvents.AssemblyStateChanged -= RebuildState;
     }
 
     public bool CanAcceptStep(AttachmentSocket socket, AttachableObject childObject)
@@ -25,16 +31,21 @@ public class AssemblyRecipeRunner : MonoBehaviour
         if (recipe == null)
             return true;
 
-        if (isCompleted)
-            return false;
+        RebuildState();
 
-        if (currentStepIndex < 0 || currentStepIndex >= recipe.steps.Count)
-            return false;
+        if (isCompleted)
+            return true;
 
         WorkbenchPart parentPart = socket.GetComponentInParent<WorkbenchPart>();
         WorkbenchPart childPart = childObject.GetComponent<WorkbenchPart>();
 
         if (parentPart == null || childPart == null)
+            return false;
+
+        if (recipe.assemblyMode == RecipeAssemblyMode.Unordered)
+            return true;
+
+        if (currentStepIndex < 0 || currentStepIndex >= recipe.steps.Count)
             return false;
 
         return StepMatches(recipe.steps[currentStepIndex], socket, parentPart, childPart);
@@ -42,31 +53,85 @@ public class AssemblyRecipeRunner : MonoBehaviour
 
     private void OnAttachmentCompleted(AttachmentSocket socket, AttachableObject childObject)
     {
-        if (recipe == null || isCompleted)
+        RebuildState();
+    }
+
+    private void RebuildState()
+    {
+        completedStepIndices.Clear();
+        currentStepIndex = 0;
+        isCompleted = false;
+
+        if (recipe == null)
             return;
 
-        if (!socket.transform.IsChildOf(transform))
+        AttachmentSocket[] sockets = GetComponentsInChildren<AttachmentSocket>(true);
+
+        if (recipe.assemblyMode == RecipeAssemblyMode.Unordered)
+        {
+            for (int i = 0; i < recipe.steps.Count; i++)
+            {
+                if (HasMatchingCompletedConnection(recipe.steps[i], sockets))
+                {
+                    completedStepIndices.Add(i);
+                }
+            }
+
+            if (completedStepIndices.Count >= recipe.steps.Count)
+            {
+                isCompleted = true;
+            }
+
             return;
+        }
 
-        if (currentStepIndex < 0 || currentStepIndex >= recipe.steps.Count)
-            return;
-
-        WorkbenchPart parentPart = socket.GetComponentInParent<WorkbenchPart>();
-        WorkbenchPart childPart = childObject.GetComponent<WorkbenchPart>();
-
-        if (parentPart == null || childPart == null)
-            return;
-
-        if (!StepMatches(recipe.steps[currentStepIndex], socket, parentPart, childPart))
-            return;
-
-        currentStepIndex++;
+        // Ordered
+        for (int i = 0; i < recipe.steps.Count; i++)
+        {
+            if (HasMatchingCompletedConnection(recipe.steps[i], sockets))
+            {
+                currentStepIndex++;
+            }
+            else
+            {
+                break;
+            }
+        }
 
         if (currentStepIndex >= recipe.steps.Count)
         {
             isCompleted = true;
-            Debug.Log($"Рецепт [{recipe.recipeId}] завершен.");
         }
+    }
+
+    private bool HasMatchingCompletedConnection(AssemblyRecipeStep step, AttachmentSocket[] sockets)
+    {
+        foreach (AttachmentSocket socket in sockets)
+        {
+            if (socket == null)
+                continue;
+
+            if (!socket.HasAttachedObject)
+                continue;
+
+            if (socket.TargetProgress < 1f)
+                continue;
+
+            AttachableObject childObject = socket.AttachedObject;
+            if (childObject == null)
+                continue;
+
+            WorkbenchPart parentPart = socket.GetComponentInParent<WorkbenchPart>();
+            WorkbenchPart childPart = childObject.GetComponent<WorkbenchPart>();
+
+            if (parentPart == null || childPart == null)
+                continue;
+
+            if (StepMatches(step, socket, parentPart, childPart))
+                return true;
+        }
+
+        return false;
     }
 
     private bool StepMatches(
