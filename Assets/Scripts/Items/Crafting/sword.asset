@@ -12,5 +12,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3c62117823b6ed459986c95df741fea, type: 3}
   m_Name: sword
   m_EditorClassIdentifier: Assembly-CSharp::AssemblyRecipe
-  recipeId: 
-  steps: []
+  recipeId: AssemblyRecipe
+  steps:
+  - stepName: Put Guard On Blade
+    socketId: Blade_Guard_Socket
+    parentType: 3
+    parentPartId: blade_basic
+    childType: 1
+    childPartId: guard_basic
+  - stepName: Put Handle On Guard
+    socketId: Guard_Handle_Socket
+    parentType: 1
+    parentPartId: guard_basic
+    childType: 2
+    childPartId: handle_basic
+  - stepName: Put Pommel On Handle
+    socketId: Handle_Pommel_Socket
+    parentType: 2
+    parentPartId: handle_basic
+    childType: 4
+    childPartId: pommel_basic
