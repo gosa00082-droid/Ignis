@@ -1,298 +1,184 @@
 using UnityEngine;
 
+[RequireComponent(typeof(PhysicsItem))]
 public class AssemblyRoot : MonoBehaviour
 {
-    [Header("Плоскость перетаскивания")]
-    [SerializeField] private Transform dragPlaneReference;
+    [SerializeField] private bool debugLogs = true;
+    [SerializeField] private bool isActiveRoot = true;
 
-    [Header("С чем нельзя пересекаться")]
-    [SerializeField] private LayerMask blockingMask;
+    private PhysicsItem physicsItem;
 
-    [Header("Маленький отступ от стола")]
-    [SerializeField] private float surfacePadding = 0.001f;
-
-    [Header("Шаг проверки коллизии")]
-    [SerializeField] private float collisionStepDistance = 0.03f;
-
-    private Camera mainCamera;
-    private bool isDragging;
-    private Vector3 horizontalOffset;
-
-    public Transform DragPlaneReference => dragPlaneReference;
-    public LayerMask BlockingMask => blockingMask;
-    public float SurfacePadding => surfacePadding;
-    public float CollisionStepDistance => collisionStepDistance;
+    public bool IsActiveRoot => isActiveRoot;
+    public PhysicsItem PhysicsItem => physicsItem;
 
     private void Awake()
     {
-        mainCamera = Camera.main;
+        physicsItem = GetComponent<PhysicsItem>();
     }
 
-    public void CopySettingsFrom(AssemblyRoot other)
+    public static AssemblyRoot FindActiveRoot(Transform from)
     {
-        if (other == null)
-            return;
+        if (from == null)
+            return null;
 
-        dragPlaneReference = other.dragPlaneReference;
-        blockingMask = other.blockingMask;
-        surfacePadding = other.surfacePadding;
-        collisionStepDistance = other.collisionStepDistance;
+        AssemblyRoot[] roots = from.GetComponentsInParent<AssemblyRoot>(true);
+        foreach (AssemblyRoot root in roots)
+        {
+            if (root != null && root.isActiveRoot)
+                return root;
+        }
+
+        return null;
     }
 
-    public void BeginDrag()
+    public void RefreshWorkbenchLock()
     {
-        if (mainCamera == null)
-            mainCamera = Camera.main;
+        if (physicsItem == null)
+            physicsItem = GetComponent<PhysicsItem>();
 
-        if (mainCamera == null)
+        bool shouldLock = HasIncompleteSocketInAssembly();
+        physicsItem?.SetWorkbenchLocked(shouldLock);
+
+        if (debugLogs)
         {
-            Debug.LogError("На сцене нет MainCamera.");
-            return;
-        }
-
-        if (dragPlaneReference == null)
-        {
-            Debug.LogError($"[{name}] Не назначен DragPlaneReference.");
-            return;
-        }
-
-        if (TryGetPointOnDragPlane(out Vector3 planePoint))
-        {
-            isDragging = true;
-
-            horizontalOffset = new Vector3(
-                transform.position.x - planePoint.x,
-                0f,
-                transform.position.z - planePoint.z);
+            Debug.Log($"[AssemblyRoot.RefreshWorkbenchLock] root={name}, shouldLock={shouldLock}");
         }
     }
 
-    public void DragToMouse()
+    private bool HasIncompleteSocketInAssembly()
     {
-        if (!isDragging)
-            return;
+        AttachmentSocket[] sockets = GetComponentsInChildren<AttachmentSocket>(true);
 
-        if (!TryGetPointOnDragPlane(out Vector3 planePoint))
-            return;
-
-        float targetY = CalculateTargetY();
-        Vector3 targetPosition = new Vector3(
-            planePoint.x + horizontalOffset.x,
-            targetY,
-            planePoint.z + horizontalOffset.z);
-
-        MoveWithCollision(targetPosition);
-    }
-
-    public void EndDrag()
-    {
-        isDragging = false;
-    }
-
-    private void MoveWithCollision(Vector3 targetPosition)
-    {
-        Vector3 start = transform.position;
-        Vector3 delta = targetPosition - start;
-
-        float safeStep = Mathf.Max(0.001f, collisionStepDistance);
-        int steps = Mathf.Max(1, Mathf.CeilToInt(delta.magnitude / safeStep));
-
-        Vector3 lastSafePosition = start;
-
-        for (int i = 1; i <= steps; i++)
+        foreach (AttachmentSocket socket in sockets)
         {
-            Vector3 candidate = Vector3.Lerp(start, targetPosition, i / (float)steps);
-            Vector3 testDelta = candidate - start;
-
-            if (WouldCollideAt(testDelta))
-                break;
-
-            lastSafePosition = candidate;
-        }
-
-        transform.position = lastSafePosition;
-    }
-
-    private float CalculateTargetY()
-    {
-        WorkbenchPart[] parts = GetComponentsInChildren<WorkbenchPart>(true);
-
-        bool foundAnyBottomPoint = false;
-        float minOffsetY = float.MaxValue;
-
-        foreach (WorkbenchPart part in parts)
-        {
-            if (part == null || part.BottomPoints == null)
+            if (socket == null)
                 continue;
 
-            foreach (Transform bottomPoint in part.BottomPoints)
-            {
-                if (bottomPoint == null)
-                    continue;
-
-                float offsetY = bottomPoint.position.y - transform.position.y;
-
-                if (offsetY < minOffsetY)
-                {
-                    minOffsetY = offsetY;
-                    foundAnyBottomPoint = true;
-                }
-            }
-        }
-
-        float planeY = dragPlaneReference.position.y;
-
-        if (!foundAnyBottomPoint)
-            return planeY + surfacePadding;
-
-        return planeY - minOffsetY + surfacePadding;
-    }
-
-    private bool TryGetPointOnDragPlane(out Vector3 point)
-    {
-        point = Vector3.zero;
-
-        if (mainCamera == null || dragPlaneReference == null)
-            return false;
-
-        Plane dragPlane = new Plane(Vector3.up, dragPlaneReference.position);
-        Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
-
-        if (dragPlane.Raycast(ray, out float enter))
-        {
-            point = ray.GetPoint(enter);
-            return true;
-        }
-
-        return false;
-    }
-
-    private bool WouldCollideAt(Vector3 delta)
-    {
-        Collider[] ownColliders = GetComponentsInChildren<Collider>(true);
-
-        foreach (Collider own in ownColliders)
-        {
-            if (own == null || !own.enabled || own.isTrigger)
-                continue;
-
-            if (CheckSingleColliderOverlap(own, delta))
+            if (socket.HasAttachedObject && socket.TargetProgress < 1f)
                 return true;
         }
 
         return false;
     }
 
-    private bool CheckSingleColliderOverlap(Collider own, Vector3 delta)
+    public void BeginDrag(Transform clickedTransform)
     {
-        Collider[] overlaps;
-
-        if (own is BoxCollider box)
+        if (debugLogs)
         {
-            Vector3 center = box.transform.TransformPoint(box.center) + delta;
-            Vector3 halfExtents = Vector3.Scale(box.size * 0.5f, Abs(box.transform.lossyScale));
-
-            overlaps = Physics.OverlapBox(
-                center,
-                halfExtents,
-                box.transform.rotation,
-                blockingMask,
-                QueryTriggerInteraction.Ignore);
-        }
-        else if (own is SphereCollider sphere)
-        {
-            Vector3 center = sphere.transform.TransformPoint(sphere.center) + delta;
-            float radius = sphere.radius * MaxAbs(sphere.transform.lossyScale);
-
-            overlaps = Physics.OverlapSphere(
-                center,
-                radius,
-                blockingMask,
-                QueryTriggerInteraction.Ignore);
-        }
-        else if (own is CapsuleCollider capsule)
-        {
-            GetCapsuleWorldData(capsule, delta, out Vector3 p0, out Vector3 p1, out float radius);
-
-            overlaps = Physics.OverlapCapsule(
-                p0,
-                p1,
-                radius,
-                blockingMask,
-                QueryTriggerInteraction.Ignore);
-        }
-        else
-        {
-            Bounds b = own.bounds;
-            Vector3 center = b.center + delta;
-            Vector3 halfExtents = b.extents;
-
-            overlaps = Physics.OverlapBox(
-                center,
-                halfExtents,
-                own.transform.rotation,
-                blockingMask,
-                QueryTriggerInteraction.Ignore);
+            Debug.Log(
+                $"[AssemblyRoot.BeginDrag] root={name}, clicked={clickedTransform?.name}, " +
+                $"isActiveRoot={isActiveRoot}, hasPhysicsItem={physicsItem != null}");
         }
 
-        foreach (Collider hit in overlaps)
+        if (!isActiveRoot || physicsItem == null)
         {
-            if (hit == null)
-                continue;
+            if (debugLogs)
+                Debug.Log($"[AssemblyRoot.BeginDrag] STOP: root inactive or no PhysicsItem on {name}");
+            return;
+        }
 
-            if (hit.transform.IsChildOf(transform))
-                continue;
+        bool canStart = CanStartDragFrom(clickedTransform);
 
+        if (debugLogs)
+        {
+            Debug.Log(
+                $"[AssemblyRoot.BeginDrag] root={name}, clicked={clickedTransform?.name}, canStartDrag={canStart}");
+        }
+
+        if (!canStart)
+            return;
+
+        if (debugLogs)
+            Debug.Log($"[AssemblyRoot.BeginDrag] START DRAG on root={name}");
+
+        physicsItem.BeginGrab(clickedTransform);
+    }
+
+    public void DragToMouse()
+    {
+        if (!isActiveRoot || physicsItem == null)
+            return;
+
+        physicsItem.RefreshGrabTargetFromInput();
+    }
+
+    public void EndDrag()
+    {
+        if (!isActiveRoot || physicsItem == null)
+            return;
+
+        physicsItem.EndGrab();
+    }
+
+    public void AbsorbChildRoot(AssemblyRoot childRoot)
+    {
+        if (childRoot == null || childRoot == this)
+            return;
+
+        childRoot.isActiveRoot = false;
+
+        if (childRoot.physicsItem == null)
+            childRoot.physicsItem = childRoot.GetComponent<PhysicsItem>();
+
+        childRoot.physicsItem?.SetAttachedToParentAssembly(true);
+    }
+
+    public void ReleaseAsStandalone()
+    {
+        isActiveRoot = true;
+
+        if (physicsItem == null)
+            physicsItem = GetComponent<PhysicsItem>();
+
+        physicsItem?.SetAttachedToParentAssembly(false);
+    }
+
+    private bool CanStartDragFrom(Transform clickedTransform)
+    {
+        // Если в сборке есть незавершенная вставка — вся сборка закреплена.
+        if (HasIncompleteSocketInAssembly())
+        {
+            if (debugLogs)
+                Debug.Log($"[AssemblyRoot.CanStartDragFrom] BLOCK DRAG because assembly has incomplete socket on {name}");
+            return false;
+        }
+
+        if (clickedTransform == null)
+        {
+            if (debugLogs)
+                Debug.Log($"[AssemblyRoot.CanStartDragFrom] clickedTransform is null on root={name}");
             return true;
         }
 
-        return false;
-    }
+        AttachableObject attachable = clickedTransform.GetComponentInParent<AttachableObject>();
 
-    private void GetCapsuleWorldData(CapsuleCollider capsule, Vector3 delta, out Vector3 p0, out Vector3 p1, out float radius)
-    {
-        Transform t = capsule.transform;
-        Vector3 center = t.TransformPoint(capsule.center) + delta;
-        Vector3 lossy = Abs(t.lossyScale);
-
-        Vector3 axis;
-        float axisScale;
-        float radiusScale;
-
-        switch (capsule.direction)
+        if (attachable == null)
         {
-            case 0:
-                axis = t.right;
-                axisScale = lossy.x;
-                radiusScale = Mathf.Max(lossy.y, lossy.z);
-                break;
-            case 1:
-                axis = t.up;
-                axisScale = lossy.y;
-                radiusScale = Mathf.Max(lossy.x, lossy.z);
-                break;
-            default:
-                axis = t.forward;
-                axisScale = lossy.z;
-                radiusScale = Mathf.Max(lossy.x, lossy.y);
-                break;
+            if (debugLogs)
+                Debug.Log($"[AssemblyRoot.CanStartDragFrom] no AttachableObject found from {clickedTransform.name}");
+            return true;
         }
 
-        radius = capsule.radius * radiusScale;
-        float height = Mathf.Max(capsule.height * axisScale, radius * 2f);
-        float halfSegment = Mathf.Max(0f, height * 0.5f - radius);
+        if (debugLogs)
+        {
+            string socketName = attachable.CurrentSocket != null ? attachable.CurrentSocket.name : "null";
+            float progress = attachable.CurrentSocket != null ? attachable.CurrentSocket.TargetProgress : -1f;
 
-        p0 = center + axis * halfSegment;
-        p1 = center - axis * halfSegment;
-    }
+            Debug.Log(
+                $"[AssemblyRoot.CanStartDragFrom] clicked={clickedTransform.name}, attachable={attachable.name}, " +
+                $"isAttached={attachable.IsAttached}, socket={socketName}, progress={progress}");
+        }
 
-    private Vector3 Abs(Vector3 v)
-    {
-        return new Vector3(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
-    }
+        if (!attachable.IsAttached || attachable.CurrentSocket == null)
+            return true;
 
-    private float MaxAbs(Vector3 v)
-    {
-        return Mathf.Max(Mathf.Abs(v.x), Mathf.Abs(v.y), Mathf.Abs(v.z));
+        if (attachable.CurrentSocket.TargetProgress < 1f)
+        {
+            if (debugLogs)
+                Debug.Log($"[AssemblyRoot.CanStartDragFrom] BLOCK DRAG because progress < 1 on {attachable.name}");
+            return false;
+        }
+
+        return true;
     }
 }

@@ -5,19 +5,12 @@ public class DragHandle : MonoBehaviour
     [Header("Скорость вытягивания из сокета")]
     [SerializeField] private float pullOutSpeed = 0.9f;
 
+    [Header("Дебаг")]
+    [SerializeField] private bool debugLogs = true;
+
     private AssemblyRoot activeRoot;
-    private AttachableObject ownAttachable;
-
+    private AttachableObject activeAttachable;
     private bool isPullDragging;
-    private bool isEntryDetachDrag;
-
-    private void Awake()
-    {
-        ownAttachable = GetComponent<AttachableObject>();
-
-        if (ownAttachable == null)
-            ownAttachable = GetComponentInParent<AttachableObject>();
-    }
 
     private void Update()
     {
@@ -26,93 +19,95 @@ public class DragHandle : MonoBehaviour
 
     private void OnMouseDown()
     {
-        if (ownAttachable != null &&
-            ownAttachable.IsAttached &&
-            ownAttachable.CurrentSocket != null)
+        Transform clickedTransform = GetRealMouseHitTransform();
+        if (clickedTransform == null)
+            clickedTransform = transform;
+
+        AttachableObject clickedAttachable = clickedTransform.GetComponentInParent<AttachableObject>();
+        activeAttachable = clickedAttachable;
+
+        if (debugLogs)
         {
-            float progress = ownAttachable.CurrentSocket.TargetProgress;
-
-            // Если объект только защелкнулся на входе,
-            // ЛКМ оставляем для возможного "увести зажатием"
-            if (progress <= 0.001f)
-            {
-                isEntryDetachDrag = true;
-                return;
-            }
-
-            // Если уже начали вбивать, но еще не довели до конца,
-            // ЛКМ не drag, а клики на вбивание
-            if (progress < 1f)
-            {
-                return;
-            }
+            Debug.Log(
+                $"[DragHandle.OnMouseDown] scriptObject={name}, realHit={clickedTransform.name}, " +
+                $"attachable={(clickedAttachable != null ? clickedAttachable.name : "null")}, " +
+                $"isAttached={(clickedAttachable != null && clickedAttachable.IsAttached)}, " +
+                $"socket={(clickedAttachable != null && clickedAttachable.CurrentSocket != null ? clickedAttachable.CurrentSocket.name : "null")}, " +
+                $"progress={(clickedAttachable != null && clickedAttachable.CurrentSocket != null ? clickedAttachable.CurrentSocket.TargetProgress : -1f)}");
         }
 
-        activeRoot = GetComponentInParent<AssemblyRoot>();
-
-        if (activeRoot != null)
+        // Если кликнули по детали, которая уже сидит в сокете, но не вставлена до конца,
+        // ЛКМ должна не таскать, а выполнять шаг вставления.
+        if (clickedAttachable != null &&
+            clickedAttachable.IsAttached &&
+            clickedAttachable.CurrentSocket != null &&
+            clickedAttachable.CurrentSocket.TargetProgress < 1f)
         {
-            activeRoot.BeginDrag();
+            if (debugLogs)
+                Debug.Log($"[DragHandle.OnMouseDown] HandleInsertionClick on {clickedAttachable.name}");
+
+            clickedAttachable.HandleInsertionClick();
+            return;
         }
+
+        activeRoot = AssemblyRoot.FindActiveRoot(clickedTransform);
+
+        if (debugLogs)
+        {
+            Debug.Log(
+                $"[DragHandle.OnMouseDown] activeRoot={(activeRoot != null ? activeRoot.name : "null")} " +
+                $"from realHit={clickedTransform.name}");
+        }
+
+        activeRoot?.BeginDrag(clickedTransform);
     }
 
     private void OnMouseDrag()
     {
-        if (isEntryDetachDrag &&
-            ownAttachable != null &&
-            ownAttachable.IsAttached &&
-            ownAttachable.CurrentSocket != null &&
-            ownAttachable.CurrentSocket.IsOnlySnappedAtEntry)
-        {
-            ownAttachable.CurrentSocket.DetachImmediatelyIfOnlySnapped();
-
-            if (activeRoot == null)
-            {
-                activeRoot = GetComponentInParent<AssemblyRoot>();
-                if (activeRoot != null)
-                {
-                    activeRoot.BeginDrag();
-                }
-            }
-
-            if (activeRoot != null)
-            {
-                activeRoot.DragToMouse();
-            }
-
-            return;
-        }
-
-        if (activeRoot != null)
-        {
-            activeRoot.DragToMouse();
-        }
+        activeRoot?.DragToMouse();
     }
 
     private void OnMouseUp()
     {
-        if (activeRoot != null)
-        {
-            activeRoot.EndDrag();
-        }
+        activeRoot?.EndDrag();
 
-        if (ownAttachable != null && !ownAttachable.IsAttached)
+        if (activeAttachable != null && !activeAttachable.IsAttached)
         {
-            ownAttachable.TrySnapToNearestSocket();
+            if (debugLogs)
+                Debug.Log($"[DragHandle.OnMouseUp] TrySnapToNearestSocket on {activeAttachable.name}");
+
+            activeAttachable.TrySnapToNearestSocket();
         }
 
         activeRoot = null;
-        isEntryDetachDrag = false;
+        activeAttachable = null;
     }
 
     private void OnMouseOver()
     {
-        if (Input.GetMouseButtonDown(1) &&
-            ownAttachable != null &&
-            ownAttachable.IsAttached &&
-            ownAttachable.CurrentSocket != null &&
-            ownAttachable.CurrentSocket.TargetProgress > 0.001f)
+        if (!Input.GetMouseButtonDown(1))
+            return;
+
+        Transform hoveredTransform = GetRealMouseHitTransform();
+        if (hoveredTransform == null)
+            hoveredTransform = transform;
+
+        AttachableObject hoveredAttachable = hoveredTransform.GetComponentInParent<AttachableObject>();
+
+        if (debugLogs)
         {
+            Debug.Log(
+                $"[DragHandle.OnMouseOver RMB] scriptObject={name}, realHit={hoveredTransform.name}, " +
+                $"attachable={(hoveredAttachable != null ? hoveredAttachable.name : "null")}, " +
+                $"isAttached={(hoveredAttachable != null && hoveredAttachable.IsAttached)}, " +
+                $"progress={(hoveredAttachable != null && hoveredAttachable.CurrentSocket != null ? hoveredAttachable.CurrentSocket.TargetProgress : -1f)}");
+        }
+
+        if (hoveredAttachable != null &&
+            hoveredAttachable.IsAttached &&
+            hoveredAttachable.CurrentSocket != null)
+        {
+            activeAttachable = hoveredAttachable;
             isPullDragging = true;
         }
     }
@@ -124,45 +119,112 @@ public class DragHandle : MonoBehaviour
 
         if (Input.GetMouseButton(1))
         {
-            if (ownAttachable != null &&
-                ownAttachable.IsAttached &&
-                ownAttachable.CurrentSocket != null)
+            if (activeAttachable != null &&
+                activeAttachable.IsAttached &&
+                activeAttachable.CurrentSocket != null)
             {
-                ownAttachable.CurrentSocket.PullOutStep(pullOutSpeed * Time.deltaTime);
+                if (debugLogs)
+                {
+                    Debug.Log(
+                        $"[DragHandle.HandleRightMousePull] attachable={activeAttachable.name}, " +
+                        $"progress={activeAttachable.CurrentSocket.TargetProgress}");
+                }
+
+                if (activeAttachable.CurrentSocket.TargetProgress <= 0.001f)
+                {
+                    if (debugLogs)
+                        Debug.Log($"[DragHandle.HandleRightMousePull] DetachImmediatelyIfOnlySnapped on {activeAttachable.name}");
+
+                    activeAttachable.CurrentSocket.DetachImmediatelyIfOnlySnapped();
+
+                    Transform hitAfterDetach = GetRealMouseHitTransform();
+                    if (hitAfterDetach == null)
+                        hitAfterDetach = activeAttachable.transform;
+
+                    if (activeRoot == null)
+                    {
+                        activeRoot = AssemblyRoot.FindActiveRoot(hitAfterDetach);
+
+                        if (debugLogs)
+                        {
+                            Debug.Log(
+                                $"[DragHandle.HandleRightMousePull] activeRoot after detach = " +
+                                $"{(activeRoot != null ? activeRoot.name : "null")}, hitAfterDetach={hitAfterDetach.name}");
+                        }
+
+                        activeRoot?.BeginDrag(hitAfterDetach);
+                    }
+
+                    activeRoot?.DragToMouse();
+                }
+                else
+                {
+                    if (debugLogs)
+                        Debug.Log($"[DragHandle.HandleRightMousePull] PullOutStep on {activeAttachable.name}");
+
+                    activeAttachable.CurrentSocket.PullOutStep(pullOutSpeed * Time.deltaTime);
+                }
             }
             else
             {
+                Transform hoveredTransform = GetRealMouseHitTransform();
+                if (hoveredTransform == null && activeAttachable != null)
+                    hoveredTransform = activeAttachable.transform;
+                if (hoveredTransform == null)
+                    hoveredTransform = transform;
+
                 if (activeRoot == null)
                 {
-                    activeRoot = GetComponentInParent<AssemblyRoot>();
+                    activeRoot = AssemblyRoot.FindActiveRoot(hoveredTransform);
 
-                    if (activeRoot != null)
+                    if (debugLogs)
                     {
-                        activeRoot.BeginDrag();
+                        Debug.Log(
+                            $"[DragHandle.HandleRightMousePull] free drag activeRoot=" +
+                            $"{(activeRoot != null ? activeRoot.name : "null")} from {hoveredTransform.name}");
                     }
+
+                    activeRoot?.BeginDrag(hoveredTransform);
                 }
 
-                if (activeRoot != null)
-                {
-                    activeRoot.DragToMouse();
-                }
+                activeRoot?.DragToMouse();
             }
         }
 
         if (Input.GetMouseButtonUp(1))
         {
-            if (activeRoot != null)
-            {
-                activeRoot.EndDrag();
-            }
+            if (debugLogs)
+                Debug.Log("[DragHandle.HandleRightMousePull] RMB UP");
 
-            if (ownAttachable != null && !ownAttachable.IsAttached)
+            activeRoot?.EndDrag();
+
+            if (activeAttachable != null && !activeAttachable.IsAttached)
             {
-                ownAttachable.TrySnapToNearestSocket();
+                if (debugLogs)
+                    Debug.Log($"[DragHandle.HandleRightMousePull] TrySnapToNearestSocket on {activeAttachable.name}");
+
+                activeAttachable.TrySnapToNearestSocket();
             }
 
             activeRoot = null;
+            activeAttachable = null;
             isPullDragging = false;
         }
+    }
+
+    private Transform GetRealMouseHitTransform()
+    {
+        Camera cam = Camera.main;
+        if (cam == null)
+            return null;
+
+        Ray ray = cam.ScreenPointToRay(Input.mousePosition);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, 1000f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+        {
+            return hit.collider != null ? hit.collider.transform : null;
+        }
+
+        return null;
     }
 }
