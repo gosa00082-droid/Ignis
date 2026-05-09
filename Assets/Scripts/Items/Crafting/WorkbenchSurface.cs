@@ -5,11 +5,11 @@ public class WorkbenchSurface : MonoBehaviour
 {
     public static WorkbenchSurface Instance { get; private set; }
 
-    [Header("Границы стола")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private BoxCollider tableBounds;
     [SerializeField] private float boundsPadding = 0.05f;
 
-    [Header("Возврат предметов")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private float rescueBelowSurfaceOffset = -1.0f;
     [SerializeField] private float rescueBoundsExtra = 0.35f;
 
@@ -19,13 +19,22 @@ public class WorkbenchSurface : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Debug.LogWarning("На сцене больше одного WorkbenchSurface. Будет использоваться последний Awake().");
+            Debug.LogWarning("РќР° СЃС†РµРЅРµ Р±РѕР»СЊС€Рµ РѕРґРЅРѕРіРѕ WorkbenchSurface. Р‘СѓРґРµС‚ РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊСЃСЏ РїРѕСЃР»РµРґРЅРёР№ Awake().");
         }
 
         Instance = this;
 
         if (tableBounds == null)
             tableBounds = GetComponent<BoxCollider>();
+
+        if (tableBounds != null)
+        {
+            Debug.Log($"[WorkbenchSurface.Awake] Initialized on {name}: SurfaceY={SurfaceY}, bounds.center={tableBounds.bounds.center}, bounds.size={tableBounds.bounds.size}");
+        }
+        else
+        {
+            Debug.LogError($"[WorkbenchSurface.Awake] tableBounds is NULL on {name}!");
+        }
     }
 
     public bool TryGetMousePoint(Camera cam, out Vector3 point)

@@ -95,7 +95,8 @@ public class PhysicsItem : MonoBehaviour
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         }
 
-        CacheSafePose();
+        // Не кешируем позицию в Awake, т.к. surface может быть null
+        // CacheSafePose();
     }
 
     private void Start()
@@ -105,6 +106,18 @@ public class PhysicsItem : MonoBehaviour
 
         if (mainCamera == null)
             mainCamera = Camera.main;
+
+        // Инициализируем безопасную позицию в Start, когда surface точно инициализирован
+        if (surface != null)
+        {
+            lastSafePosition = transform.position;
+            lastSafeRotation = transform.rotation;
+            Debug.Log($"[PhysicsItem.Start] Initialized safe pose for {name}: pos={lastSafePosition}, surface.SurfaceY={surface.SurfaceY}");
+        }
+        else
+        {
+            Debug.LogError($"[PhysicsItem.Start] WorkbenchSurface.Instance is NULL for {name}!");
+        }
     }
 
     private void Update()
@@ -159,10 +172,14 @@ public class PhysicsItem : MonoBehaviour
 
         activeGrabPivot = ResolveGrabPivot(clickedTransform);
         grabPivotLocalPoint = transform.InverseTransformPoint(activeGrabPivot.position);
+        
+        float lowestY = GetLowestWorldYForPose(transform.position, transform.rotation);
         liftOffset = Mathf.Clamp(
-            GetLowestWorldYForPose(transform.position, transform.rotation) - surface.SurfaceY - surfacePadding,
+            lowestY - surface.SurfaceY - surfacePadding,
             minLift,
             maxLift);
+
+        Debug.Log($"[PhysicsItem.BeginGrab] {name}: lowestY={lowestY}, surfaceY={surface.SurfaceY}, liftOffset={liftOffset}, minLift={minLift}, maxLift={maxLift}");
 
         targetGrabRotation = transform.rotation;
         targetGrabPosition = transform.position;
@@ -436,6 +453,8 @@ public class PhysicsItem : MonoBehaviour
             return;
         }
 
+        Debug.Log($"[PhysicsItem.StartReturn] Starting return for {name}, lastSafePosition={lastSafePosition}, currentPosition={transform.position}");
+
         isReturning = true;
         outOfBoundsTimer = 0f;
 
@@ -446,12 +465,19 @@ public class PhysicsItem : MonoBehaviour
             returnFinalPoint = ApplySurfaceHeight(lastSafePosition, lastSafeRotation);
             activeGrabPivot = null;
             returnTargetRotation = lastSafeRotation;
+            Debug.LogWarning($"[PhysicsItem.StartReturn] Could not find return destination, using lastSafePosition: {returnFinalPoint}");
+        }
+        else
+        {
+            Debug.Log($"[PhysicsItem.StartReturn] Found return destination: {returnFinalPoint}");
         }
 
         float cruiseY = Mathf.Max(transform.position.y, returnFinalPoint.y, GetReturnCruiseHeight());
         returnLiftPoint = new Vector3(transform.position.x, cruiseY, transform.position.z);
         returnTravelPoint = new Vector3(returnFinalPoint.x, cruiseY, returnFinalPoint.z);
         returnPhase = ReturnPhase.Lift;
+
+        Debug.Log($"[PhysicsItem.StartReturn] Return path: Lift={returnLiftPoint}, Travel={returnTravelPoint}, Final={returnFinalPoint}");
 
         ZeroBodyVelocity();
         rb.useGravity = false;
@@ -551,11 +577,21 @@ public class PhysicsItem : MonoBehaviour
 
     private void CacheSafePose()
     {
-        if (surface != null && !surface.IsInsideWorkingArea(transform.position))
+        if (surface == null)
+        {
+            Debug.LogWarning($"[PhysicsItem.CacheSafePose] surface is NULL for {name}, skipping cache");
             return;
+        }
+
+        if (!surface.IsInsideWorkingArea(transform.position))
+        {
+            Debug.LogWarning($"[PhysicsItem.CacheSafePose] {name} is outside working area at {transform.position}, skipping cache");
+            return;
+        }
 
         lastSafePosition = transform.position;
         lastSafeRotation = transform.rotation;
+        Debug.Log($"[PhysicsItem.CacheSafePose] Cached safe pose for {name}: pos={lastSafePosition}");
     }
 
     private Transform ResolveGrabPivot(Transform clickedTransform)
@@ -619,14 +655,21 @@ public class PhysicsItem : MonoBehaviour
             if (c == null || !c.enabled || c.isTrigger)
                 continue;
 
-            minY = Mathf.Min(minY, c.bounds.min.y);
-            foundBottomPoint = true;
+            if (c.bounds.min.y < minY)
+            {
+                minY = c.bounds.min.y;
+                foundBottomPoint = true;
+            }
         }
 
-        if (foundBottomPoint)
-            return minY;
+        if (!foundBottomPoint)
+        {
+            Debug.LogWarning($"[PhysicsItem.GetLowestWorldYForPose] No bottom points or colliders found for {name}, using rootPosition.y={rootPosition.y}");
+            return rootPosition.y;
+        }
 
-        return rootPosition.y;
+        Debug.Log($"[PhysicsItem.GetLowestWorldYForPose] {name}: minY={minY}, foundBottomPoint={foundBottomPoint}, colliderCount={allColliders.Length}");
+        return minY;
     }
 
     private bool CanOccupyReturnPose(Vector3 targetPosition, Quaternion targetRotation)
