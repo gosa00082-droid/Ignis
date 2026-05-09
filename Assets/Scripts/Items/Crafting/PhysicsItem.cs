@@ -430,6 +430,12 @@ public class PhysicsItem : MonoBehaviour
         if (isReturning || isGrabbed || isAttachedToParentAssembly || rb == null)
             return;
 
+        if (surface == null)
+        {
+            Debug.LogError($"[PhysicsItem.StartReturn] surface is NULL on {name}!");
+            return;
+        }
+
         isReturning = true;
         outOfBoundsTimer = 0f;
 
