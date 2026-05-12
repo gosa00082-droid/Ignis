@@ -114,6 +114,19 @@ MonoBehaviour:
   m_SampleCount:
     m_OverrideState: 1
     m_Value: 8
+--- !u!114 &-7080814706317056723
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: TestComponent
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Editor.Tests:UnityEditor.Rendering.HighDefinition.Tests:CustomPostProcessComponentListTest/TestComponent
+  active: 1
 --- !u!114 &-6770441310539925778
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1054,8 +1067,8 @@ MonoBehaviour:
   - {fileID: -7546392308903763738}
   - {fileID: -3434387921871218131}
   - {fileID: 151081211396026033}
-  - {fileID: -5318902212198259549}
-  - {fileID: -3663068493902610537}
+  - {fileID: -7080814706317056723}
+  - {fileID: 336340907006507470}
 --- !u!114 &49866433041814418
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1141,6 +1154,19 @@ MonoBehaviour:
   worldOffset:
     m_OverrideState: 1
     m_Value: {x: 0, y: 0, z: 0}
+--- !u!114 &336340907006507470
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: TestComponent2
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Editor.Tests:UnityEditor.Rendering.HighDefinition.Tests:CustomPostProcessComponentListTest/TestComponent2
+  active: 1
 --- !u!114 &448115243408767295
 MonoBehaviour:
   m_ObjectHideFlags: 3
