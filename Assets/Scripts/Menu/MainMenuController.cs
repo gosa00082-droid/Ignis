@@ -11,6 +11,12 @@ public class LoadingMenuController : MonoBehaviour
     [Header("Главное меню")]
     [SerializeField] private GameObject menuRoot;
 
+    [Header("Кнопки, которые надо скрывать при открытии настроек")]
+    [SerializeField] private GameObject[] menuButtons;
+
+    [Header("Надпись настроек")]
+    [SerializeField] private GameObject settingsMessage;
+
     [Header("Загрузочный экран")]
     [SerializeField] private GameObject loadingRoot;
 
@@ -21,18 +27,97 @@ public class LoadingMenuController : MonoBehaviour
     [SerializeField] private RectTransform spinnerImage;
     [SerializeField] private float spinnerRotationSpeed = 180f;
 
-    [Header("Настройки")]
+    [Header("Настройки загрузки")]
     [SerializeField] private float minimumLoadingTime = 1f;
 
     private bool isLoading = false;
+    private bool isSettingsMessageOpen = false;
 
     private void Start()
     {
+        ShowMainMenu();
+    }
+
+    private void Update()
+    {
+        if (isLoading)
+        {
+            if (spinnerImage != null)
+                spinnerImage.Rotate(0f, 0f, -spinnerRotationSpeed * Time.unscaledDeltaTime);
+
+            return;
+        }
+
+        if (isSettingsMessageOpen && Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseSettingsMessage();
+        }
+    }
+
+    public void StartGame()
+    {
+        if (isLoading)
+            return;
+
+        if (isSettingsMessageOpen)
+            return;
+
+        StartCoroutine(LoadGameScene());
+    }
+
+    public void OpenSettings()
+    {
+        if (isLoading)
+            return;
+
+        isSettingsMessageOpen = true;
+
+        SetMenuButtonsActive(false);
+
+        if (settingsMessage != null)
+            settingsMessage.SetActive(true);
+    }
+
+    public void CloseSettingsMessage()
+    {
+        isSettingsMessageOpen = false;
+
+        if (settingsMessage != null)
+            settingsMessage.SetActive(false);
+
+        SetMenuButtonsActive(true);
+    }
+
+    public void ExitGame()
+    {
+        if (isLoading)
+            return;
+
+        if (isSettingsMessageOpen)
+            return;
+
+        Application.Quit();
+
+#if UNITY_EDITOR
+        Debug.Log("ExitGame вызван. В редакторе Unity Application.Quit() не закрывает Play Mode.");
+#endif
+    }
+
+    private void ShowMainMenu()
+    {
+        isLoading = false;
+        isSettingsMessageOpen = false;
+
         if (menuRoot != null)
             menuRoot.SetActive(true);
 
         if (loadingRoot != null)
             loadingRoot.SetActive(false);
+
+        SetMenuButtonsActive(true);
+
+        if (settingsMessage != null)
+            settingsMessage.SetActive(false);
 
         if (progressBar != null)
         {
@@ -46,42 +131,27 @@ public class LoadingMenuController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
     }
 
-    private void Update()
+    private void SetMenuButtonsActive(bool state)
     {
-        if (!isLoading)
+        if (menuButtons == null)
             return;
 
-        if (spinnerImage != null)
+        for (int i = 0; i < menuButtons.Length; i++)
         {
-            spinnerImage.Rotate(0f, 0f, -spinnerRotationSpeed * Time.unscaledDeltaTime);
+            if (menuButtons[i] != null)
+                menuButtons[i].SetActive(state);
         }
-    }
-
-    public void StartGame()
-    {
-        if (isLoading)
-            return;
-
-        StartCoroutine(LoadGameScene());
-    }
-
-    public void OpenSettings()
-    {
-        Debug.Log("Настройки пока не сделаны.");
-    }
-
-    public void ExitGame()
-    {
-        Application.Quit();
-
-#if UNITY_EDITOR
-        Debug.Log("ExitGame вызван. В редакторе Unity Application.Quit() не закрывает Play Mode.");
-#endif
     }
 
     private IEnumerator LoadGameScene()
     {
         isLoading = true;
+        isSettingsMessageOpen = false;
+
+        if (settingsMessage != null)
+            settingsMessage.SetActive(false);
+
+        SetMenuButtonsActive(false);
 
         if (menuRoot != null)
             menuRoot.SetActive(false);
@@ -99,15 +169,7 @@ public class LoadingMenuController : MonoBehaviour
         if (operation == null)
         {
             Debug.LogError("Не удалось загрузить сцену: " + gameSceneName);
-
-            isLoading = false;
-
-            if (menuRoot != null)
-                menuRoot.SetActive(true);
-
-            if (loadingRoot != null)
-                loadingRoot.SetActive(false);
-
+            ShowMainMenu();
             yield break;
         }
 
