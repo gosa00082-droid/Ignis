@@ -11,9 +11,16 @@ EditorBuildSettings:
   - enabled: 0
     path: "Assets/\u0421\u0446\u0435\u043D\u044B/OutdoorsScene.unity"
     guid: 8124e5870f4fd4c779e7a5f994e84ad1
-  - enabled: 1
+  - enabled: 0
     path: "Assets/\u0421\u0446\u0435\u043D\u044B/\u043F\u043E\u0441\u043B\u0435 \u0438\u043C\u043F\u043E\u0440\u0442\u0430.unity"
     guid: 61d9c2afad2bd514c95e8b6cb2c59fe4
+  - enabled: 1
+    path: "Assets/\u0421\u0446\u0435\u043D\u044B/\u041C\u0435\u043D\u044E.unity"
+    guid: d7c993ab2cfd93e4d90b95841a7b0a7b
+  - enabled: 1
+    path: "Assets/\u0421\u0446\u0435\u043D\u044B/\u0433\u043E\u0442\u043E\u0432\u043E
+      \u0434\u043B\u044F \u043C\u0438\u0440\u0435\u0430 (\u0431\u0435\u0437 \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430).unity"
+    guid: f260dc146e466c045925dfa1f5cdd2b6
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 35845fe01580c41289b024647b1d1c53, type: 3}

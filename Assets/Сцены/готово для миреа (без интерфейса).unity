@@ -2795,15 +2795,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 3847071389033969704, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1559370356}
-    - targetCorrespondingSourceObject: {fileID: 3727807215501679666, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
-      insertIndex: 2
-      addedObject: {fileID: 1011842296}
-    - targetCorrespondingSourceObject: {fileID: 3727807215501679666, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1011842286}
-    - targetCorrespondingSourceObject: {fileID: 3727807215501679666, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1011842290}
     - targetCorrespondingSourceObject: {fileID: 6182372450259260998, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2106594142}
@@ -3879,63 +3870,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1011842282 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3727807215501679666, guid: 6ba590305358b73458b53d8d0a956d89, type: 3}
-  m_PrefabInstance: {fileID: 541183861}
-  m_PrefabAsset: {fileID: 0}
---- !u!65 &1011842286
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1011842282}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 3.879612, y: 5.8703227, z: 6.2370563}
-  m_Center: {x: 0.00037276643, y: 2.0508835, z: 1.5943313}
---- !u!114 &1011842290
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1011842282}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 699604883246695419e4104b4927b29d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InteractableObject
-  displayName: "\u041E\u0431\u044A\u0435\u043A\u0442"
-  targetCamera: {fileID: 2131754927}
-  targetUI: {fileID: 2010678966}
-  cameraModeManager: {fileID: 189790242}
-  outline: {fileID: 0}
---- !u!114 &1011842296
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1011842282}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5cb34f0587a8ec4c818e8c524e82b3b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SimpleOutline
-  outlineMaterial: {fileID: 2100000, guid: ea0c58294f0b0784e971f2a79c983b34, type: 2}
-  showOnStartForDebug: 0
 --- !u!1 &1022512684 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 30aa61e42415c8e4b86d6f9925087670, type: 3}
@@ -7262,7 +7196,7 @@ PrefabInstance:
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: anvilInteractable
       value: 
-      objectReference: {fileID: 1011842290}
+      objectReference: {fileID: 0}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: cameraModeManager
       value: 
