@@ -1,5 +1,6 @@
 // Assets/Scripts/Items/ItemData.cs
 using UnityEngine;
+using System.Collections.Generic;
 
 [CreateAssetMenu(fileName = "New Item", menuName = "Ignis/Item")]
 public class ItemData : ScriptableObject
@@ -21,4 +22,8 @@ public class ItemData : ScriptableObject
 
     [TextArea(3, 6)]
     public string description = "Описание предмета..."; // описание
+
+    [Header("Workbench System")]
+    [Tooltip("Теги компонентов для системы верстака")]
+    public List<string> tags = new List<string>();
 }
