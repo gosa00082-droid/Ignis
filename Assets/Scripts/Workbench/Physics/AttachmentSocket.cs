@@ -2,34 +2,34 @@ using UnityEngine;
 
 public class AttachmentSocket : MonoBehaviour
 {
-    [Header("Идентификатор сокета")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private string socketId;
 
-    [Header("Что сюда можно вставить")]
+    [Header("пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private AttachmentType acceptedType = AttachmentType.None;
 
-    [Header("Точки пути")]
+    [Header("пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ")]
     [SerializeField] private Transform entryPoint;
     [SerializeField] private Transform seatPoint;
 
-    [Header("Настройки соединения")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private float snapDistance = 0.6f;
     [SerializeField] private int clicksToInsert = 4;
 
-    [Header("Плавность движения")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private float moveSpeed = 4f;
     [SerializeField] private float rotationSpeedDeg = 360f;
 
-    [Header("Подстройка поворота")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private Vector3 entryRotationOffsetEuler;
     [SerializeField] private Vector3 seatRotationOffsetEuler;
 
-    [Header("Состояние")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private AttachableObject attachedObject;
     [SerializeField] private int clicksDone;
     [SerializeField, Range(0f, 1f)] private float targetProgress;
 
-    [Header("Игнорировать мышь у принимающего объекта, пока сокет занят не до конца")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private Collider[] hostCollidersToIgnoreWhileBusy;
 
     [SerializeField] private bool debugLogs = true;
@@ -46,6 +46,20 @@ public class AttachmentSocket : MonoBehaviour
     public float TargetProgress => targetProgress;
     public bool IsOnlySnappedAtEntry => attachedObject != null && targetProgress <= 0.001f;
     public AttachableObject AttachedObject => attachedObject;
+
+    /// <summary>
+    /// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїСЂРѕРіСЂРµСЃСЃ РІСЃС‚Р°РІРєРё (РґР»СЏ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ СЃР±РѕСЂРѕРє РёР· РёРЅРІРµРЅС‚Р°СЂСЏ)
+    /// </summary>
+    public void SetProgress(float progress)
+    {
+        targetProgress = Mathf.Clamp01(progress);
+        clicksDone = Mathf.RoundToInt(targetProgress * clicksToInsert);
+        
+        if (targetProgress >= 1f && attachedObject != null)
+        {
+            completionRaised = false; // РЎР±СЂР°СЃС‹РІР°РµРј С„Р»Р°Рі С‡С‚РѕР±С‹ СЃРѕР±С‹С‚РёРµ СЃСЂР°Р±РѕС‚Р°Р»Рѕ РІ Update
+        }
+    }
 
     private void Awake()
     {
@@ -335,7 +349,7 @@ public class AttachmentSocket : MonoBehaviour
         float lowestY = float.MaxValue;
         bool found = false;
 
-        // 1) Проверяем BottomPoints
+        // 1) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ BottomPoints
         WorkbenchPart[] parts = root.GetComponentsInChildren<WorkbenchPart>(true);
         foreach (WorkbenchPart part in parts)
         {
@@ -352,7 +366,7 @@ public class AttachmentSocket : MonoBehaviour
             }
         }
 
-        // 2) Проверяем реальные коллайдеры тоже
+        // 2) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
         Collider[] cols = root.GetComponentsInChildren<Collider>(true);
         foreach (Collider c in cols)
         {
@@ -366,7 +380,7 @@ public class AttachmentSocket : MonoBehaviour
         if (!found)
             return true;
 
-        // Было слишком строго. После падения объект может лечь чуть выше.
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.
         return lowestY <= surface.SurfaceY + 0.08f;
     }
 

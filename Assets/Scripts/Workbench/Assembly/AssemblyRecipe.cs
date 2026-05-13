@@ -14,6 +14,10 @@ public class AssemblyRecipe : ScriptableObject
     public string recipeId;
     public RecipeAssemblyMode assemblyMode = RecipeAssemblyMode.Ordered;
     public List<AssemblyRecipeStep> steps = new();
+
+    [Header("Р РµР·СѓР»СЊС‚Р°С‚ СЃР±РѕСЂРєРё")]
+    [Tooltip("ID РїСЂРµРґРјРµС‚Р°, РєРѕС‚РѕСЂС‹Р№ РїРѕР»СѓС‡Р°РµС‚СЃСЏ РїСЂРё Р·Р°РІРµСЂС€РµРЅРёРё СЃР±РѕСЂРєРё (РЅР°РїСЂРёРјРµСЂ 'sword')")]
+    public string resultItemId;
 }
 
 [Serializable]
@@ -21,14 +25,14 @@ public class AssemblyRecipeStep
 {
     public string stepName;
 
-    [Header("Какой сокет должен использоваться")]
+    [Header("пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     public string socketId;
 
-    [Header("Родительская деталь")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ")]
     public AttachmentType parentType = AttachmentType.None;
     public string parentPartId;
 
-    [Header("Дочерняя деталь")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ")]
     public AttachmentType childType = AttachmentType.None;
     public string childPartId;
 }

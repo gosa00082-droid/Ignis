@@ -5,13 +5,14 @@ public class AssemblyRecipeRunner : MonoBehaviour
 {
     [SerializeField] private AssemblyRecipe recipe;
 
-    [Header("Состояние")]
+    [Header("пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ")]
     [SerializeField] private int currentStepIndex;
     [SerializeField] private bool isCompleted;
 
     private readonly List<int> completedStepIndices = new();
 
     public bool IsCompleted => isCompleted;
+    public AssemblyRecipe Recipe => recipe;
 
     private void OnEnable()
     {

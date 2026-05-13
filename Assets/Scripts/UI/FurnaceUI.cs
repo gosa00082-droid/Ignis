@@ -118,7 +118,21 @@ public class FurnaceUI : MonoBehaviour
     private void RefreshMiniInventory()
     {
         ClearMiniInventory();
-        var materialsDict = playerInventory.GetMaterials();
+        var materialItems = playerInventory.GetItemsByCategory(ItemCategory.Material);
+
+        // Группируем по baseItemId для отображения
+        Dictionary<string, int> materialsDict = new Dictionary<string, int>();
+        foreach (var invItem in materialItems)
+        {
+            if (materialsDict.ContainsKey(invItem.baseItemId))
+            {
+                materialsDict[invItem.baseItemId] += invItem.stackCount;
+            }
+            else
+            {
+                materialsDict[invItem.baseItemId] = invItem.stackCount;
+            }
+        }
 
         Debug.Log("Все id материалов в инвентаре: " + string.Join(", ", materialsDict.Keys));
 

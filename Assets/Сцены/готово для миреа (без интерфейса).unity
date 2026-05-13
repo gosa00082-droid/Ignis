@@ -5126,7 +5126,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WorkbenchInventoryBridge
   inventory: {fileID: 1267766222}
-  itemDatabase: {fileID: 11400000, guid: c07d3a4339f86a94986f183c8a519002, type: 2}
+  itemDatabase: {fileID: 11400000, guid: b712bbb36d6131b45a20569ec6b61ea9, type: 2}
+  prefabDatabase: {fileID: 11400000, guid: c07d3a4339f86a94986f183c8a519002, type: 2}
   workbenchSurface: {fileID: 1407765612}
   defaultSpawnOffset: {x: 0, y: 0.5, z: 0}
   spawnCheckMask:
