@@ -4135,6 +4135,38 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_InputField
+--- !u!1 &743489268
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 743489269}
+  m_Layer: 0
+  m_Name: System_manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &743489269
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 743489268}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -14.18542, y: -1.26458, z: -7.03234}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1102888847}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &753747056 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7776533454709714075, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
@@ -5049,6 +5081,57 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1706561271}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1102888846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1102888847}
+  - component: {fileID: 1102888848}
+  m_Layer: 0
+  m_Name: WorkbenchBridge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1102888847
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1102888846}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.10631001, z: -0.20669985}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 743489269}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1102888848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1102888846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd1c5aa59f4315d4eb5c9ab25cd60bfe, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorkbenchInventoryBridge
+  inventory: {fileID: 1267766222}
+  itemDatabase: {fileID: 11400000, guid: c07d3a4339f86a94986f183c8a519002, type: 2}
+  workbenchSurface: {fileID: 1407765612}
+  defaultSpawnOffset: {x: 0, y: 0.5, z: 0}
+  spawnCheckMask:
+    serializedVersion: 2
+    m_Bits: 2048
 --- !u!114 &1109342281 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 9099470715178603789, guid: b9524d0e1bbf8924a96490d1507b3ab0, type: 3}
@@ -13529,3 +13612,4 @@ SceneRoots:
   - {fileID: 626907417}
   - {fileID: 1706561271}
   - {fileID: 1241071113}
+  - {fileID: 743489269}
