@@ -11,6 +11,9 @@ public class PauseMenuController : MonoBehaviour
     [Header("Корень меню паузы")]
     [SerializeField] private GameObject pauseMenuRoot;
 
+    [Header("Блюр фона")]
+    [SerializeField] private GameObject pauseBlurRoot;
+
     [Header("Кнопки, которые скрываются при сообщении настроек")]
     [SerializeField] private GameObject[] menuButtons;
 
@@ -44,6 +47,9 @@ public class PauseMenuController : MonoBehaviour
 
         if (loadingRoot != null)
             loadingRoot.SetActive(false);
+
+        if (pauseBlurRoot != null)
+            pauseBlurRoot.SetActive(false);
 
         if (progressBar != null)
         {
@@ -90,6 +96,9 @@ public class PauseMenuController : MonoBehaviour
         isPaused = true;
         isSettingsWarningOpen = false;
 
+        if (pauseBlurRoot != null)
+            pauseBlurRoot.SetActive(true);
+
         if (pauseMenuRoot != null)
             pauseMenuRoot.SetActive(true);
 
@@ -130,6 +139,9 @@ public class PauseMenuController : MonoBehaviour
 
         if (pauseMenuRoot != null)
             pauseMenuRoot.SetActive(false);
+
+        if (pauseBlurRoot != null)
+            pauseBlurRoot.SetActive(false);
 
         if (loadingRoot != null)
             loadingRoot.SetActive(false);
@@ -213,6 +225,9 @@ public class PauseMenuController : MonoBehaviour
         if (pauseMenuRoot != null)
             pauseMenuRoot.SetActive(false);
 
+        if (pauseBlurRoot != null)
+            pauseBlurRoot.SetActive(false);
+
         if (settingsWarning != null)
             settingsWarning.SetActive(false);
 
@@ -280,6 +295,12 @@ public class PauseMenuController : MonoBehaviour
 
         if (pauseMenuRoot != null)
             pauseMenuRoot.SetActive(false);
+
+        if (pauseBlurRoot != null)
+            pauseBlurRoot.SetActive(false);
+
+        if (loadingRoot != null)
+            loadingRoot.SetActive(false);
 
         if (settingsWarning != null)
             settingsWarning.SetActive(false);

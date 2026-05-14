@@ -8309,7 +8309,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\u0411\u0435\u0442\u0430 \u0442\u0435\u0441\u0442 001"
+  m_text: "\u0411\u0435\u0442\u0430 \u0442\u0435\u0441\u0442 0.01"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: a84bfb481ec4fb3429b190cb44739476, type: 2}
   m_sharedMaterial: {fileID: -8146267407937392859, guid: a84bfb481ec4fb3429b190cb44739476, type: 2}
@@ -8420,6 +8420,75 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.26266602, y: 0.14780883, z: 0.0990725}
   m_Center: {x: 0.024055235, y: -0.028037462, z: 0.031206304}
+--- !u!1 &1915097610
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1915097612}
+  - component: {fileID: 1915097611}
+  m_Layer: 0
+  m_Name: PauseBlurVolume
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1915097611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1915097610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26d6499a6bd256e47b859377446493a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Runtime::UnityEngine.Rendering.HighDefinition.CustomPassVolume
+  m_IsGlobal: 1
+  fadeRadius: 0
+  priority: 0
+  customPasses:
+  - rid: 4227429029333696512
+  injectionPoint: 2
+  m_TargetCamera: {fileID: 0}
+  useTargetCamera: 0
+  references:
+    version: 2
+    RefIds:
+    - rid: 4227429029333696512
+      type: {class: FullScreenCustomPass, ns: UnityEngine.Rendering.HighDefinition, asm: Unity.RenderPipelines.HighDefinition.Runtime}
+      data:
+        m_Name: Custom Pass
+        enabled: 1
+        targetColorBuffer: 0
+        targetDepthBuffer: 0
+        clearFlags: 0
+        passFoldout: 0
+        m_Version: 0
+        fullscreenPassMaterial: {fileID: 2100000, guid: c8a47b06bc2ebba489245e885d714ba6, type: 2}
+        materialPassIndex: 0
+        materialPassName: Custom Pass 0
+        fetchColorBuffer: 1
+--- !u!4 &1915097612
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1915097610}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 791.59955, y: 411.43152, z: -566.0041}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1942217834
 GameObject:
   m_ObjectHideFlags: 0
@@ -12479,6 +12548,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PauseMenuController
   mainMenuSceneName: "\u041C\u0435\u043D\u044E"
   pauseMenuRoot: {fileID: 1036667946}
+  pauseBlurRoot: {fileID: 1915097610}
   menuButtons:
   - {fileID: 1039425344}
   - {fileID: 1852079993}
@@ -12965,3 +13035,4 @@ SceneRoots:
   - {fileID: 1159665227}
   - {fileID: 587940631}
   - {fileID: 179446042}
+  - {fileID: 1915097612}
