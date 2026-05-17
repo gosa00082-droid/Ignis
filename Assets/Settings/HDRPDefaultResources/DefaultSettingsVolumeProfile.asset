@@ -46,6 +46,19 @@ MonoBehaviour:
   scale:
     m_OverrideState: 1
     m_Value: 1
+--- !u!114 &-8221211058315339243
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: TestComponent
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Editor.Tests:UnityEditor.Rendering.HighDefinition.Tests:CustomPostProcessComponentListTest/TestComponent
+  active: 1
 --- !u!114 &-7546392308903763738
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -402,6 +415,19 @@ MonoBehaviour:
   writeDepthAlphaThreshold:
     m_OverrideState: 1
     m_Value: 0
+--- !u!114 &-6367839159019750395
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: TestComponent2
+  m_EditorClassIdentifier: Unity.RenderPipelines.HighDefinition.Editor.Tests:UnityEditor.Rendering.HighDefinition.Tests:CustomPostProcessComponentListTest/TestComponent2
+  active: 1
 --- !u!114 &-6237291332047645210
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -1054,8 +1080,8 @@ MonoBehaviour:
   - {fileID: -7546392308903763738}
   - {fileID: -3434387921871218131}
   - {fileID: 151081211396026033}
-  - {fileID: -5318902212198259549}
-  - {fileID: -3663068493902610537}
+  - {fileID: -8221211058315339243}
+  - {fileID: -6367839159019750395}
 --- !u!114 &49866433041814418
 MonoBehaviour:
   m_ObjectHideFlags: 3
