@@ -134,9 +134,18 @@ public class WorkbenchReturnZone : MonoBehaviour
 
         if (assemblyRoot != null)
         {
-            // Это сборка - сохраняем через SaveAssemblyToInventory
+            // Проверяем завершена ли сборка
+            AssemblyRecipeRunner runner = item.GetComponent<AssemblyRecipeRunner>();
+            if (runner != null && !runner.IsCompleted)
+            {
+                if (debugLogs)
+                    Debug.Log($"WorkbenchReturnZone: Сборка {item.name} не завершена, возврат невозможен");
+                return;
+            }
+
+            // Завершённая сборка — сохраняем
             if (debugLogs)
-                Debug.Log($"WorkbenchReturnZone: Сохраняем сборку {item.name}");
+                Debug.Log($"WorkbenchReturnZone: Сохраняем завершённую сборку {item.name}");
 
             bridge.SaveAssemblyToInventory(assemblyRoot);
         }
@@ -149,7 +158,7 @@ public class WorkbenchReturnZone : MonoBehaviour
             bridge.ReturnItemToInventory(item.gameObject);
         }
 
-        // Удаляем из списка (объект будет уничтожен)
+        // Удаляем из списка (объект будет уничтожен или останется на столе)
         itemsInZone.Remove(item);
         UpdateVisualFeedback();
     }

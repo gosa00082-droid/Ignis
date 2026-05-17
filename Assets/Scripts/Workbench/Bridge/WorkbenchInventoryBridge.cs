@@ -250,10 +250,7 @@ public class WorkbenchInventoryBridge : MonoBehaviour
             attachedParts.Add(partData);
         }
 
-        // 3. Собрать теги со всех компонентов
-        List<string> tags = CollectTagsFromAssembly(assembly);
-
-        // 4. Проверить является ли это сборкой (есть ли прикрепленные детали)
+        // 3. Проверить является ли это сборкой (есть ли прикрепленные детали)
         bool isActualAssembly = attachedParts.Count > 0;
 
         // Если это не сборка (одиночный компонент), возвращаем как простой предмет
@@ -264,40 +261,18 @@ public class WorkbenchInventoryBridge : MonoBehaviour
             return;
         }
 
-        // 5. Определить прогресс завершения
-        float completionProgress = 0f;
+        // 5. Если сборка завершена — сохраняем как простой предмет
         if (runner != null && runner.IsCompleted)
         {
-            completionProgress = 1f;
-        }
-        else if (runner != null)
-        {
-            // Можно добавить более точный расчет прогресса позже
-            completionProgress = 0.5f; // Примерное значение для незавершенной сборки
+            inventory.AddItem(baseItemId, 1);
+            Destroy(assemblyObject);
+            Debug.Log($"WorkbenchInventoryBridge: Сборка {baseItemId} завершена, сохранена как простой предмет");
+            return;
         }
 
-        // Если сборка незавершена, добавляем тег "incomplete"
-        if (completionProgress < 1f && !tags.Contains("incomplete"))
-        {
-            tags.Add("incomplete");
-        }
-
-        // 6. Создать AssemblySnapshot
-        AssemblySnapshot snapshot = new AssemblySnapshot
-        {
-            baseItemId = baseItemId,
-            parts = attachedParts,
-            tags = tags,
-            completionProgress = completionProgress
-        };
-
-        // 7. Добавить в инвентарь через новый метод AddAssembly
-        inventory.AddAssembly(baseItemId, tags, snapshot);
-
-        // 8. Удалить GameObject сборки
-        Destroy(assemblyObject);
-
-        Debug.Log($"WorkbenchInventoryBridge: Сборка {baseItemId} сохранена в инвентарь с {attachedParts.Count} деталями и {tags.Count} тегами");
+        // 6. Если не завершена — не трогаем
+        Debug.LogWarning($"WorkbenchInventoryBridge: Сборка {baseItemId} не завершена, возврат невозможен");
+        // Объект остаётся на верстаке, инвентарь не трогаем
     }
 
     /// <summary>

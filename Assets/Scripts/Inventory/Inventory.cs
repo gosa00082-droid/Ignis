@@ -143,7 +143,7 @@ public class Inventory : MonoBehaviour
 
         foreach (InventoryItem invItem in items)
         {
-            if (invItem.baseItemId == itemId)
+            if (invItem.baseItemId == itemId && !invItem.isAssembly)
             {
                 totalCount += invItem.stackCount;
             }

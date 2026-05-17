@@ -69,7 +69,11 @@ public class QuestManager : MonoBehaviour
         // Проверяем наличие предмета
         if (playerInventory.GetCount(aq.data.requiredItemID) >= aq.data.requiredAmount)
         {
-            playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount);
+            if (!playerInventory.RemoveItem(aq.data.requiredItemID, aq.data.requiredAmount))
+            {
+                Debug.LogWarning($"Не удалось сдать заказ: предмет {aq.data.requiredItemID} не удалось изъять");
+                return;
+            }
             playerInventory.AddItem("Gold_Money", aq.data.rewardGold);
             activeQuests.RemoveAt(slotIndex);
 
