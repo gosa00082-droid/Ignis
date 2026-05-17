@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemName: "\u041B\u0435\u0437\u0432\u0438\u0435"
   id: blade_basic
-  category: 2
+  category: 1
   icon: {fileID: 0}
   maxStackSize: 99
   basePrice: 10

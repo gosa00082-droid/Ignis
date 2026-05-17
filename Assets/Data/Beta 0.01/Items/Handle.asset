@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Handle
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemName: "\u0420\u0443\u043A\u043E\u044F\u0442\u044C"
-  id: hundle_basic
-  category: 2
+  id: handle_basic
+  category: 1
   icon: {fileID: 0}
   maxStackSize: 99
   basePrice: 10
