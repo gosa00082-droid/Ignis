@@ -192,25 +192,31 @@ public class WorkbenchInventoryBridge : MonoBehaviour
         }
 
         GameObject assemblyObject = assembly.gameObject;
+        Debug.Log($"[Bridge DEBUG] SaveAssembly START, assembly={assembly.name}");
 
         // 1. Получить AssemblyRecipeRunner для определения baseItemId
         AssemblyRecipeRunner runner = assemblyObject.GetComponent<AssemblyRecipeRunner>();
+        Debug.Log($"[Bridge DEBUG] runner={runner != null}, Recipe={runner?.Recipe?.recipeId}, IsCompleted={runner?.IsCompleted}, resultItemId={runner?.Recipe?.resultItemId}");
+
         string baseItemId = null;
 
         if (runner != null && runner.Recipe != null && !string.IsNullOrEmpty(runner.Recipe.resultItemId))
         {
             // Используем resultItemId из рецепта
             baseItemId = runner.Recipe.resultItemId;
+            Debug.Log($"[Bridge DEBUG] Использую resultItemId={baseItemId}");
         }
         else
         {
             // Если нет runner или resultItemId не задан, используем ID корневой детали
             WorkbenchPart rootPart = assemblyObject.GetComponent<WorkbenchPart>();
             baseItemId = rootPart != null ? rootPart.PartId : "unknown_assembly";
+            Debug.Log($"[Bridge DEBUG] resultItemId не найден, fallback={baseItemId}, runner={runner != null}, recipe={runner?.Recipe?.recipeId}");
         }
 
         // 2. Собрать все AttachmentSocket в иерархии
         AttachmentSocket[] sockets = assemblyObject.GetComponentsInChildren<AttachmentSocket>();
+        Debug.Log($"[Bridge DEBUG] Найдено сокетов={sockets?.Length}");
         List<AttachedPartData> attachedParts = new List<AttachedPartData>();
 
         foreach (AttachmentSocket socket in sockets)
@@ -252,6 +258,7 @@ public class WorkbenchInventoryBridge : MonoBehaviour
 
         // 3. Проверить является ли это сборкой (есть ли прикрепленные детали)
         bool isActualAssembly = attachedParts.Count > 0;
+        Debug.Log($"[Bridge DEBUG] isActualAssembly={isActualAssembly}, attachedParts.Count={attachedParts.Count}, runner.IsCompleted={runner?.IsCompleted}");
 
         // Если это не сборка (одиночный компонент), возвращаем как простой предмет
         if (!isActualAssembly)
@@ -264,6 +271,7 @@ public class WorkbenchInventoryBridge : MonoBehaviour
         // 5. Если сборка завершена — сохраняем как простой предмет
         if (runner != null && runner.IsCompleted)
         {
+            Debug.Log($"[Bridge DEBUG] Сохраняю завершённую сборку {baseItemId} как простой предмет, inventory={inventory != null}");
             inventory.AddItem(baseItemId, 1);
             Destroy(assemblyObject);
             Debug.Log($"WorkbenchInventoryBridge: Сборка {baseItemId} завершена, сохранена как простой предмет");
@@ -271,7 +279,7 @@ public class WorkbenchInventoryBridge : MonoBehaviour
         }
 
         // 6. Если не завершена — не трогаем
-        Debug.LogWarning($"WorkbenchInventoryBridge: Сборка {baseItemId} не завершена, возврат невозможен");
+        Debug.LogWarning($"[Bridge DEBUG] Сборка {baseItemId} не завершена! runner={runner != null}, IsCompleted={runner?.IsCompleted}, recipe={runner?.Recipe?.recipeId}");
         // Объект остаётся на верстаке, инвентарь не трогаем
     }
 

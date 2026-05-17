@@ -14,6 +14,11 @@ public class AssemblyRecipeRunner : MonoBehaviour
     public bool IsCompleted => isCompleted;
     public AssemblyRecipe Recipe => recipe;
 
+    public void RefreshState()
+    {
+        RebuildState();
+    }
+
     private void OnEnable()
     {
         AssemblyEvents.AttachmentCompleted += OnAttachmentCompleted;
@@ -64,9 +69,28 @@ public class AssemblyRecipeRunner : MonoBehaviour
         isCompleted = false;
 
         if (recipe == null)
+        {
+            Debug.LogWarning($"[RecipeRunner DEBUG] recipe=null на {name}");
             return;
+        }
 
         AttachmentSocket[] sockets = GetComponentsInChildren<AttachmentSocket>(true);
+        Debug.Log($"[RecipeRunner DEBUG] RebuildState: {name}, recipe={recipe.recipeId}, steps={recipe.steps.Count}, " +
+                  $"sockets={sockets?.Length}, mode={recipe.assemblyMode}");
+
+        foreach (var s in sockets)
+        {
+            string childName = s.AttachedObject != null ? s.AttachedObject.name : "none";
+            Debug.Log($"[RecipeRunner DEBUG]   socket={s.SocketId}, HasAttached={s.HasAttachedObject}, " +
+                      $"progress={s.TargetProgress:F2}, child={childName}");
+            if (s.HasAttachedObject && s.AttachedObject != null)
+            {
+                WorkbenchPart parent = s.GetComponentInParent<WorkbenchPart>();
+                WorkbenchPart child = s.AttachedObject.GetComponent<WorkbenchPart>();
+                Debug.Log($"[RecipeRunner DEBUG]     parentPartId={parent?.PartId}, childPartId={child?.PartId}, " +
+                          $"parentType={parent?.PartType}, childType={child?.PartType}");
+            }
+        }
 
         if (recipe.assemblyMode == RecipeAssemblyMode.Unordered)
         {
@@ -75,12 +99,22 @@ public class AssemblyRecipeRunner : MonoBehaviour
                 if (HasMatchingCompletedConnection(recipe.steps[i], sockets))
                 {
                     completedStepIndices.Add(i);
+                    Debug.Log($"[RecipeRunner DEBUG] Шаг {i} ({recipe.steps[i].childPartId}) ПРОЙДЕН");
+                }
+                else
+                {
+                    Debug.Log($"[RecipeRunner DEBUG] Шаг {i} ({recipe.steps[i].childPartId}) НЕ ПРОЙДЕН");
                 }
             }
 
             if (completedStepIndices.Count >= recipe.steps.Count)
             {
                 isCompleted = true;
+                Debug.Log($"[RecipeRunner DEBUG] СБОРКА ЗАВЕРШЕНА!");
+            }
+            else
+            {
+                Debug.Log($"[RecipeRunner DEBUG] Завершено {completedStepIndices.Count}/{recipe.steps.Count} шагов");
             }
 
             return;
@@ -113,10 +147,16 @@ public class AssemblyRecipeRunner : MonoBehaviour
                 continue;
 
             if (!socket.HasAttachedObject)
+            {
+                Debug.Log($"[RecipeRunner DEBUG]   HasMatching: socket={socket.SocketId} — нет прикрепленного объекта");
                 continue;
+            }
 
             if (socket.TargetProgress < 1f)
+            {
+                Debug.Log($"[RecipeRunner DEBUG]   HasMatching: socket={socket.SocketId} — прогресс {socket.TargetProgress:F2} < 1");
                 continue;
+            }
 
             AttachableObject childObject = socket.AttachedObject;
             if (childObject == null)
@@ -128,7 +168,10 @@ public class AssemblyRecipeRunner : MonoBehaviour
             if (parentPart == null || childPart == null)
                 continue;
 
-            if (StepMatches(step, socket, parentPart, childPart))
+            bool matches = StepMatches(step, socket, parentPart, childPart);
+            Debug.Log($"[RecipeRunner DEBUG]   HasMatching: socket={socket.SocketId}, parent={parentPart.PartId}, " +
+                      $"child={childPart.PartId} — {(matches ? "СОВПАДАЕТ" : "НЕ СОВПАДАЕТ")}");
+            if (matches)
                 return true;
         }
 
@@ -142,19 +185,34 @@ public class AssemblyRecipeRunner : MonoBehaviour
         WorkbenchPart childPart)
     {
         if (!string.IsNullOrEmpty(step.socketId) && socket.SocketId != step.socketId)
+        {
+            Debug.Log($"[StepMatches] socketId FAIL: step={step.socketId}, actual={socket.SocketId}");
             return false;
+        }
 
         if (step.parentType != AttachmentType.None && parentPart.PartType != step.parentType)
+        {
+            Debug.Log($"[StepMatches] parentType FAIL: step={step.parentType}, actual={parentPart.PartType}");
             return false;
+        }
 
         if (!string.IsNullOrEmpty(step.parentPartId) && parentPart.PartId != step.parentPartId)
+        {
+            Debug.Log($"[StepMatches] parentPartId FAIL: step={step.parentPartId}, actual={parentPart.PartId}");
             return false;
+        }
 
         if (step.childType != AttachmentType.None && childPart.PartType != step.childType)
+        {
+            Debug.Log($"[StepMatches] childType FAIL: step={step.childType}, actual={childPart.PartType}");
             return false;
+        }
 
         if (!string.IsNullOrEmpty(step.childPartId) && childPart.PartId != step.childPartId)
+        {
+            Debug.Log($"[StepMatches] childPartId FAIL: step={step.childPartId}, actual={childPart.PartId}");
             return false;
+        }
 
         return true;
     }

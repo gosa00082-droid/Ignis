@@ -131,11 +131,15 @@ public class WorkbenchReturnZone : MonoBehaviour
 
         // Проверяем есть ли AssemblyRoot на предмете
         AssemblyRoot assemblyRoot = item.GetComponent<AssemblyRoot>();
+        Debug.Log($"[ReturnZone DEBUG] item={item.name}, assemblyRoot={assemblyRoot != null}");
 
         if (assemblyRoot != null)
         {
             // Проверяем завершена ли сборка
             AssemblyRecipeRunner runner = item.GetComponent<AssemblyRecipeRunner>();
+            if (runner != null) runner.RefreshState();
+            Debug.Log($"[ReturnZone DEBUG] runner={runner != null}, IsCompleted={runner?.IsCompleted}, recipe={runner?.Recipe?.recipeId}");
+
             if (runner != null && !runner.IsCompleted)
             {
                 if (debugLogs)

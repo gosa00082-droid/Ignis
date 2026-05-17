@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: sword
   m_EditorClassIdentifier: Assembly-CSharp::AssemblyRecipe
   recipeId: AssemblyRecipe
+  assemblyMode: 1
   steps:
   - stepName: Put Guard On Blade
     socketId: Blade_Guard_Socket
@@ -32,3 +33,4 @@ MonoBehaviour:
     parentPartId: handle_basic
     childType: 4
     childPartId: pommel_basic
+  resultItemId: sword
