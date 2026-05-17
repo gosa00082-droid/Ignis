@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 public class Inventory : MonoBehaviour
 {
+    // События для уведомления об изменениях инвентаря
+    public static event System.Action OnInventoryChanged;
+
     // Новая структура хранения - список уникальных предметов
     private List<InventoryItem> items = new List<InventoryItem>();
 
@@ -87,6 +90,9 @@ public class Inventory : MonoBehaviour
             int currentCount = GetCount(itemId);
             TutorialManager.Instance.CheckGoals(itemId, currentCount, GoalType.CollectItem);
         }
+
+        // Уведомляем об изменении инвентаря
+        OnInventoryChanged?.Invoke();
     }
 
     // Убрать предмет из инвентаря (обратная совместимость)
@@ -123,6 +129,10 @@ public class Inventory : MonoBehaviour
         }
 
         Debug.Log($"Удалено {amount} × {item.itemName}");
+        
+        // Уведомляем об изменении инвентаря
+        OnInventoryChanged?.Invoke();
+        
         return true;
     }
 
@@ -227,6 +237,9 @@ public class Inventory : MonoBehaviour
         ItemData itemData = itemDatabase.GetItem(baseItemId);
         string itemName = itemData != null ? itemData.itemName : baseItemId;
         Debug.Log($"Добавлена сборка: {itemName} с тегами [{string.Join(", ", tags)}]");
+        
+        // Уведомляем об изменении инвентаря
+        OnInventoryChanged?.Invoke();
     }
 
     /// <summary>
@@ -285,6 +298,10 @@ public class Inventory : MonoBehaviour
         }
 
         Debug.Log($"Удалено {amount} предметов с тегами [{string.Join(", ", requiredTags)}]");
+        
+        // Уведомляем об изменении инвентаря
+        OnInventoryChanged?.Invoke();
+        
         return true;
     }
 
@@ -315,6 +332,10 @@ public class Inventory : MonoBehaviour
             {
                 items.RemoveAt(i);
                 Debug.Log($"Удален предмет с uniqueId: {uniqueId}");
+                
+                // Уведомляем об изменении инвентаря
+                OnInventoryChanged?.Invoke();
+                
                 return true;
             }
         }

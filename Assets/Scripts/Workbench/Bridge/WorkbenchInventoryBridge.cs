@@ -71,7 +71,38 @@ public class WorkbenchInventoryBridge : MonoBehaviour
         SetupSpawnedObject(spawnedObject, itemId);
 
         // Списать предмет из инвентаря
-        inventory.RemoveItem(itemId, 1);
+        // Сначала пытаемся найти первый предмет с таким baseItemId (может быть сборкой или простым предметом)
+        List<InventoryItem> allItems = inventory.GetAllItems();
+        InventoryItem itemToRemove = null;
+        
+        foreach (InventoryItem invItem in allItems)
+        {
+            if (invItem.baseItemId == itemId)
+            {
+                itemToRemove = invItem;
+                break;
+            }
+        }
+
+        if (itemToRemove != null)
+        {
+            // Если это сборка, восстанавливаем её вместо создания нового объекта
+            if (itemToRemove.isAssembly)
+            {
+                Debug.Log($"WorkbenchInventoryBridge: Восстанавливаем сборку {itemId} вместо спавна нового предмета");
+                Destroy(spawnedObject); // Удаляем только что созданный объект
+                return RestoreAssemblyFromInventory(itemToRemove);
+            }
+            else
+            {
+                // Простой предмет - удаляем через стандартный метод
+                inventory.RemoveItem(itemId, 1);
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"WorkbenchInventoryBridge: Не удалось найти предмет {itemId} для удаления из инвентаря");
+        }
 
         Debug.Log($"WorkbenchInventoryBridge: Заспавнен предмет {itemId} на позиции {position}");
         return spawnedObject;
@@ -222,7 +253,18 @@ public class WorkbenchInventoryBridge : MonoBehaviour
         // 3. Собрать теги со всех компонентов
         List<string> tags = CollectTagsFromAssembly(assembly);
 
-        // 4. Определить прогресс завершения
+        // 4. Проверить является ли это сборкой (есть ли прикрепленные детали)
+        bool isActualAssembly = attachedParts.Count > 0;
+
+        // Если это не сборка (одиночный компонент), возвращаем как простой предмет
+        if (!isActualAssembly)
+        {
+            Debug.Log($"WorkbenchInventoryBridge: Объект {baseItemId} не является сборкой (нет прикрепленных деталей), возвращаем как простой предмет");
+            ReturnItemToInventory(assemblyObject);
+            return;
+        }
+
+        // 5. Определить прогресс завершения
         float completionProgress = 0f;
         if (runner != null && runner.IsCompleted)
         {
@@ -240,7 +282,7 @@ public class WorkbenchInventoryBridge : MonoBehaviour
             tags.Add("incomplete");
         }
 
-        // 5. Создать AssemblySnapshot
+        // 6. Создать AssemblySnapshot
         AssemblySnapshot snapshot = new AssemblySnapshot
         {
             baseItemId = baseItemId,
@@ -249,10 +291,10 @@ public class WorkbenchInventoryBridge : MonoBehaviour
             completionProgress = completionProgress
         };
 
-        // 6. Добавить в инвентарь через новый метод AddAssembly
+        // 7. Добавить в инвентарь через новый метод AddAssembly
         inventory.AddAssembly(baseItemId, tags, snapshot);
 
-        // 7. Удалить GameObject сборки
+        // 8. Удалить GameObject сборки
         Destroy(assemblyObject);
 
         Debug.Log($"WorkbenchInventoryBridge: Сборка {baseItemId} сохранена в инвентарь с {attachedParts.Count} деталями и {tags.Count} тегами");

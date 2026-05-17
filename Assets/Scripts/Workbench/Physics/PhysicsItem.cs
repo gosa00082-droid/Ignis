@@ -3,6 +3,10 @@ using UnityEngine;
 
 public class PhysicsItem : MonoBehaviour
 {
+    // События для взаимодействия с другими системами
+    public static event System.Action<PhysicsItem> OnItemGrabbed;
+    public static event System.Action<PhysicsItem> OnItemReleased;
+
     private enum ReturnPhase
     {
         None,
@@ -189,6 +193,9 @@ public class PhysicsItem : MonoBehaviour
         rb.isKinematic = true;
 
         UpdateGrabTargetFromInput();
+
+        // Вызываем событие захвата предмета
+        OnItemGrabbed?.Invoke(this);
     }
 
     public void RefreshGrabTargetFromInput()
@@ -209,6 +216,9 @@ public class PhysicsItem : MonoBehaviour
             ZeroBodyVelocity();
             rb.useGravity = false;
             rb.isKinematic = true;
+            
+            // Вызываем событие отпускания предмета
+            OnItemReleased?.Invoke(this);
             return;
         }
 
@@ -216,6 +226,9 @@ public class PhysicsItem : MonoBehaviour
         rb.useGravity = true;
         ZeroBodyVelocity();
         CacheSafePose();
+
+        // Вызываем событие отпускания предмета
+        OnItemReleased?.Invoke(this);
     }
 
     public void SetAttachedToParentAssembly(bool attached)
