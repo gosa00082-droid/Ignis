@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 865017964d6e63a47a693f4a70a2ea4c, type: 3}
+  m_Name: WorkbenchItemDatabase B0.01
+  m_EditorClassIdentifier: Assembly-CSharp::WorkbenchItemDatabase
+  mappings:
+  - itemId: pommel_basic
+    prefab: {fileID: 2118319231609549421, guid: da85976c54aae7545a2e7fe664acf87c, type: 3}
+  - itemId: guard_basic
+    prefab: {fileID: 2935161647107727081, guid: 343f59bd216c77a4bb16cbd3017ab304, type: 3}
+  - itemId: blade_basic
+    prefab: {fileID: 3137451555706543347, guid: fd7d8da14246a564ea74e146f75a9f9d, type: 3}
+  - itemId: handle_basic
+    prefab: {fileID: 3414065677609436944, guid: e11cee707e0887c4ba488a1b59c6516f, type: 3}

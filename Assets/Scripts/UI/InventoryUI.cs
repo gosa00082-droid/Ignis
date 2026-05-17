@@ -44,15 +44,36 @@ public class InventoryUI : MonoBehaviour
         currentCategory = category;
         ClearSlots();
 
-        // Получаем все предметы этой категории
-        List<ItemData> items = itemDatabase.GetItemsByCategory(category);
+        // Получаем все предметы из инвентаря
+        List<InventoryItem> allItems = inventory.GetAllItems();
 
-        foreach (ItemData item in items)
+        // Группируем по baseItemId для отображения
+        Dictionary<string, int> itemCounts = new Dictionary<string, int>();
+        
+        foreach (InventoryItem invItem in allItems)
         {
-            int count = inventory.GetCount(item.id);
-            if (count <= 0) continue;  // не показываем предметы с нулевым количеством
+            ItemData itemData = itemDatabase.GetItem(invItem.baseItemId);
+            if (itemData != null && itemData.category == category)
+            {
+                if (itemCounts.ContainsKey(invItem.baseItemId))
+                {
+                    itemCounts[invItem.baseItemId] += invItem.stackCount;
+                }
+                else
+                {
+                    itemCounts[invItem.baseItemId] = invItem.stackCount;
+                }
+            }
+        }
 
-            CreateSlot(item, count);
+        // Создаем слоты для каждого уникального предмета
+        foreach (var kvp in itemCounts)
+        {
+            ItemData itemData = itemDatabase.GetItem(kvp.Key);
+            if (itemData != null && kvp.Value > 0)
+            {
+                CreateSlot(itemData, kvp.Value);
+            }
         }
     }
 
