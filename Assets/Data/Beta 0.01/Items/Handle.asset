@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f5c2d36cc93735498175b50ebe39d41, type: 3}
   m_Name: Handle
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: "\u0420\u0443\u043A\u043E\u044F\u0442\u044C"
+  itemName: "\u0420\u0443\u043A\u043E\u044F\u0442\u044C \u043C\u0435\u0447\u0430"
   id: handle_basic
   category: 1
   icon: {fileID: 0}

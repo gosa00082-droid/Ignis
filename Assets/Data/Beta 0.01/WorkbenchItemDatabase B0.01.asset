@@ -21,3 +21,7 @@ MonoBehaviour:
     prefab: {fileID: 3137451555706543347, guid: fd7d8da14246a564ea74e146f75a9f9d, type: 3}
   - itemId: handle_basic
     prefab: {fileID: 3414065677609436944, guid: e11cee707e0887c4ba488a1b59c6516f, type: 3}
+  - itemId: AxeBlade
+    prefab: {fileID: 1983701922381920911, guid: 5a3e5bb7775d94a4092d99810801aee2, type: 3}
+  - itemId: AxeHandle
+    prefab: {fileID: 3426649860938369639, guid: d720e4956e68eb2459849dbc8f434ee5, type: 3}

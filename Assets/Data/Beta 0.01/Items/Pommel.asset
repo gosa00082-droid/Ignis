@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7f5c2d36cc93735498175b50ebe39d41, type: 3}
   m_Name: Pommel
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: "\u041D\u0430\u0432\u0435\u0440\u0448\u0438\u0435"
+  itemName: "\u041D\u0430\u0432\u0435\u0440\u0448\u0438\u0435 \u043C\u0435\u0447\u0430"
   id: pommel_basic
   category: 2
   icon: {fileID: 0}
