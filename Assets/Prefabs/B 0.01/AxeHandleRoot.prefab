@@ -218,7 +218,7 @@ MonoBehaviour:
   acceptedType: 3
   entryPoint: {fileID: 5928539549343729848}
   seatPoint: {fileID: 6257135492650366529}
-  snapDistance: 0.6
+  snapDistance: 0.1
   clicksToInsert: 4
   moveSpeed: 4
   rotationSpeedDeg: 360
