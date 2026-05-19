@@ -81,13 +81,19 @@ public class FurnaceUI : MonoBehaviour
 
     private void OnEnable()
     {
-        StartCoroutine(RefreshAfterOpen());
+        Inventory.OnInventoryChanged += RefreshUI;
+        RefreshUI();
     }
 
-    private IEnumerator RefreshAfterOpen()
+    private void OnDisable()
     {
-        yield return null;
+        Inventory.OnInventoryChanged -= RefreshUI;
+        ReturnOresToInventory();
+        ClearFurnaceSlots();
+    }
 
+    private void RefreshUI()
+    {
         RefreshMiniInventory();
         UpdatePreview();
         UpdateCoalText();
@@ -103,16 +109,8 @@ public class FurnaceUI : MonoBehaviour
         if (opened)
         {
             Debug.Log("Заходим в RefreshMiniInventory");
-            RefreshMiniInventory();
-            UpdatePreview();
-            UpdateCoalText();
+            RefreshUI();
         }
-    }
-
-    private void OnDisable()
-    {
-        ReturnOresToInventory();
-        ClearFurnaceSlots();
     }
 
     private void RefreshMiniInventory()

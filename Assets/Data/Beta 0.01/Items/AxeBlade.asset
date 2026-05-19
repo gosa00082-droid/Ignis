@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f5c2d36cc93735498175b50ebe39d41, type: 3}
-  m_Name: Blade
+  m_Name: AxeBlade
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: "\u041B\u0435\u0437\u0432\u0438\u0435 \u043C\u0435\u0447\u0430"
-  id: blade_basic
+  itemName: "\u041B\u0435\u0437\u0432\u0438\u0435 \u0442\u043E\u043F\u043E\u0440\u0430"
+  id: AxeBlade
   category: 1
   icon: {fileID: 0}
   maxStackSize: 99
