@@ -19,7 +19,7 @@ MonoBehaviour:
     \u0435\u0433\u043E \u0432\u043D\u0443\u043A\u0430"
   customerName: "\u0414\u0435\u0434 \u043C\u0430\u043A\u0441\u0438\u043C"
   rewardGold: 300
-  timeLimitHours: 10
+  timeLimitHours: 4
   requiredItemID: sword
   requiredAmount: 1
   failPenaltyPercent: 30

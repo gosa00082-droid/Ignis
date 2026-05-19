@@ -3118,7 +3118,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &304340341
 Transform:
   m_ObjectHideFlags: 0
@@ -7402,26 +7402,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 798729010}
   m_CullTransparentMesh: 1
---- !u!1 &798936012 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3426649860938369639, guid: d720e4956e68eb2459849dbc8f434ee5, type: 3}
-  m_PrefabInstance: {fileID: 1898197738316419526}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &798936021
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 798936012}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 107e665fb68fe2549bbb954ac22a3c1f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AssemblyRecipeRunner
-  recipe: {fileID: 11400000, guid: 1d7e0ce7f9afce244b022454816ff65e, type: 2}
-  currentStepIndex: 0
-  isCompleted: 0
 --- !u!1 &801291214
 GameObject:
   m_ObjectHideFlags: 0
@@ -17256,7 +17236,7 @@ PrefabInstance:
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: alloyDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: f0f8d9aa15b4cfd40807162145d42f56, type: 2}
+      objectReference: {fileID: 11400000, guid: aea6d765fe8437246b965b42245135d6, type: 2}
     - target: {fileID: 1156452857035115783, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: bellowsButton
       value: 
@@ -17372,7 +17352,7 @@ PrefabInstance:
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: recipeDatabase
       value: 
-      objectReference: {fileID: 11400000, guid: 25599d3121ec53744bd226eba42028a4, type: 2}
+      objectReference: {fileID: 11400000, guid: 8bf62de737b51994e9906be24942bf9d, type: 2}
     - target: {fileID: 1899019318877887671, guid: b2743aec8d937a941b16732f224a5588, type: 3}
       propertyPath: recipeNameText
       value: 
@@ -22712,6 +22692,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: AxeBladeRoot
       objectReference: {fileID: 0}
+    - target: {fileID: 1983701922381920911, guid: 5a3e5bb7775d94a4092d99810801aee2, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -22772,10 +22756,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 3426649860938369639, guid: d720e4956e68eb2459849dbc8f434ee5, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 798936021}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d720e4956e68eb2459849dbc8f434ee5, type: 3}
 --- !u!1001 &1976505869230549994
 PrefabInstance:

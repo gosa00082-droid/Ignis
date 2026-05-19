@@ -109,13 +109,14 @@ GameObject:
   - component: {fileID: 4202629961532003373}
   - component: {fileID: 6523684474473371672}
   - component: {fileID: 47058604842296712}
+  - component: {fileID: 4816267781351204898}
   m_Layer: 11
   m_Name: AxeHandleRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1633194221299037327
 Transform:
   m_ObjectHideFlags: 0
@@ -293,6 +294,21 @@ CapsuleCollider:
   m_Height: 0.0037
   m_Direction: 0
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &4816267781351204898
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3426649860938369639}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 107e665fb68fe2549bbb954ac22a3c1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AssemblyRecipeRunner
+  recipe: {fileID: 11400000, guid: 1d7e0ce7f9afce244b022454816ff65e, type: 2}
+  currentStepIndex: 0
+  isCompleted: 0
 --- !u!1 &7685085006784869622
 GameObject:
   m_ObjectHideFlags: 0
