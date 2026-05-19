@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c62117823b6ed459986c95df741fea, type: 3}
+  m_Name: axe
+  m_EditorClassIdentifier: Assembly-CSharp::AssemblyRecipe
+  recipeId: axe
+  assemblyMode: 1
+  steps:
+  - stepName: blade_to_handle
+    socketId: AxetoBlade
+    parentType: 2
+    parentPartId: AxeHandle
+    childType: 3
+    childPartId: AxeBlade
+  resultItemId: axe
