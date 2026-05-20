@@ -45,6 +45,22 @@ public class AssemblyRoot : MonoBehaviour
         }
     }
 
+    public bool HasAnyAttachment()
+    {
+        AttachmentSocket[] sockets = GetComponentsInChildren<AttachmentSocket>(true);
+
+        foreach (AttachmentSocket socket in sockets)
+        {
+            if (socket == null)
+                continue;
+
+            if (socket.HasAttachedObject)
+                return true;
+        }
+
+        return false;
+    }
+
     private bool HasIncompleteSocketInAssembly()
     {
         AttachmentSocket[] sockets = GetComponentsInChildren<AttachmentSocket>(true);
@@ -135,7 +151,7 @@ public class AssemblyRoot : MonoBehaviour
 
     private bool CanStartDragFrom(Transform clickedTransform)
     {
-        // Если в сборке есть незавершенная вставка — вся сборка закреплена.
+        // пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
         if (HasIncompleteSocketInAssembly())
         {
             if (debugLogs)

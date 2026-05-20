@@ -142,6 +142,16 @@ public class WorkbenchReturnZone : MonoBehaviour
 
             if (runner != null && !runner.IsCompleted)
             {
+                if (!assemblyRoot.HasAnyAttachment())
+                {
+                    if (debugLogs)
+                        Debug.Log($"WorkbenchReturnZone: Сборка {item.name} пуста (нет вложений), возвращаем как компонент");
+                    bridge.ReturnItemToInventory(item.gameObject);
+                    itemsInZone.Remove(item);
+                    UpdateVisualFeedback();
+                    return;
+                }
+
                 if (debugLogs)
                     Debug.Log($"WorkbenchReturnZone: Сборка {item.name} не завершена, возврат невозможен");
                 return;
